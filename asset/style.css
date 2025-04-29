@@ -1,0 +1,337 @@
+
+.st-key-green button {
+    background-color: green;
+}
+
+/* Animated button with pulse effect */
+.st-key-pulse button {
+    background-color: #4CAF50;
+    border-radius: 10px;
+    padding: 20px 60px;
+    animation: pulse 2s infinite;
+}
+
+.st-key-pulse button p {
+    font-size: 24px;
+    font-family: 'Futura', 'Trebuchet MS', Arial, sans-serif;
+}
+
+/* Hover effect for the button */
+.st-key-pulse button:hover {
+    background-color: #45a049; /* Darker green */
+    border: none;
+}
+
+.st-key-pulse button:hover p {
+    color: #FFD700; /* Gold color */
+}
+
+/* Override the focus states to prevent default red border */
+.st-key-pulse button:focus {
+    background-color: #45a049; /* Keep the same as hover */
+    border: none;
+}
+
+/* Apply the same text color during focus states */
+.st-key-pulse button:focus p {
+    color: #FFD700;
+}
+
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 20px rgba(76, 175, 80, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+}
+
+/* Text input with custom font and color */
+.st-key-styledinput input {
+    border: 5px solid #3cff1e;
+    border-radius: 8px;
+}
+
+.st-key-styledinput input:focus {
+    border: none;
+}
+
+
+/* Text area with custom font */
+.st-key-styledtextarea textarea {
+    background-color: #e6e6fa;
+    border: 4px solid #9370DB;
+    border-radius: 8px;
+    font-family: 'Lucida Handwriting', cursive;
+    color: #4B0082;
+}
+
+
+/* Radio buttons with custom styles */
+.st-key-styleradio .stRadio p {
+    color: #3d2e8b;
+    font-family: "Source Sans Pro", sans-serif;
+    font-size: 24px;
+}
+/* Tự làm*/
+
+.st-key-yc form {
+    background-color: green;
+}
+
+.tieude {
+    text-align: center;
+    font-family: "Source Sans Pro", sans-serif;
+    color: #013e55;
+    font-size: 45px;
+}
+
+.demuc {
+    text-align: left;
+    font-family: "Source Sans Pro", sans-serif;
+    color:#3a06f4;
+    font-size: 20px;
+    margin-bottom: 1px;
+    margin-top: 10px;
+
+}
+
+.admin_1 {
+    text-align: left;
+    font-family: 'Calibri', cursive;
+    color:#19ba00;
+    font-size: 20px;
+    margin-bottom: 0px;
+}
+
+
+.muc {
+    text-align: left;
+    font-family: "Source Sans Pro", sans-serif;
+    color:#000000;
+    font-size: 60px;
+    margin-bottom: -10px;
+}
+
+.fixed-header {
+    position: fixed;
+    top: 0;
+    padding-top: 10px;
+    left: 5;
+    width: 100%;
+    background-color: white;
+    flex-direction: column;
+    z-index: 1000;
+    display: flex;
+    align-items: left;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    padding-bottom: 0px;
+}
+
+.header-underline {
+    position: fixed;
+    border-bottom: 2px solid #00697d;
+    width: 55%;
+    display: flex;
+    z-index: 1001;
+    top: 4.5rem;
+}
+
+.header-content img {
+    height: 1.6rem;
+    max-width: 100%;
+    object-fit: contain;
+    margin-right: 10px;
+}
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.header-text p {
+    font-size: 25px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.header-text h1 {
+    font-size: 11px;
+    line-height: 1;
+    color: #003b62; 
+    font-family: "Source Sans Pro", sans-serif;
+    padding-bottom: 0%;
+    padding-top:0.2rem;
+}
+
+.header-subtext {
+    margin-top: 0px;
+    text-align: left;
+
+
+}
+
+.login-header {
+    display: flex;            
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.logo-img {
+    height: 60px;            
+    width: auto;              
+}
+.login-header-text h4 {
+    margin-top: 5px;               
+    line-height: 1.2;
+}
+
+@media screen and (max-width: 780px) {
+.fixed-header {
+        padding-left: 22px;
+        left: 15px;
+}
+.header-underline {
+        width: 90%;
+}
+.login-header-text h4 {
+    padding-bottom: 0px;
+    margin-top: 5px;
+    padding-top: 0px;          
+    line-height: 1.2;
+    font-size: 12px;
+}
+.logo-img {
+    height: 33px;
+    width: auto;
+}
+[data-testid="stBaseButton-headerNoPadding"] {
+    position: absolute;
+    top: 8px;
+    left: -15px;
+}
+.header-subtext p {
+    padding-left: 140px;
+}
+}
+
+.header-subtext p {
+    font-size: 1.4rem;
+    color: #e60d0de9;
+    font-family: "Source Sans Pro", sans-serif;
+    font-weight: bold;
+    padding-left: 12%;
+    margin-bottom: 2px;
+    border-bottom: #000000;
+}
+
+@media screen and (max-width: 480px) {
+.header-subtext p {
+    padding-left: 0px;
+}}
+
+[data-testid="stToolbar"] {
+    top: 0px;
+    right: 0px;
+}
+
+[data-testid="stRadio"] p {
+    font-size: 15px; 
+    color: #003b62; 
+    font-family: "Source Sans Pro", sans-serif;
+}
+[data-testid="stVerticalBlock"] {
+    gap: 0.5rem;
+}
+[data-baseweb="base-input"] {
+    background-color: #e7f1f8; 
+    border-style:hidden;
+}
+label[for^="text_input_"] div p {
+    font-size:15px;
+    color: rgb(59, 112, 114);
+    padding-left:20px;
+    width: 200px;
+    
+}
+
+[data-testid="stDateInput"] p {
+    font-size:15px !important;
+    color: rgb(59, 112, 114) !important;
+}
+
+[data-testid="stWidgetLabel"] p {
+    font-size: 15px; 
+    color: #005259; 
+    font-family: "Source Sans Pro", sans-serif;
+    font-weight:bold;
+}
+.stRadio label:hover {
+    background-color: #e0e8ee;  
+    cursor: pointer;
+}
+[data-baseweb="select"] div div {
+    background-color: #e7f1f8;
+    align-content: flex-start !important;
+}
+
+[data-testid="stHeadingWithActionElements"] h3 {
+    color:#005259;
+    font-size:20px;
+    font-style: italic;
+}
+
+[data-baseweb="tab-list"] {
+    display: flex !important; 
+    justify-content: space-around;
+
+}
+
+[data-baseweb="tab-border"] {
+    width: 0;
+}
+
+[data-baseweb="tab-highlight"] {
+    background-color: #00515b;
+} 
+
+[data-testid="stHorizontalBlock"] {
+    gap:5px;
+}
+
+[data-testid="stHeadingWithActionElements"] h6 {
+    color: #005259;
+    padding-top:39px;
+    padding-bottom:0px;
+    font-weight:bold;
+}
+
+[data-testid="stToast"] {
+    top: 200px;
+    position: fixed;
+    display: flex;
+    background-color: #008080;
+    text-emphasis-color: #000000;
+}
+[data-testid="stHeader"] {
+    height: 0% !important;
+    background:#ffffff
+}
+[data-testid="stBaseButton-header"] div span {
+    visibility: hidden;
+}
+
+[data-testid="stMainBlockContainer"] {
+    padding-top: 3.7rem;
+    padding-left: 1rem;
+    padding-right: 2%;
+    padding-bottom: 2rem;
+}

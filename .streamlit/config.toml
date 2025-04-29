@@ -1,0 +1,26 @@
+[server]
+port = 80
+enableStaticServing = true
+
+[client]
+showErrorDetails = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"
+primaryColor="#013e55"
+backgroundColor="#ffffff"
+secondaryBackgroundColor="#e7f1f8"
+textColor="#000000"
+linkColor="#693382"
+codeBackgroundColor="#693382"
+font="sans serif"
+baseRadius="0.5rem"
+borderColor ="#424242"
+
+[theme.sidebar]
+primaryColor ="#ffffff"
+backgroundColor ="#AFDDFF"
+secondaryBackgroundColor ="#ffffff"

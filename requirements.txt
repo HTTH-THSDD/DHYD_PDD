@@ -1,0 +1,11 @@
+streamlit
+matplotlib
+pandas
+numpy
+openpyxl
+plotly
+gspread
+datetime
+pathlib
+base64
+google.oauth2.service_account

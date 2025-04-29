@@ -1,0 +1,31 @@
+# Ignore Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore virtual environment folders
+env/
+venv/
+ENV/
+VENV/
+
+# Ignore Jupyter Notebook checkpoints (nếu có dùng)
+.ipynb_checkpoints/
+
+# Ignore local environment configuration
+.env
+*.env
+
+# Ignore Streamlit secrets
+.streamlit/secrets.toml
+
+# Ignore any DS_Store (Mac OS files)
+.DS_Store
+
+# Ignore VSCode settings (nếu dùng VSCode)
+.vscode/
+
+# Ignore build files
+build/
+dist/
+*.egg-info/

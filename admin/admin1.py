@@ -1,0 +1,235 @@
+import streamlit as st
+import pandas as pd
+import gspread
+import datetime
+import pathlib
+import base64
+from google.oauth2.service_account import Credentials
+
+@st.cache_data(ttl=3600)
+def load_credentials():
+    creds_info = {
+    "type": st.secrets["google_service_account"]["type"],
+    "project_id": st.secrets["google_service_account"]["project_id"],
+    "private_key_id": st.secrets["google_service_account"]["private_key_id"],
+    "private_key": st.secrets["google_service_account"]["private_key"],
+    "client_email": st.secrets["google_service_account"]["client_email"],
+    "client_id": st.secrets["google_service_account"]["client_id"],
+    "auth_uri": st.secrets["google_service_account"]["auth_uri"],
+    "token_uri": st.secrets["google_service_account"]["token_uri"],
+    "auth_provider_x509_cert_url": st.secrets["google_service_account"]["auth_provider_x509_cert_url"],
+    "client_x509_cert_url": st.secrets["google_service_account"]["client_x509_cert_url"],
+    "universe_domain": st.secrets["google_service_account"]["universe_domain"],
+    }
+    # Dùng để kết nối Google APIs
+    credentials = Credentials.from_service_account_info(
+        creds_info,
+        scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    )
+    return credentials
+
+@st.cache_data(ttl=3600)
+def get_img_as_base64(file):
+    with open(file, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+def load_css(file_path):
+    with open(file_path) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+@st.cache_data(ttl=10)
+def load_data(x):
+    credentials = load_credentials()
+    gc = gspread.authorize(credentials)
+    sheet = gc.open(x).sheet1
+    data = sheet.get_all_values()
+    header = data[0]
+    values = data[1:]
+    data_final = pd.DataFrame(values, columns=header)
+    if st.session_state.phan_quyen == "2" and x == "Input-st-DSNS":
+        data_final = data_final.drop(["Phân quyền","Mật khẩu"], axis=1)
+    if x == "Input-st-GSQT":
+        data_final = data_final.drop(["Kết quả đánh giá","Tồn đọng"], axis=1)
+
+    return data_final
+
+@st.cache_data(ttl=10)
+def get_key_from_value(dictionary, value):
+    return next((key for key, val in dictionary.items() if val == value), None)
+
+@st.cache_data(ttl=10)
+def load_data_GSheet(name):
+    credentials = load_credentials()
+    gc = gspread.authorize(credentials)
+    sheet = gc.open(name).sheet1
+    data = sheet.get_all_records()
+    df = pd.DataFrame(data)
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'], errors='coerce')
+    start_date = st.session_state.sd
+    end_date = st.session_state.ed + datetime.timedelta(days=1)
+    df = df[(df['Timestamp'] >= pd.Timestamp(start_date)) & (df['Timestamp'] < pd.Timestamp(end_date))]
+    if name == "Output-st-GSQT":
+        df = df.drop(["Mã quy trình","Tỉ lệ tuân thủ","Tỉ lệ an toàn"], axis=1)
+    return df
+
+def change_GS(stt,tt1,kq1):
+    credentials = load_credentials()
+    gc = gspread.authorize(credentials)
+    sheet = gc.open("Output-st-YC").sheet1
+    sheet.update_cell(stt+1, 8, tt1)
+    sheet.update_cell(stt+1, 9, kq1)
+    st.toast("Đã cập nhật thay đổi")
+
+def phan_quyen(row,quyen):
+    credentials = load_credentials()
+    gc = gspread.authorize(credentials)
+    sheet = gc.open("Input-st-DSNS").sheet1
+    if quyen in [""," "]:
+         sheet.update_cell(row+2, 21, "")
+    else:
+        sheet.update_cell(row+2, 21, quyen)
+    st.toast("Phân quyền thành công")
+
+def doi_mat_khau(row, mkm1):
+    credentials = load_credentials()
+    gc = gspread.authorize(credentials)
+    sheet = gc.open("Input-st-DSNS").sheet1
+    mk= mkm1.upper()
+    sheet.update_cell(row+2,22,mk)
+    st.toast("Đổi mật khẩu thành công")
+#########################################################################################################
+#Cài thời gian sẵn
+css_path = pathlib.Path("asset/style.css")
+load_css(css_path)
+img = get_img_as_base64("pages/img/logo.png")
+st.markdown(f"""
+    <div class="fixed-header">
+        <div class="header-content">
+            <img src="data:image/png;base64,{img}" alt="logo">
+            <div class="header-text">
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+            </div>
+        </div>
+        <div class="header-subtext">
+        <p style="color:#ebb434, padding-left:15px">TRANG QUẢN TRỊ</p>
+        </div>
+    </div>
+    <div class="header-underline"></div>
+
+ """, unsafe_allow_html=True)
+html_code = f'<p class="admin_1"><i>Xin chào admin:{st.session_state.username}</i></p>'
+st.html(html_code)
+
+#Giá trị này giúp cache nhận ra sự thay đổi đầu vào
+input_data = {
+              "Input-st-DSNS":"Danh sách nhân sự",
+              "Input-st-GSQT":"Giám sát quy trình",
+              "Input-st-HSBA":"Hồ sơ bệnh án",
+              "Input-st-GDSK":"Giáo dục sức khỏe",
+              }
+inp = st.selectbox(label="Input",
+            options=["---"]+ list(input_data.values()),
+            index=0,             
+            )
+if inp and inp != "---":
+    with st.expander("Mở rộng 🌦️"):
+        try:
+            a = get_key_from_value(input_data, inp)
+            data_in = load_data(a)
+            st.dataframe(data_in, hide_index=True,height=225)
+        except:
+            st.write("Chọn bảng input")
+output_data = {
+              "Output-st-GSQT":"Data giám sát quy trình",
+              "Output-st-HSBA":"Data hồ sơ bệnh án",
+              "Output-st-GDSK":"Data giáo dục sức khỏe",
+              "Output-st-YC":"Các yêu cầu bổ sung/phân quyền"
+              }
+outp = st.selectbox(label="Output",
+            options=["---"]+ list(output_data.values()),
+            index=0,             
+            )
+
+if outp and outp != "---":
+        with st.expander("Mở rộng 🌦️"):
+            with st.form("Thời gian"):
+                cold = st.columns([5,5])
+                with cold[0]:
+                    sd = st.date_input(
+                    label="Ngày bắt đầu",
+                    value=datetime.date(2025, 1, 1),
+                    min_value=datetime.date(2025, 1, 1),
+                    max_value=datetime.date.today(), 
+                    format="DD/MM/YYYY",
+                    key="sd",
+                    )
+                with cold[1]:
+                    ed = st.date_input(
+                    label="Ngày kết thúc",
+                    value=datetime.date.today(),
+                    min_value=datetime.date(2025, 1, 1),
+                    max_value=datetime.date.today(), 
+                    format="DD/MM/YYYY",
+                    key="ed",
+                    )
+                submit_thoigian = st.form_submit_button("Cập nhật ngày")
+            if submit_thoigian:
+                if ed < sd:
+                    st.error("Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")            
+            try:
+                placeholder = st.empty()
+                a = get_key_from_value(output_data, outp)
+                data_out = load_data_GSheet(a)
+                if data_out.empty:
+                    st.warning("Không có dữ liệu trong khoảng thời gian yêu cầu")
+                else:
+                    columns = data_out.columns.tolist()
+                    rows = list(range(1,len(data_out)+1))
+                    placeholder.dataframe(data_out, hide_index=True)
+                    if outp == "Các yêu cầu bổ sung/phân quyền":
+                        st.write("Thông tin muốn chỉnh sửa")
+                        with st.form("Thay đổi tình trạng"):
+                            col = st.columns([2,3,3])
+                            with col[0]:
+                                stt = st.number_input(label="STT yêu cầu", 
+                                                    min_value=1, 
+                                                    max_value=len(data_out), 
+                                                    step=1,
+                                                    key="stt",
+                                                    )
+                            with col[1]:
+                                tt = st.selectbox("Đổi tình trạng", 
+                                                options=["Chưa xem","Đã xem"],
+                                                key="tt",
+                                                )
+                            with col[2]:
+                                kq = st.selectbox("Đổi kết quả", 
+                                                options=["Trống","Hoàn thành","Từ chối"],
+                                                key="kq",
+                                                )
+                            submit_tt = st.form_submit_button("Lưu")
+                        if submit_tt:
+                            if (tt == "Chưa xem" and kq == "Từ chối") or (tt == "Chưa xem" and kq == "Hoàn thành"):
+                                st.write("Giá trị kết quả không phù hợp")
+                            else:
+                                if tt == "Chưa xem":
+                                    tt1 = ""
+                                    kq1 = ""
+                                else:
+                                    tt1 = "x"
+                                if kq == "Trống":
+                                    kq1 = ""
+                                elif kq == "Hoàn thành":
+                                    kq1 = "1"
+                                else:
+                                    kq1 = "0"
+                                change_GS(stt,tt1,kq1)
+                                data_out = load_data_GSheet(a)
+                                placeholder.dataframe(data_out, hide_index=True)
+            except:
+                st.write("Không tìm thấy giá trị tương ứng")
+        
+                       
+        
+        
