@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import gspread
-import datetime
+import datetime 
+from zoneinfo import ZoneInfo
 import pathlib
 import base64
 from google.oauth2.service_account import Credentials
@@ -139,8 +140,8 @@ def upload_data_GS(data):
     sheet = gc.open(sheeto1).sheet1
     sheet = gc.open("Output-st-GSQT").sheet1
     column_index = len(sheet.get_all_values())
-    now = datetime.datetime.now()
-    column_timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
+    column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_GSQT)
     column_nvgs = str(st.session_state.username)
     column_nvth = str(st.session_state.nv_thuchien_GSQT)
