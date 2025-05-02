@@ -40,7 +40,6 @@ def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-
 @st.cache_data(ttl=3600)
 def load_data(x):
     credentials = load_credentials()
@@ -88,7 +87,6 @@ def load_data_GSheet(name):
         df_yc = pd.DataFrame(k)
         df_yc = pd.DataFrame(df_yc).sort_values("Ngày gửi yêu cầu", ascending=False)
         df_yc.insert(0, 'STT', range(1, len(df_yc) + 1))
-
         return df_yc
     else:
         return pd.DataFrame()

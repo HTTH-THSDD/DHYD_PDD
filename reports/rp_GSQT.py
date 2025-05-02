@@ -134,7 +134,6 @@ def tao_thong_ke(x,y):
             ket_qua=ket_qua.drop("Khoa",axis=1)
         return ket_qua
 
-@st.cache_data(ttl=3600)
 def chon_khoa(khoa):
     placeholder1 = st.empty()
     if st.session_state.phan_quyen in ["1","2","3"]:

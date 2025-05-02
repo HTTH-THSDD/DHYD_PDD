@@ -69,7 +69,6 @@ def doi_mat_khau(row, mkm1):
     sheet.update_cell(row+2,22,mk)
     st.toast("Đổi mật khẩu thành công")
 #########################################################################################################
-#Cài thời gian sẵn
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
 img = get_img_as_base64("pages/img/logo.png")

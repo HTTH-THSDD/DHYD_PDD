@@ -53,7 +53,6 @@ def load_data(x):
     data_final = pd.DataFrame(values, columns=header)
     return data_final
 
-@st.cache_data(ttl=3600)
 def thong_tin_hanh_chinh():
     sheeti1 = st.secrets["sheet_name"]["input_1"]
     data_nv = load_data(sheeti1)

@@ -52,7 +52,6 @@ def load_data(x):
     data_final = pd.DataFrame(values, columns=header)
     return data_final
 
-@st.cache_data(ttl=3600)
 def thong_tin_hanh_chinh():
     sheeti1 = st.secrets["sheet_name"]["input_1"]
     data_nv = load_data(sheeti1)
@@ -78,7 +77,6 @@ def thong_tin_hanh_chinh():
         if "khoa_GSQT" in st.session_state:
             del st.session_state["khoa_GSQT"]
 
-@st.cache_data(ttl=3600)
 def vitrigs():
     vitri_gsv=["Điều dưỡng trưởng tại khoa lâm sàng", "Điều dưỡng trưởng giám sát chéo", "Điều dưỡng trưởng phiên", "Điều dưỡng phụ trách quy trình","Điều dưỡng viên giám sát chéo", "Nhân viên Phòng Điều dưỡng"]
     vitri = st.radio(label="Vị trí nhân viên giám sát",
@@ -90,7 +88,6 @@ def vitrigs():
         if "vtgs_GSQT" in st.session_state:
             del st.session_state["vtgs_GSQT"]
 
-@st.cache_data(ttl=3600)
 def bang_kiem_quy_trinh():
     sheeti2 = st.secrets["sheet_name"]["input_2"]
     data_qt2 = load_data(sheeti2)
