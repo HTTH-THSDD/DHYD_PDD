@@ -7,8 +7,6 @@ import base64
 from google.oauth2.service_account import Credentials
 import re
 
-
-
 @st.cache_data(ttl=3600)
 def load_credentials():
     creds_info = {
@@ -138,7 +136,7 @@ def warning(x):
         st.warning(f"Số vào viện không hợp lệ. Vui lòng nhập lại VD: 25-1234567")
 
 # Main ####################################################################################
-img = get_img_as_base64("d:/DHYD_St/DHYD_Streamlit/pages/img/logo.png")
+img = get_img_as_base64("pages/img/logo.png")
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
 st.markdown(f"""
