@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import datetime
+from datetime import datetime, date
 from zoneinfo import ZoneInfo
 import pathlib
 import base64
@@ -229,7 +229,7 @@ databa = load_data(sheeto2)
 sheeto3 = st.secrets["sheet_name"]["output_3"]
 datagd = load_data(sheeto3)
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")) 
-md = datetime.date(2025, 1, 1)
+md = date(2025, 1, 1)
 with st.form("Thời gian"):
     html_code = f'<p class="ttcn"><i>Thông tin giám sát cá nhân</i></p>'
     st.html(html_code)
