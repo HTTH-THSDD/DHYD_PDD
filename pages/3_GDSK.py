@@ -222,7 +222,7 @@ if "khoa_GDSK" in st.session_state and st.session_state["khoa_GDSK"] and "vtgs_G
             st.date_input(
                 label="Ngày tạo phiếu",
                 key=f"gdskdateinput_{i}",
-                value=now_vn.date,
+                value=now_vn.date(),
                 format="DD/MM/YYYY",
             )
         submitbutton = st.form_submit_button("Gửi")
