@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import gspread
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
 import pathlib
 import base64
@@ -67,7 +67,7 @@ def load_data_GSheet(name):
     df = pd.DataFrame(data)
     df['Timestamp'] = pd.to_datetime(df['Timestamp'], errors='coerce')
     start_date = st.session_state.sd
-    end_date = st.session_state.ed + datetime.timedelta(days=1)
+    end_date = st.session_state.ed + timedelta(days=1)
     df = df[(df['Timestamp'] >= pd.Timestamp(start_date)) & (df['Timestamp'] < pd.Timestamp(end_date))]
     if name == st.secrets["sheet_name"]["output_1"]:
         df = df.drop(["Mã quy trình","Tỉ lệ tuân thủ","Tỉ lệ an toàn"], axis=1)

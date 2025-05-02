@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import gspread
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
 import pathlib
 import base64
@@ -79,7 +79,7 @@ def load_data(x,sd,ed,khoa_select):
     data = data.loc[data["Khoa"].isin(khoa_select)]
     data['Timestamp'] = pd.to_datetime(data['Timestamp'], errors='coerce')
     start_date = sd
-    end_date = ed + datetime.timedelta(days=1)
+    end_date = ed + timedelta(days=1)
     data_final = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] < pd.Timestamp(end_date))]
     return data_final
 

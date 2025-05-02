@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
 import pathlib
 import base64
@@ -131,7 +131,7 @@ def xuli(data,a,ten_ma,sd,ed):
     data = data.loc[data[a] == st.session_state.username]
     data['Timestamp'] = pd.to_datetime(data['Timestamp'], errors='coerce')
     start_date = sd
-    end_date = ed + datetime.timedelta(days=1)
+    end_date = ed + timedelta(days=1)
     data = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] <= pd.Timestamp(end_date))]
     if data.empty:
         st.toast("Không có dữ liệu trong khoảng thời gian yêu cầu")
@@ -165,7 +165,7 @@ def xuli2(data,x):
     data = data.loc[data["Họ tên người đánh giá"] == st.session_state.username]
     data['Timestamp'] = pd.to_datetime(data['Timestamp'], errors='coerce')
     start_date = sd
-    end_date = ed + datetime.timedelta(days=1)
+    end_date = ed + timedelta(days=1)
     data = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] <= pd.Timestamp(end_date))]
     if data.empty:
         st.toast("Không có dữ liệu trong khoảng thời gian yêu cầu")
