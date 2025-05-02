@@ -5,7 +5,6 @@ import gspread
 from google.oauth2.service_account import Credentials
 import pathlib
 
-@st.cache_data(ttl=3600)
 def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)

@@ -31,7 +31,6 @@ def load_credentials():
     )
     return credentials
 
-@st.cache_data(ttl=3600)
 def load_css(file_path):
     with open(file_path) as f:
         st.html(f"<style>{f.read()}</style>")

@@ -13,7 +13,6 @@ def get_img_as_base64(file):
         data = f.read()
     return base64.b64encode(data).decode()
 
-
 def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -36,5 +35,5 @@ st.markdown(f"""
     <div class="header-underline"></div>
 
  """, unsafe_allow_html=True)
-html_code = f'<p class="admin_1"><i>Xin chào admin:{st.session_state.username}</i></p>'
+html_code = f'<p class="admin_1"><i>Đang phát triển</i></p>'
 st.html(html_code)
