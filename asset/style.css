@@ -190,8 +190,6 @@
 .header-subtext {
     margin-top: 0px;
     text-align: left;
-
-
 }
 
 .login-header {
@@ -249,8 +247,18 @@
 }
 
 @media screen and (max-width: 480px) {
+.demuc {
+        text-align: left;
+        font-family: "Source Sans Pro", sans-serif;
+        color:#3a06f4;
+        font-size: 17px;
+        margin-bottom: 1px;
+        margin-top: 10px;
+    
+    }
 .header-subtext p {
     padding-left: 0px;
+    font-size: 1818px !important;
 }}
 
 [data-testid="stToolbar"] {
