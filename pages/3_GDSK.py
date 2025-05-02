@@ -187,7 +187,7 @@ vitri_gdsk()
 thong_tin_hanh_chinh()
 sheeti4 = st.secrets["sheet_name"]["input_4"]
 data_gdsk = load_data(sheeti4)
-now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
+now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")) 
 if "khoa_GDSK" in st.session_state and st.session_state["khoa_GDSK"] and "vtgs_GDSK" in st.session_state and st.session_state["vtgs_GDSK"] is not None:
 # if "khoa_GDSK" in st.session_state and "nv_thuchien_GDSK" in st.session_state and "vtgs_GDSK" in st.session_state:
     st.markdown('''

@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import datetime
+from datetime import datetime, date
 from zoneinfo import ZoneInfo
 import pathlib
 import base64
@@ -145,8 +145,7 @@ st.markdown(f"""
  """, unsafe_allow_html=True)
 html_code = f'<p class="demuc"><i>Nhân viên gửi yêu cầu: {st.session_state.username}</i></p>'
 st.html(html_code)
-sheeti1 = st.secrets["sheet_name"]["input_1"]
-now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
+sheeti1 = st.secrets["sheet_name"]["input_1"]   
 data_nv = load_data(sheeti1)
 st.session_state.khoa_YC = data_nv.loc[data_nv["Nhân viên"]==st.session_state.username,"Khoa"].values[0]
 tab1, tab2 = st.tabs(["🔍 Gửi yêu cầu", "📊 Các yêu cầu trước đây"])

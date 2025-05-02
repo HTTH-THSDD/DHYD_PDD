@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import gspread
-from datetime import datetime
+from datetime import datetime, date
 from zoneinfo import ZoneInfo
 import pathlib
 import base64
@@ -215,13 +215,14 @@ loai_qtkt = {  "All":"Tất cả",
               "KHAC":"Khác",
               }
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
+md = date(2025, 1, 1)
 with st.form("Thời gian"):
     cold = st.columns([5,5])
     with cold[0]:
         sd = st.date_input(
         label="Ngày bắt đầu",
-        value=datetime.date(2025, 1, 1),
-        min_value=datetime.date(2025, 1, 1),
+        value=md,
+        min_value=md,
         max_value=now_vn.date(), 
         format="DD/MM/YYYY",
         )
@@ -229,7 +230,7 @@ with st.form("Thời gian"):
         ed = st.date_input(
         label="Ngày kết thúc",
         value=now_vn.date(),
-        min_value=datetime.date(2025, 1, 1),
+        min_value=md,
         max_value=now_vn.date(), 
         format="DD/MM/YYYY",
         )

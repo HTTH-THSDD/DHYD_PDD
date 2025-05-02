@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import gspread
-from datetime import datetime
+from datetime import datetime, date
 from zoneinfo import ZoneInfo
 import pathlib
 import base64
@@ -136,7 +136,8 @@ outp = st.selectbox(label="Output",
             index=0,             
             )
 
-now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")) 
+now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+md = date(2025, 1, 1) 
 if outp and outp != "---":
         with st.expander("Mở rộng 🌦️"):
             with st.form("Thời gian"):
@@ -144,8 +145,8 @@ if outp and outp != "---":
                 with cold[0]:
                     sd = st.date_input(
                     label="Ngày bắt đầu",
-                    value=datetime.date(2025, 1, 1),
-                    min_value=datetime.date(2025, 1, 1),
+                    value=md,
+                    min_value=md,
                     max_value=now_vn.date(), 
                     format="DD/MM/YYYY",
                     key="sd",
@@ -154,7 +155,7 @@ if outp and outp != "---":
                     ed = st.date_input(
                     label="Ngày kết thúc",
                     value=now_vn.date(),
-                    min_value=datetime.date(2025, 1, 1),
+                    min_value=md,
                     max_value=now_vn.date(), 
                     format="DD/MM/YYYY",
                     key="ed",
