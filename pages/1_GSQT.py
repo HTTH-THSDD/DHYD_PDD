@@ -220,11 +220,9 @@ if (
 ):
     st.divider()
     quy_trinh = st.session_state.quy_trinh
-    quy_trinh["Nội dung"] = quy_trinh["Nội dung"].str.replace(" + ", "<br>• ", regex=False)
-    for i in range (0,len(quy_trinh)):
-        st.markdown(f"Bước {quy_trinh.iloc[i, 5]}: {quy_trinh.iloc[i, 7]}", unsafe_allow_html=True)
+    for i in range (0,len(quy_trinh)):   
         st.radio(
-        label="Lựa chọn",
+        label=f"Bước {quy_trinh.iloc[i, 5]}: {quy_trinh.iloc[i, 7]}",
         options=luachon,
         key=f"radio_{i}",
         index=None,
