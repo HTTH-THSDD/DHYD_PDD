@@ -54,7 +54,7 @@ def login():
     <div class="login-header">
             <img src="data:image/png;base64,{img}" alt="logo" class="logo-img">
             <div class="login-header-text">
-                <h4>BỆNH VIỆN ĐẠI HỌC 1111 Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<br><span style="color:#c15088">Phòng Điều dưỡng</span></h4>
+                <h4>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<br><span style="color:#c15088">Phòng Điều dưỡng</span></h4>
             </div>
         </div>
     """, unsafe_allow_html=True)
