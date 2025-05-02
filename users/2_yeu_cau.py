@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
-import datetime
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import pathlib
 import base64
 
@@ -34,9 +35,11 @@ def get_img_as_base64(file):
         data = f.read()
     return base64.b64encode(data).decode()
 
+@st.cache_data(ttl=3600)
 def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 
 @st.cache_data(ttl=3600)
 def load_data(x):
@@ -107,8 +110,8 @@ def upload_data_yc():
     gc = gspread.authorize(credentials)
     sheet = gc.open("Output-st-YC").sheet1
     column_index = len(sheet.get_all_values())
-    now = datetime.datetime.now()
-    column_timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
+    column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_YC)
     column_nvyc = str(st.session_state.username)
     column_ttlh = str(st.session_state.ttlh)
@@ -146,6 +149,7 @@ st.markdown(f"""
 html_code = f'<p class="demuc"><i>Nhân viên gửi yêu cầu: {st.session_state.username}</i></p>'
 st.html(html_code)
 sheeti1 = st.secrets["sheet_name"]["input_1"]
+now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
 data_nv = load_data(sheeti1)
 st.session_state.khoa_YC = data_nv.loc[data_nv["Nhân viên"]==st.session_state.username,"Khoa"].values[0]
 tab1, tab2 = st.tabs(["🔍 Gửi yêu cầu", "📊 Các yêu cầu trước đây"])

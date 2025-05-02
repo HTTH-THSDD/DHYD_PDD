@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
-import datetime
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import pathlib
 import base64
 
@@ -34,6 +35,7 @@ def get_img_as_base64(file):
         data = f.read()
     return base64.b64encode(data).decode()
 
+@st.cache_data(ttl=3600)
 def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -109,8 +111,8 @@ def upload_data_yc():
     sheeto4 = st.secrets["sheet_name"]["output_4"]
     sheet = gc.open(sheeto4).sheet1
     column_index = len(sheet.get_all_values())
-    now = datetime.datetime.now()
-    column_timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
+    column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_YC)
     column_nvyc = str(st.session_state.username)
     column_ttlh = str(st.session_state.ttlh)
@@ -178,8 +180,6 @@ def xuli2(data,x):
             html_code = f'<p class="ttcn"><i>Thông tin đánh giá {x}</i></p>'
             st.html(html_code)
             st.dataframe(data, hide_index=True)
-
-
 # Main Section ####################################################################################
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
@@ -229,6 +229,7 @@ sheeto2 = st.secrets["sheet_name"]["output_2"]
 databa = load_data(sheeto2)
 sheeto3 = st.secrets["sheet_name"]["output_3"]
 datagd = load_data(sheeto3)
+now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")) 
 with st.form("Thời gian"):
     html_code = f'<p class="ttcn"><i>Thông tin giám sát cá nhân</i></p>'
     st.html(html_code)
@@ -238,15 +239,15 @@ with st.form("Thời gian"):
         label="Ngày bắt đầu",
         value=datetime.date(2025, 1, 1),
         min_value=datetime.date(2025, 1, 1),
-        max_value=datetime.date.today(), 
+        max_value=now_vn.date(), 
         format="DD/MM/YYYY",
         )
     with cold[1]:
         ed = st.date_input(
         label="Ngày kết thúc",
-        value=datetime.date.today(),
+        value=now_vn.date(),
         min_value=datetime.date(2025, 1, 1),
-        max_value=datetime.date.today(), 
+        max_value=now_vn.date(), 
         format="DD/MM/YYYY",
         )
     submit_thoigian = st.form_submit_button("Xem thống kê")

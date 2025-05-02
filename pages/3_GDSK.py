@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import gspread
-import datetime
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import pathlib
 import base64
 from google.oauth2.service_account import Credentials
@@ -30,6 +31,7 @@ def load_credentials():
     )
     return credentials
 
+@st.cache_data(ttl=3600)
 def load_css(file_path):
     with open(file_path) as f:
         st.html(f"<style>{f.read()}</style>")
@@ -51,6 +53,7 @@ def load_data(x):
     data_final = pd.DataFrame(values, columns=header)
     return data_final
 
+@st.cache_data(ttl=3600)
 def thong_tin_hanh_chinh():
     sheeti1 = st.secrets["sheet_name"]["input_1"]
     data_nv = load_data(sheeti1)
@@ -61,17 +64,6 @@ def thong_tin_hanh_chinh():
                              )
     if chon_khoa:
         st.session_state.khoa_GDSK = chon_khoa
-        # data_nv1=data_nv.loc[data_nv["Khoa"]==f"{chon_khoa}"]
-        # chon_nhanvien = st.selectbox(label="Nhân viên thực hiện quy trình",
-        #                             options=data_nv1["Tên nhân viên"],
-        #                             index=None,
-        #                             placeholder="",
-        #                             )
-        # if chon_nhanvien:
-        #     st.session_state.nv_thuchien_GDSK = chon_nhanvien
-        # else:
-        #     if "nv_thuchien_GDSK" in st.session_state:
-        #         del st.session_state["nv_thuchien_GDSK"]
     else:
         if "khoa_GDSK" in st.session_state:
             del st.session_state["khoa_GDSK"]
@@ -117,8 +109,8 @@ def upload_data_GDSK(len_data):
     gc = gspread.authorize(credentials)
     sheeto3 = st.secrets["sheet_name"]["output_3"]
     sheet = gc.open(sheeto3).sheet1
-    now = datetime.datetime.now()
-    column_timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
+    column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_GDSK)
     column_svv = str(st.session_state.svv_GDSK)
     column_yob_nb = str(st.session_state.yob_GDSK)
@@ -197,6 +189,7 @@ vitri_gdsk()
 thong_tin_hanh_chinh()
 sheeti4 = st.secrets["sheet_name"]["input_4"]
 data_gdsk = load_data(sheeti4)
+now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
 if "khoa_GDSK" in st.session_state and st.session_state["khoa_GDSK"] and "vtgs_GDSK" in st.session_state and st.session_state["vtgs_GDSK"] is not None:
 # if "khoa_GDSK" in st.session_state and "nv_thuchien_GDSK" in st.session_state and "vtgs_GDSK" in st.session_state:
     st.markdown('''
@@ -210,7 +203,7 @@ if "khoa_GDSK" in st.session_state and st.session_state["khoa_GDSK"] and "vtgs_G
         st.session_state.yob_GDSK = row1[1].number_input(
             "Năm sinh",
             min_value=1900,
-            max_value=datetime.datetime.now().year,
+            max_value=now_vn.year,
             value=None,
             step=1,
             placeholder="VD: 1990",
@@ -231,7 +224,7 @@ if "khoa_GDSK" in st.session_state and st.session_state["khoa_GDSK"] and "vtgs_G
             st.date_input(
                 label="Ngày tạo phiếu",
                 key=f"gdskdateinput_{i}",
-                value=datetime.date.today(),
+                value=now_vn.date,
                 format="DD/MM/YYYY",
             )
         submitbutton = st.form_submit_button("Gửi")

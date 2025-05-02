@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import gspread
-import datetime
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import pathlib
 import base64
 from google.oauth2.service_account import Credentials
@@ -35,6 +36,7 @@ def get_img_as_base64(file):
         data = f.read()
     return base64.b64encode(data).decode()
 
+@st.cache_data(ttl=3600)
 def load_css(file_path):
     with open(file_path) as f:
         st.html(f"<style>{f.read()}</style>")
@@ -50,6 +52,7 @@ def load_data(x):
     data_final = pd.DataFrame(values, columns=header)
     return data_final
 
+@st.cache_data(ttl=3600)
 def thong_tin_hanh_chinh():
     sheeti1 = st.secrets["sheet_name"]["input_1"]
     data_nv = load_data(sheeti1)
@@ -64,6 +67,7 @@ def thong_tin_hanh_chinh():
         if "khoa_HSBA" in st.session_state:
             del st.session_state["khoa_HSBA"]
 
+@st.cache_data(ttl=3600)
 def vitri_hsba():
     vitri_gsv=["Điều dưỡng trưởng khoa lâm sàng", "Điều dưỡng trưởng phiên", "Điều dưỡng phụ trách ghi chép hồ sơ", "Điều dưỡng viên đánh giá chéo", "Nhân viên Phòng Điều dưỡng"]
     vitri = st.radio(label="Vị trí nhân viên đánh giá",
@@ -81,8 +85,8 @@ def upload_data_HSBA(len_data):
     gc = gspread.authorize(credentials)
     sheeto2 = st.secrets["sheet_name"]["output_2"]
     sheet = gc.open(sheeto2).sheet1
-    now = datetime.datetime.now()
-    column_timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
+    column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_HSBA)
     column_svv = str(st.session_state.svv_HSBA)
     column_yob_nb = str(st.session_state.yob_HSBA)
@@ -159,6 +163,7 @@ vitri_hsba()
 thong_tin_hanh_chinh()
 sheeti3 = st.secrets["sheet_name"]["input_3"]
 data_hsba = load_data(sheeti3)
+now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
 if "khoa_HSBA" in st.session_state and st.session_state["khoa_HSBA"] and "vtgs_HSBA" in st.session_state and st.session_state["vtgs_HSBA"] is not None:
     st.markdown('''
     <h4><span style="color:#003b62">Phần đánh giá hồ sơ bệnh án
@@ -166,12 +171,13 @@ if "khoa_HSBA" in st.session_state and st.session_state["khoa_HSBA"] and "vtgs_H
 ''',unsafe_allow_html=True)
     luachon = [ "KHÔNG ÁP DỤNG", "KHÔNG thực hiện, hoặc ghi sai", "Thực hiện đúng nhưng chưa đủ", "Thực hiện đúng, đủ"]
     with st.form(key="hsba"):
+        
         row1 = st.columns([5,5])
         st.session_state.svv_HSBA = row1[0].text_input("Số vào viện", max_chars=10, placeholder="VD: 25-1234567",)
         st.session_state.yob_HSBA = row1[1].number_input(
             "Năm sinh",
             min_value=1900,
-            max_value=datetime.datetime.now().year,
+            max_value=now_vn.year,
             value=None,
             step=1,
             placeholder="VD: 1990",
@@ -193,7 +199,7 @@ if "khoa_HSBA" in st.session_state and st.session_state["khoa_HSBA"] and "vtgs_H
             st.date_input(
                 label="Ngày tạo phiếu",
                 key=f"hsbadateinput_{i}",
-                value=datetime.date.today(), 
+                value=now_vn.date(), 
                 format="DD/MM/YYYY",
             )
         submitbutton = st.form_submit_button("Gửi")

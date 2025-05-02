@@ -33,12 +33,13 @@ def get_img_as_base64(file):
         data = f.read()
     return base64.b64encode(data).decode()
 
+@st.cache_data(ttl=3600)
 def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 def logout():
-    for key in st.session_state.keys():  # Use list() to avoid runtime modification issues
+    for key in st.session_state.keys(): 
         del st.session_state[key]
     st.rerun()
 
@@ -61,13 +62,13 @@ def doi_mat_khau(row, mkm1):
     mk= mkm1.upper()
     sheet.update_cell(row+2,22,mk)
     st.toast("Đổi mật khẩu thành công")
-    for key in st.session_state.keys():  # Use list() to avoid runtime modification issues
+    for key in st.session_state.keys(): 
         del st.session_state[key]
     st.cache_data.clear()
     st.rerun()
 
 @st.dialog("Thông báo")
-def warning(row,mkm1):
+def notification(row,mkm1):
     st.write("Sau khi nhấn nút Đồng ý, mật khẩu sẽ được đổi và tự động đăng xuất.")
     if st.button("Đồng ý"):
         doi_mat_khau(row,mkm1)
@@ -114,27 +115,7 @@ if submit:
         data1 = data.loc[data["Nhân viên"] == st.session_state.username]
         if mkc == data1["Mật khẩu"].tolist()[0]:
             row=data.index[data["Nhân viên"]==st.session_state.username].tolist()[0]
-            warning(row,mkm1)
-            # if "agree" not in st.session_state or st.session_state.agree == False:
-            #     st.write("ok")
-            # else:
-            #     doi_mat_khau(row,mkm1)
+            notification(row,mkm1)
         else:
             st.session_state.nhap_sai +=1
-            st.warning(f"Bạn đã nhập sai mặt khẩu cũ. Bạn còn {3-st.session_state.nhap_sai} lần thử")
-        # if mkc == str(data1.at[0, "Mật khẩu"]):
-        #     row = int(data.index[data["Nhân viên"]==st.session_state.username])
-        #     doi_mat_khau(row,mkm1)
-        # data1=data.loc[data["Mã nhân viên"]==mnv]
-        # if data1.empty:
-        #     st.warning("Mã nhân viên khôg tồn tại")
-        # else:
-        #     data1=data1.loc["Họ và tên"==ho_ten]
-        #     if data1.empty:
-        #         st.warning("Tên nhân viên không trùng khớp với mã")
-        #     else:
-        #         if mkc == str(data1.at[0, "Mật khẩu"]):
-        #             row = int(data.index[data["Mã nhân viên"]==mnv])
-        #             doi_mat_khau(row,mkm1)
-        #         else:
-        #             st.warning("Mật khẩu cũ không chính xác")
+            st.warning(f"Bạn đã nhập sai mật khẩu cũ. Bạn còn {3-st.session_state.nhap_sai} lần thử")

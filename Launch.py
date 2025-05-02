@@ -5,6 +5,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 import pathlib
 
+@st.cache_data(ttl=3600)
 def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -89,11 +90,11 @@ def login():
             st.rerun()
 
 def logout():
-    for key in st.session_state.keys():  # Use list() to avoid runtime modification issues
+    for key in st.session_state.keys():
         del st.session_state[key]
     st.rerun()
 
-#MS
+#MS##########################################################################################################3
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
 img = get_img_as_base64("pages/img/logo.png")

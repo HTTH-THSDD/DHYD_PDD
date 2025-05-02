@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import gspread
-import datetime
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import pathlib
 import base64
 from google.oauth2.service_account import Credentials
@@ -13,6 +14,7 @@ def get_img_as_base64(file):
         data = f.read()
     return base64.b64encode(data).decode()
 
+@st.cache_data(ttl=3600)
 def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -21,6 +23,7 @@ css_path = pathlib.Path("asset/style.css")
 @st.cache_data(ttl=10)
 def get_key_from_value(dictionary, value):
     return next((key for key, val in dictionary.items() if val == value), None)
+
 @st.cache_data(ttl=3600)
 def load_credentials():
     creds_info = {
@@ -131,6 +134,7 @@ def tao_thong_ke(x,y):
             ket_qua=ket_qua.drop("Khoa",axis=1)
         return ket_qua
 
+@st.cache_data(ttl=3600)
 def chon_khoa(khoa):
     placeholder1 = st.empty()
     if st.session_state.phan_quyen in ["1","2","3"]:
@@ -212,6 +216,7 @@ loai_qtkt = {  "All":"Tất cả",
               "CSCS":"Chỉ số chăm sóc điều dưỡng",
               "KHAC":"Khác",
               }
+now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
 with st.form("Thời gian"):
     cold = st.columns([5,5])
     with cold[0]:
@@ -219,15 +224,15 @@ with st.form("Thời gian"):
         label="Ngày bắt đầu",
         value=datetime.date(2025, 1, 1),
         min_value=datetime.date(2025, 1, 1),
-        max_value=datetime.date.today(), 
+        max_value=now_vn.date(), 
         format="DD/MM/YYYY",
         )
     with cold[1]:
         ed = st.date_input(
         label="Ngày kết thúc",
-        value=datetime.date.today(),
+        value=now_vn.date(),
         min_value=datetime.date(2025, 1, 1),
-        max_value=datetime.date.today(), 
+        max_value=now_vn.date(), 
         format="DD/MM/YYYY",
         )
     chon_loai_qtkt = st.selectbox(label="Loại quy trình kỹ thuật",

@@ -33,6 +33,7 @@ def get_img_as_base64(file):
         data = f.read()
     return base64.b64encode(data).decode()
 
+@st.cache_data(ttl=3600)
 def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -81,7 +82,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:#ebb434, padding-left:15px">TRANG QUẢN TRỊ</p>
+        <p style="color:#ebb434, padding-left:15px">TRANG QUẢN LÝ MẬT KHẨU & PHÂN QUYỀN</p>
         </div>
     </div>
     <div class="header-underline"></div>

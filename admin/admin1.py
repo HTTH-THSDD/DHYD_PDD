@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import gspread
-import datetime
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import pathlib
 import base64
 from google.oauth2.service_account import Credentials
@@ -34,6 +35,7 @@ def get_img_as_base64(file):
         data = f.read()
     return base64.b64encode(data).decode()
 
+@st.cache_data(ttl=3600)
 def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -135,6 +137,7 @@ outp = st.selectbox(label="Output",
             index=0,             
             )
 
+now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")) 
 if outp and outp != "---":
         with st.expander("Mở rộng 🌦️"):
             with st.form("Thời gian"):
@@ -144,16 +147,16 @@ if outp and outp != "---":
                     label="Ngày bắt đầu",
                     value=datetime.date(2025, 1, 1),
                     min_value=datetime.date(2025, 1, 1),
-                    max_value=datetime.date.today(), 
+                    max_value=now_vn.date(), 
                     format="DD/MM/YYYY",
                     key="sd",
                     )
                 with cold[1]:
                     ed = st.date_input(
                     label="Ngày kết thúc",
-                    value=datetime.date.today(),
+                    value=now_vn.date(),
                     min_value=datetime.date(2025, 1, 1),
-                    max_value=datetime.date.today(), 
+                    max_value=now_vn.date(), 
                     format="DD/MM/YYYY",
                     key="ed",
                     )
