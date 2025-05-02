@@ -224,7 +224,7 @@ if (
     for i in range (0,len(quy_trinh)):
         st.markdown(f"Bước {quy_trinh.iloc[i, 5]}: {quy_trinh.iloc[i, 7]}", unsafe_allow_html=True)
         st.radio(
-        label="Lựa chọn"
+        label="Lựa chọn",
         options=luachon,
         key=f"radio_{i}",
         index=None,
