@@ -204,7 +204,7 @@ st.markdown(f"""
     <div class="header-underline"></div>
 
  """, unsafe_allow_html=True)
-html_code = f'<p class="demuc"><i>Nhân viên giám sát: {st.session_state.username}</i></p>'
+html_code = f'<p class="demuc"><i>Nhân viên đánh giá: {st.session_state.username}</i></p>'
 st.html(html_code)
 vitrigs()
 #st.html(f'<p class="demuc"><i>Nhân viên thực hiện quy trình</i></p>')
@@ -241,12 +241,7 @@ if (
                 buoc_chua_dien.append(f"{quy_trinh.iloc[j,6]}")
         buoc_chua_dien_str = ", ".join(buoc_chua_dien)
         if buoc_chua_dien_str == "":
-            prechecktable = precheck_table()
-            st.write(f"Nhân viên giám sát: {st.session_state.username}")
-            st.write(f"Vị trí nhân viên giám sát: {st.session_state.vtgs_GSQT}")
-            st.write(f"Khoa: {st.session_state.khoa_GSQT}")
-            st.write(f"Nhân viên thực hiện quy trình: {st.session_state.nv_thuchien_GSQT}")
-            st.write(st.session_state.ten_quy_trinh)
+            prechecktable = precheck_table()         
             st.dataframe(prechecktable, hide_index=True)
             if st.button("Lưu"):
                 upload_data_GS(prechecktable)

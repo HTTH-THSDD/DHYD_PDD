@@ -98,7 +98,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:#ebb434, padding-left:15px">TRANG QUẢN TRỊ</p>
+        <p style="color:#b36002; padding-left:180px">TRANG QUẢN TRỊ</p>
         </div>
     </div>
     <div class="header-underline"></div>

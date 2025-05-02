@@ -68,8 +68,8 @@ def doi_mat_khau(row, mkm1):
 
 @st.dialog("Thông báo")
 def notification(row,mkm1):
-    st.write("Sau khi nhấn nút Đồng ý, mật khẩu sẽ được đổi và tự động đăng xuất.")
-    if st.button("Đồng ý"):
+    st.write("Nhấn xác nhận để đổi mật khẩu và đăng xuất.")
+    if st.button("Xác nhận"):
         doi_mat_khau(row,mkm1)
 
     

@@ -134,7 +134,10 @@ def xuli(data,a,ten_ma,sd,ed):
     end_date = ed + timedelta(days=1)
     data = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] <= pd.Timestamp(end_date))]
     if data.empty:
-        st.toast("Không có dữ liệu trong khoảng thời gian yêu cầu")
+        if a == "Tên người đánh giá":
+            st.warning("Không có dữ liệu tham gia giám sát trong khoảng thời gian yêu cầu")
+        else:
+            st.warning("Không có dữ liệu được giám sát trong khoảng thời gian yêu cầu")
     else:
         data.insert(0, 'STT', range(1, len(data) + 1))
         data['Tỉ lệ tuân thủ'] = data['Tỉ lệ tuân thủ'].str.slice(0, 4)
@@ -155,7 +158,7 @@ def xuli(data,a,ten_ma,sd,ed):
                 with st.expander("Thông tin chi tiết:"):
                     st.dataframe(data, hide_index=True)
             else:
-                html_code = f'<p class="ttcn"><i>Thông tin được đánh giá giám sát quy trình:</i></p>'
+                html_code = f'<p class="ttcn"><i>Thông tin được đánh giá thực hiện quy trình:</i></p>'
                 st.html(html_code)
                 st.write(f"Nhân viên {ten_ma} đã được đánh giá kỹ thuật {len(data)} lần trong thời gian yêu cầu.")
                 with st.expander("Thông tin chi tiết:"):
@@ -168,16 +171,19 @@ def xuli2(data,x):
     end_date = ed + timedelta(days=1)
     data = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] <= pd.Timestamp(end_date))]
     if data.empty:
-        st.toast("Không có dữ liệu trong khoảng thời gian yêu cầu")
+        if x == "hồ sơ bệnh án":
+            st.warning("Không có dữ liệu đánh giá hồ sơ bệnh án trong khoảng thời gian yêu cầu")
+        else:
+            st.warning("Không có dữ liệu đánh giá giáo dục sức khỏe trong khoảng thời gian yêu cầu")
     else:
         data.insert(0, 'STT', range(1, len(data) + 1))
         data = data.drop(["Họ tên người đánh giá"], axis=1)
         data = data.rename(columns={"Người đánh giá": "Vị trí đánh giá"})
         data["Data"] = data["Data"].str.replace("#", "\n")
         data["Data"] = data["Data"].str.replace("|", "  ")
-        with st.expander("Thông tin:"):
-            html_code = f'<p class="ttcn"><i>Thông tin đánh giá {x}</i></p>'
-            st.html(html_code)
+        html_code = f'<p class="ttcn"><i>Thông tin đánh giá {x}</i></p>'
+        st.html(html_code)
+        with st.expander("Thông tin chi tiết:"):
             st.dataframe(data, hide_index=True)
 # Main Section ####################################################################################
 css_path = pathlib.Path("asset/style.css")
@@ -194,7 +200,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:#34eb89">THÔNG TIN TÀI KHOẢN</p>
+        <p style="color:#9F2B68">THÔNG TIN TÀI KHOẢN</p>
         </div>
     </div>
     <div class="header-underline"></div>
@@ -206,7 +212,7 @@ data_final = data_final[["Mã số","Khối","Khoa","Họ và tên","Năm bắt 
 data_final_dict = data_final.iloc[0].to_dict()
 html_code = f"""
 <div class="bangtt">
-    <h4 style="color:#2e7d32;">📋 Thông tin nhân viên</h4>
+    <h4 style="color:#9F2B68;">📋 Thông tin nhân viên</h4>
     <table style="width:100%;">
         <tr><td><b>Mã số nhân viên:</b></td><td>{data_final_dict["Mã số"]}</td></tr>
         <tr><td><b>Khối:</b></td><td>{data_final_dict["Khối"]}</td></tr>

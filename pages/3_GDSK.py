@@ -181,7 +181,7 @@ st.markdown(f"""
     </div>
     <div class="header-underline"></div>
  """, unsafe_allow_html=True)
-html_code = f'<p class="demuc"><i>Nhân viên giám sát: {st.session_state.username}</i></p>'
+html_code = f'<p class="demuc"><i>Nhân viên đánh giá: {st.session_state.username}</i></p>'
 st.html(html_code)
 vitri_gdsk()
 thong_tin_hanh_chinh()

@@ -189,7 +189,7 @@ st.markdown(f"""
     <div class="header-underline"></div>
 
  """, unsafe_allow_html=True)
-html_code = f'<p class="demuc"><i>Điều dưỡng: {st.session_state.username}</i></p>'
+html_code = f'<p class="demuc"><i>Nhân viên: {st.session_state.username}</i></p>'
 st.html(html_code)
 sheeti1 = st.secrets["sheet_name"]["input_1"]
 data = load_data1(sheeti1)

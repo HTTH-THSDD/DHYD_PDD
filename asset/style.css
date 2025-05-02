@@ -138,7 +138,7 @@
     align-items: left;
 }
 .bangtt {
-    border: 2px solid #4CAF50; 
+    border: 2px solid #9F2B68; 
     border-radius: 10px; 
     padding: 20px; 
     background-color: #f9f9f9;
@@ -277,6 +277,18 @@ label[for^="text_input_"] div p {
     width: 200px;
     
 }
+div[role="dialog"] {
+    background-color: #ffffff;
+    border: 2px solid #0887c2;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
+
+[data-testid="stBaseButton-secondary"] {
+    background-color: #ffffff;
+    color: black;
+}
 
 [data-testid="stDateInput"] p {
     font-size:15px !important;
@@ -333,8 +345,8 @@ label[for^="text_input_"] div p {
     top: 200px;
     position: fixed;
     display: flex;
-    background-color: #008080;
-    text-emphasis-color: #000000;
+    background-color: #02b6b6;
+    color: #000000;
 }
 [data-testid="stHeader"] {
     height: 0% !important;

@@ -80,7 +80,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:#ebb434, padding-left:15px">TRANG QUẢN LÝ MẬT KHẨU & PHÂN QUYỀN</p>
+        <p style="color:#b36002; padding-left:70px">TRANG QUẢN LÝ MẬT KHẨU & PHÂN QUYỀN</p>
         </div>
     </div>
     <div class="header-underline"></div>

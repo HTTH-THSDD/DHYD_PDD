@@ -137,7 +137,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:#34eb89">YÊU CẦU BỔ SUNG/PHÂN QUYỀN</p>
+        <p style="color:#9F2B68">YÊU CẦU BỔ SUNG/PHÂN QUYỀN</p>
         </div>
     </div>
     <div class="header-underline"></div>
