@@ -56,11 +56,23 @@ def load_data(x):
 def doi_mat_khau(row, mkm1):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
-    sheet = gc.open("Input-st-DSNS").sheet1
+    sheeti1 = st.secrets["sheet_name"]["input_1"]
+    sheet = gc.open(sheeti1).sheet1
     mk= mkm1.upper()
     sheet.update_cell(row+2,22,mk)
     st.toast("Đổi mật khẩu thành công")
+    for key in st.session_state.keys():  # Use list() to avoid runtime modification issues
+        del st.session_state[key]
+    st.cache_data.clear()
+    st.rerun()
 
+@st.dialog("Thông báo")
+def warning(row,mkm1):
+    st.write("Sau khi nhấn nút Đồng ý, mật khẩu sẽ được đổi và tự động đăng xuất.")
+    if st.button("Đồng ý"):
+        doi_mat_khau(row,mkm1)
+
+    
 # Main Section ####################################################################################
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
@@ -82,7 +94,8 @@ st.markdown(f"""
  """, unsafe_allow_html=True)
 html_code = f'<p class="demuc"><i>Nhân viên gửi yêu cầu: {st.session_state.username}</i></p>'
 st.html(html_code)
-data = load_data("Input-st-DSNS")
+sheeti1 = st.secrets["sheet_name"]["input_1"]
+data = load_data(sheeti1)
 if "nhap_sai" not in st.session_state:
     st.session_state.nhap_sai = 0
 else:
@@ -101,7 +114,11 @@ if submit:
         data1 = data.loc[data["Nhân viên"] == st.session_state.username]
         if mkc == data1["Mật khẩu"].tolist()[0]:
             row=data.index[data["Nhân viên"]==st.session_state.username].tolist()[0]
-            doi_mat_khau(row,mkm1)
+            warning(row,mkm1)
+            # if "agree" not in st.session_state or st.session_state.agree == False:
+            #     st.write("ok")
+            # else:
+            #     doi_mat_khau(row,mkm1)
         else:
             st.session_state.nhap_sai +=1
             st.warning(f"Bạn đã nhập sai mặt khẩu cũ. Bạn còn {3-st.session_state.nhap_sai} lần thử")

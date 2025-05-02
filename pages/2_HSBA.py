@@ -53,7 +53,8 @@ def load_data(x):
     return data_final
 
 def thong_tin_hanh_chinh():
-    data_nv = load_data("Input-st-DSNS")
+    sheeti1 = st.secrets["sheet_name"]["input_1"]
+    data_nv = load_data(sheeti1)
     chon_khoa = st.selectbox("Khoa/Đơn vị ",
                              options=data_nv["Khoa"].unique(),
                              index=None,
@@ -80,7 +81,8 @@ def vitri_hsba():
 def upload_data_HSBA(len_data):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
-    sheet = gc.open("Output-st-HSBA").sheet1
+    sheeto2 = st.secrets["sheet_name"]["output_2"]
+    sheet = gc.open(sheeto2).sheet1
     now = datetime.datetime.now()
     column_timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
     column_khoa = str(st.session_state.khoa_HSBA)
@@ -89,6 +91,10 @@ def upload_data_HSBA(len_data):
     column_vtndg = str(st.session_state.vtgs_HSBA)
     column_nv_gs = str(st.session_state.username)
     column_data=""
+    so_buoc_dung_du = 0
+    so_buoc_dung_nhung_chua_du = 0
+    so_buoc_Khong_thuc_hien = 0
+    tong_so_buoc_tru_KAD = int(len_data)
     for i in range (0, int(len_data)):
         buoc = f"B{i+1}" 
         ketqua = str(st.session_state[f"hsbaradio_{i}"])  
@@ -98,16 +104,27 @@ def upload_data_HSBA(len_data):
             column_data += buoc + "|" + ketqua + "|" + ngay_taophieu + "|#"
         else:
             column_data += buoc + "|" + ketqua + "|" + ngay_taophieu + "|" + tondong + "#"
+        if ketqua == "Thực hiện đúng, đủ":
+            so_buoc_dung_du +=1
+        elif ketqua == "Thực hiện đúng nhưng chưa đủ":
+            so_buoc_dung_nhung_chua_du +=1
+        elif ketqua == "KHÔNG thực hiện, hoặc ghi sai":
+            so_buoc_Khong_thuc_hien +=1
+        else:
+            tong_so_buoc_tru_KAD -=1
+        column_tl_dung_du = round(so_buoc_dung_du/tong_so_buoc_tru_KAD,4)
+        column_tl_dung_nhung_chua_du = round(so_buoc_dung_nhung_chua_du/tong_so_buoc_tru_KAD,4)
+        column_tl_Khong_thuc_hien = round(so_buoc_Khong_thuc_hien/tong_so_buoc_tru_KAD,4)
     column_data=column_data.rstrip("#")
-    sheet.append_row([column_timestamp, column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data])
+    sheet.append_row([column_timestamp, column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data,column_tl_dung_du,column_tl_dung_nhung_chua_du,column_tl_Khong_thuc_hien])
     warning (3)
 
 def kiemtra_svv():
-    match = re.match(r"^([A-Za-z0-9]{1}\d{1})(-)(\d{7})$",st.session_state.svv_HSBA)
+    match = re.match(r"^\d{2}-\d{7}$",st.session_state.svv_HSBA)
     if match:
         return True
     else:
-        False
+        return False
 
 @st.dialog("Thông báo")
 def warning(x):
@@ -142,7 +159,8 @@ html_code = f'<p class="demuc"><i>Nhân viên đánh giá: {st.session_state.use
 st.html(html_code)
 vitri_hsba()
 thong_tin_hanh_chinh()
-data_hsba = load_data("Input-st-HSBA")
+sheeti3 = st.secrets["sheet_name"]["input_3"]
+data_hsba = load_data(sheeti3)
 if "khoa_HSBA" in st.session_state and st.session_state["khoa_HSBA"] and "vtgs_HSBA" in st.session_state and st.session_state["vtgs_HSBA"] is not None:
     st.markdown('''
     <h4><span style="color:#003b62">Phần đánh giá hồ sơ bệnh án

@@ -47,11 +47,10 @@ def load_data(x):
     header = data[0]
     values = data[1:]
     data_final = pd.DataFrame(values, columns=header)
-    if st.session_state.phan_quyen == "2" and x == "Input-st-DSNS":
+    if st.session_state.phan_quyen == "2" and x == st.secrets["sheet_name"]["input_1"]:
         data_final = data_final.drop(["Phân quyền","Mật khẩu"], axis=1)
-    if x == "Input-st-GSQT":
+    if x == st.secrets["sheet_name"]["input_2"]:
         data_final = data_final.drop(["Kết quả đánh giá","Tồn đọng"], axis=1)
-
     return data_final
 
 @st.cache_data(ttl=10)
@@ -69,35 +68,19 @@ def load_data_GSheet(name):
     start_date = st.session_state.sd
     end_date = st.session_state.ed + datetime.timedelta(days=1)
     df = df[(df['Timestamp'] >= pd.Timestamp(start_date)) & (df['Timestamp'] < pd.Timestamp(end_date))]
-    if name == "Output-st-GSQT":
+    if name == st.secrets["sheet_name"]["output_1"]:
         df = df.drop(["Mã quy trình","Tỉ lệ tuân thủ","Tỉ lệ an toàn"], axis=1)
     return df
 
 def change_GS(stt,tt1,kq1):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
-    sheet = gc.open("Output-st-YC").sheet1
+    sheeto4 = st.secrets["sheet_name"]["output_4"]
+    sheet = gc.open(sheeto4).sheet1
     sheet.update_cell(stt+1, 8, tt1)
     sheet.update_cell(stt+1, 9, kq1)
     st.toast("Đã cập nhật thay đổi")
 
-def phan_quyen(row,quyen):
-    credentials = load_credentials()
-    gc = gspread.authorize(credentials)
-    sheet = gc.open("Input-st-DSNS").sheet1
-    if quyen in [""," "]:
-         sheet.update_cell(row+2, 21, "")
-    else:
-        sheet.update_cell(row+2, 21, quyen)
-    st.toast("Phân quyền thành công")
-
-def doi_mat_khau(row, mkm1):
-    credentials = load_credentials()
-    gc = gspread.authorize(credentials)
-    sheet = gc.open("Input-st-DSNS").sheet1
-    mk= mkm1.upper()
-    sheet.update_cell(row+2,22,mk)
-    st.toast("Đổi mật khẩu thành công")
 #########################################################################################################
 #Cài thời gian sẵn
 css_path = pathlib.Path("asset/style.css")
@@ -123,10 +106,10 @@ st.html(html_code)
 
 #Giá trị này giúp cache nhận ra sự thay đổi đầu vào
 input_data = {
-              "Input-st-DSNS":"Danh sách nhân sự",
-              "Input-st-GSQT":"Giám sát quy trình",
-              "Input-st-HSBA":"Hồ sơ bệnh án",
-              "Input-st-GDSK":"Giáo dục sức khỏe",
+              "input_1":"Danh sách nhân sự",
+              "input_2":"Giám sát quy trình",
+              "input_3":"Hồ sơ bệnh án",
+              "input_4":"Giáo dục sức khỏe",
               }
 inp = st.selectbox(label="Input",
             options=["---"]+ list(input_data.values()),
@@ -136,15 +119,16 @@ if inp and inp != "---":
     with st.expander("Mở rộng 🌦️"):
         try:
             a = get_key_from_value(input_data, inp)
-            data_in = load_data(a)
+            sheet = st.secrets["sheet_name"][a]
+            data_in = load_data(sheet)
             st.dataframe(data_in, hide_index=True,height=225)
         except:
             st.write("Chọn bảng input")
 output_data = {
-              "Output-st-GSQT":"Data giám sát quy trình",
-              "Output-st-HSBA":"Data hồ sơ bệnh án",
-              "Output-st-GDSK":"Data giáo dục sức khỏe",
-              "Output-st-YC":"Các yêu cầu bổ sung/phân quyền"
+              "output_1":"Data giám sát quy trình",
+              "output_2":"Data hồ sơ bệnh án",
+              "output_3":"Data giáo dục sức khỏe",
+              "output_4":"Các yêu cầu bổ sung/phân quyền"
               }
 outp = st.selectbox(label="Output",
             options=["---"]+ list(output_data.values()),
@@ -179,8 +163,9 @@ if outp and outp != "---":
                     st.error("Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")            
             try:
                 placeholder = st.empty()
-                a = get_key_from_value(output_data, outp)
-                data_out = load_data_GSheet(a)
+                b = get_key_from_value(output_data, outp)
+                sheetb = st.secrets["sheet_name"][b]
+                data_out = load_data_GSheet(sheetb)
                 if data_out.empty:
                     st.warning("Không có dữ liệu trong khoảng thời gian yêu cầu")
                 else:
@@ -225,7 +210,7 @@ if outp and outp != "---":
                                 else:
                                     kq1 = "0"
                                 change_GS(stt,tt1,kq1)
-                                data_out = load_data_GSheet(a)
+                                data_out = load_data_GSheet(sheetb)
                                 placeholder.dataframe(data_out, hide_index=True)
             except:
                 st.write("Không tìm thấy giá trị tương ứng")

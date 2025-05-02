@@ -52,7 +52,8 @@ def load_data(x):
     return data_final
 
 def thong_tin_hanh_chinh():
-    data_nv = load_data("Input-st-DSNS")
+    sheeti1 = st.secrets["sheet_name"]["input_1"]
+    data_nv = load_data(sheeti1)
     chon_khoa = st.selectbox("Khoa/Đơn vị ",
                              options=data_nv["Khoa"].unique(),
                              index=None,
@@ -114,7 +115,8 @@ def vitri_gdsk():
 def upload_data_GDSK(len_data):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
-    sheet = gc.open("Output-st-GDSK").sheet1
+    sheeto3 = st.secrets["sheet_name"]["output_3"]
+    sheet = gc.open(sheeto3).sheet1
     now = datetime.datetime.now()
     column_timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
     column_khoa = str(st.session_state.khoa_GDSK)
@@ -123,6 +125,10 @@ def upload_data_GDSK(len_data):
     column_vtndg = str(st.session_state.vtgs_GDSK)
     column_nv_gs = str(st.session_state.username)
     column_data=""
+    so_buoc_hieu = 0
+    so_buoc_biet = 0
+    so_buoc_khong_biet = 0
+    tong_so_buoc_tru_KAD = int(len_data)
     for i in range (0, int(len_data)):
         buoc = f"ND{i+1}" 
         ketqua = str(st.session_state[f"gdskradio_{i}"])  
@@ -132,18 +138,28 @@ def upload_data_GDSK(len_data):
             column_data += buoc + "|" + ketqua + "|" + ngay_taophieu + "#"
         else:
             column_data += buoc + "|" + ketqua + "|" + ngay_taophieu + "|" + tondong +"#"
+        if ketqua == "Hiểu":
+            so_buoc_hieu +=1
+        elif ketqua == "Biết":
+            so_buoc_biet +=1
+        elif ketqua == "Không biết":
+            so_buoc_khong_biet +=1
+        else:
+            tong_so_buoc_tru_KAD -=1
+        column_tl_hieu = round(so_buoc_hieu/tong_so_buoc_tru_KAD,4)
+        column_tl_buoc_biet = round(so_buoc_biet/tong_so_buoc_tru_KAD,4)
+        column_tl_khong_biet = round(so_buoc_khong_biet/tong_so_buoc_tru_KAD,4)
     column_data=column_data.rstrip("#")
-    sheet.append_row([column_timestamp, column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data])
+    sheet.append_row([column_timestamp, column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data,column_tl_hieu,column_tl_buoc_biet,column_tl_khong_biet])
     warning(3)
 
 def kiemtra_svv():
-    match = re.match(r"^\d{2}-\d{7}$",st.session_state.svv_HSBA)
-    if len(st.session_state.svv_HSBA) != 10:
+    match = re.match(r"^\d{2}-\d{7}$",st.session_state.svv_GDSK)
+    if match:
+        return True
+    else:
         return False
-    elif str(st.session_state.svv_HSBA)[2] != "-":
-        return False
-    elif match == False:
-        return False
+
 
 @st.dialog("Thông báo")
 def warning(x):
@@ -153,8 +169,6 @@ def warning(x):
         st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
     if x == 3:
         st.success("Đã lưu thành công")
-    if x == 4:
-        st.warning("Số vào viện không hợp lệ")
     if x == 4:
         st.warning("Số vào viện không hợp lệ. Vui lòng nhập lại VD: 25-1234567")
 
@@ -181,7 +195,8 @@ html_code = f'<p class="demuc"><i>Nhân viên giám sát: {st.session_state.user
 st.html(html_code)
 vitri_gdsk()
 thong_tin_hanh_chinh()
-data_gdsk = load_data("Input-st-GDSK")
+sheeti4 = st.secrets["sheet_name"]["input_4"]
+data_gdsk = load_data(sheeti4)
 if "khoa_GDSK" in st.session_state and st.session_state["khoa_GDSK"] and "vtgs_GDSK" in st.session_state and st.session_state["vtgs_GDSK"] is not None:
 # if "khoa_GDSK" in st.session_state and "nv_thuchien_GDSK" in st.session_state and "vtgs_GDSK" in st.session_state:
     st.markdown('''

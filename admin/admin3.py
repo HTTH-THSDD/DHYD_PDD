@@ -17,11 +17,6 @@ def get_img_as_base64(file):
 def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-@st.cache_data(ttl=3600)
-def load_data(x):
-    data = pd.read_csv(f".csv/{x}.csv")
-    return (data)
 #########################################################################################################
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)

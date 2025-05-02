@@ -59,7 +59,8 @@ def login():
         </div>
     """, unsafe_allow_html=True)
     #Lấy dữ liệu nhân viên
-    data = load_data("Input-st-DSNS")
+    sheeti1 = st.secrets["sheet_name"]["input_1"]
+    data = load_data(sheeti1)
     tennv = data["Nhân viên"]
     mk = data['Mật khẩu']
     pq = data["Phân quyền"]
@@ -141,7 +142,7 @@ GDSK = st.Page("pages/3_GDSK.py",
 
 BC_GSQT = st.Page("reports/rp_GSQT.py", title="Báo cáo giám sát quy trình", icon="🍡")
 BC_HSBA = st.Page("reports/rp_HSBA.py", title="Báo cáo hồ sơ bệnh án", icon="🍢")
-BC_GDSK = st.Page("reports/rp_GDSK.py", title="Báo cáo giáo dục sức khỏe", icon="🍢")
+BC_GDSK = st.Page("reports/rp_GDSK.py", title="Báo cáo giáo dục sức khỏe", icon="🏸")
 
 
 if "username" in st.session_state:

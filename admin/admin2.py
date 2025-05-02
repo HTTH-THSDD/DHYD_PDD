@@ -51,7 +51,8 @@ def load_data(x):
 def phan_quyen(row,quyen):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
-    sheet = gc.open("Input-st-DSNS").sheet1
+    sheeti1 =  st.secrets["sheet_name"]["input_1"]
+    sheet = gc.open(sheeti1).sheet1
     if quyen in [""," "]:
          sheet.update_cell(row+2, 21, "")
     else:
@@ -61,7 +62,8 @@ def phan_quyen(row,quyen):
 def doi_mat_khau(row, mkm1):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
-    sheet = gc.open("Input-st-DSNS").sheet1
+    sheeti1 =  st.secrets["sheet_name"]["input_1"]
+    sheet = gc.open(sheeti1).sheet1
     mk= mkm1.upper()
     sheet.update_cell(row+2,22,mk)
     st.toast("Đổi mật khẩu thành công")
@@ -87,7 +89,8 @@ st.markdown(f"""
  """, unsafe_allow_html=True)
 html_code = f'<p class="admin_1"><i>Xin chào admin:{st.session_state.username}</i></p>'
 st.html(html_code)
-data_in = load_data("Input-st-DSNS")
+sheeti1 =  st.secrets["sheet_name"]["input_1"]
+data_in = load_data(sheeti1)
 data_in1 = data_in[["Nhân viên","Phân quyền","Mật khẩu"]]
 
 data_in2 = data_in[["Nhân viên","Phân quyền","Mật khẩu", "Mã số"]]

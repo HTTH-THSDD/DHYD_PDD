@@ -106,7 +106,8 @@ def highlight_status(val):
 def upload_data_yc():
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
-    sheet = gc.open("Output-st-YC").sheet1
+    sheeto4 = st.secrets["sheet_name"]["output_4"]
+    sheet = gc.open(sheeto4).sheet1
     column_index = len(sheet.get_all_values())
     now = datetime.datetime.now()
     column_timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -132,12 +133,14 @@ def xuli(data,a,ten_ma,sd,ed):
     end_date = ed + datetime.timedelta(days=1)
     data = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] <= pd.Timestamp(end_date))]
     if data.empty:
-        st.warning("Không có dữ liệu trong khoảng thời gian yêu cầu")
+        st.toast("Không có dữ liệu trong khoảng thời gian yêu cầu")
     else:
         data.insert(0, 'STT', range(1, len(data) + 1))
         data['Tỉ lệ tuân thủ'] = data['Tỉ lệ tuân thủ'].str.slice(0, 4)
         data['Tỉ lệ an toàn'] = data['Tỉ lệ an toàn'].str.slice(0, 4)
         data = data.drop([a,"Index"], axis=1)
+        data["Data"] = data["Data"].str.replace("#", "\n")
+        data["Data"] = data["Data"].str.replace("|", "  ")
         if data.empty:
             if a == "Tên người đánh giá":
                 st.write("Bạn chưa không tham gia đánh giá quy trình kỹ thuật trong thời gian yêu cầu")
@@ -145,13 +148,37 @@ def xuli(data,a,ten_ma,sd,ed):
                 st.write("Bạn chưa được đánh giá kỹ thuật thực hiện quy trình trong thời gian yêu cầu")
         else:
             if a == "Tên người đánh giá":
+                html_code = f'<p class="ttcn"><i>Thông tin tham gia đánh giá giám sát quy trình:</i></p>'
+                st.html(html_code)
                 st.write(f"Nhân viên {ten_ma} đã tham gia giám sát {len(data)} lần trong thời gian yêu cầu.")
                 with st.expander("Thông tin chi tiết:"):
                     st.dataframe(data, hide_index=True)
             else:
+                html_code = f'<p class="ttcn"><i>Thông tin được đánh giá giám sát quy trình:</i></p>'
+                st.html(html_code)
                 st.write(f"Nhân viên {ten_ma} đã được đánh giá kỹ thuật {len(data)} lần trong thời gian yêu cầu.")
                 with st.expander("Thông tin chi tiết:"):
                     st.dataframe(data, hide_index=True)
+
+def xuli2(data,x):
+    data = data.loc[data["Họ tên người đánh giá"] == st.session_state.username]
+    data['Timestamp'] = pd.to_datetime(data['Timestamp'], errors='coerce')
+    start_date = sd
+    end_date = ed + datetime.timedelta(days=1)
+    data = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] <= pd.Timestamp(end_date))]
+    if data.empty:
+        st.toast("Không có dữ liệu trong khoảng thời gian yêu cầu")
+    else:
+        data.insert(0, 'STT', range(1, len(data) + 1))
+        data = data.drop(["Họ tên người đánh giá"], axis=1)
+        data = data.rename(columns={"Người đánh giá": "Vị trí đánh giá"})
+        data["Data"] = data["Data"].str.replace("#", "\n")
+        data["Data"] = data["Data"].str.replace("|", "  ")
+        with st.expander("Thông tin:"):
+            html_code = f'<p class="ttcn"><i>Thông tin đánh giá {x}</i></p>'
+            st.html(html_code)
+            st.dataframe(data, hide_index=True)
+
 
 # Main Section ####################################################################################
 css_path = pathlib.Path("asset/style.css")
@@ -172,16 +199,39 @@ st.markdown(f"""
         </div>
     </div>
     <div class="header-underline"></div>
-
  """, unsafe_allow_html=True)
-html_code = f'<p class="demuc"><i>Thông tin nhân viên</i></p>'
-st.html(html_code)
-data_canhan = load_data("Input-st-DSNS")
+sheeti1 = st.secrets["sheet_name"]["input_1"]
+data_canhan = load_data(sheeti1)
 data_final = data_canhan.loc[data_canhan["Nhân viên"]==st.session_state.username]
 data_final = data_final[["Mã số","Khối","Khoa","Họ và tên","Năm bắt đầu công tác","Ngày sinh","Bằng cấp chuyên môn","Phân cấp năng lực", "Email","Sđt"]]
-st.dataframe(data_final, hide_index=True)
-datags = load_data("Output-st-GSQT")
+data_final_dict = data_final.iloc[0].to_dict()
+html_code = f"""
+<div class="bangtt">
+    <h4 style="color:#2e7d32;">📋 Thông tin nhân viên</h4>
+    <table style="width:100%;">
+        <tr><td><b>Mã số nhân viên:</b></td><td>{data_final_dict["Mã số"]}</td></tr>
+        <tr><td><b>Khối:</b></td><td>{data_final_dict["Khối"]}</td></tr>
+        <tr><td><b>Khoa:</b></td><td>{data_final_dict["Khoa"]}</td></tr>
+        <tr><td><b>Họ và tên:</b></td><td>{data_final_dict["Họ và tên"]}</td></tr>
+        <tr><td><b>Năm bắt đầu công tác:</b></td><td>{data_final_dict["Năm bắt đầu công tác"]}</td></tr>
+        <tr><td><b>Ngày sinh:</b></td><td>{data_final_dict["Ngày sinh"]}</td></tr>
+        <tr><td><b>Bằng cấp chuyên môn:</b></td><td>{data_final_dict["Bằng cấp chuyên môn"]}</td></tr>
+        <tr><td><b>Phân cấp năng lực:</b></td><td>{data_final_dict["Phân cấp năng lực"]}</td></tr>
+        <tr><td><b>Email:</b></td><td>{data_final_dict["Email"]}</td></tr>
+        <tr><td><b>SĐT:</b></td><td>{data_final_dict["Sđt"]}</td></tr>
+    </table>
+</div>
+"""
+st.markdown(html_code, unsafe_allow_html=True)
+sheeto1 = st.secrets["sheet_name"]["output_1"]
+datags = load_data(sheeto1)
+sheeto2 = st.secrets["sheet_name"]["output_2"]
+databa = load_data(sheeto2)
+sheeto3 = st.secrets["sheet_name"]["output_3"]
+datagd = load_data(sheeto3)
 with st.form("Thời gian"):
+    html_code = f'<p class="ttcn"><i>Thông tin giám sát cá nhân</i></p>'
+    st.html(html_code)
     cold = st.columns([5,5])
     with cold[0]:
         sd = st.date_input(
@@ -206,3 +256,5 @@ if submit_thoigian:
     else:
         xuli(datags,"Tên người đánh giá",ten_ma,sd,ed)
         xuli(datags,"Tên người thực hiện",ten_ma,sd,ed)
+        xuli2(databa,"hồ sơ bệnh án")
+        xuli2(datagd,"giáo dục sức khỏe")

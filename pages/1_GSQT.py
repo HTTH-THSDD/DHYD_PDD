@@ -51,7 +51,8 @@ def load_data(x):
     return data_final
 
 def thong_tin_hanh_chinh():
-    data_nv = load_data("Input-st-DSNS")
+    sheeti1 = st.secrets["sheet_name"]["input_1"]
+    data_nv = load_data(sheeti1)
     chon_khoa = st.selectbox("Khoa/Đơn vị ",
                              options=data_nv["Khoa"].unique(),
                              index=None,
@@ -87,7 +88,8 @@ def vitrigs():
 
 
 def bang_kiem_quy_trinh():
-    data_qt2 = load_data("Input-st-GSQT")
+    sheeti2 = st.secrets["sheet_name"]["input_2"]
+    data_qt2 = load_data(sheeti2)
     chon_qt = st.selectbox("Tên quy trình",
                              options=data_qt2["Tên quy trình"].unique(),
                              index=None,
@@ -133,6 +135,8 @@ def precheck_table():
 def upload_data_GS(data):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
+    sheeto1 = st.secrets["sheet_name"]["output_1"]
+    sheet = gc.open(sheeto1).sheet1
     sheet = gc.open("Output-st-GSQT").sheet1
     column_index = len(sheet.get_all_values())
     now = datetime.datetime.now()
@@ -163,11 +167,11 @@ def upload_data_GS(data):
             column_data += buoc + "|" + ketqua + "|#"
         else:
             column_data += buoc + "|" + ketqua + "|" + tondong + "#"
-    tltt = so_buoc_dung_du/tong_so_buoc_tru_KAD
+    tltt = round(so_buoc_dung_du/tong_so_buoc_tru_KAD,4)
     if tong_an_toan_tru_an_toan_va_KAD == 0:
         tlan = ""
     else:
-        tlan = buoc_an_toan_dung_du/tong_an_toan_tru_an_toan_va_KAD
+        tlan = round(buoc_an_toan_dung_du/tong_an_toan_tru_an_toan_va_KAD,4)
     column_data=column_data.rstrip("#")
     column_mqt = st.session_state.ma_quy_trinh
     sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan])

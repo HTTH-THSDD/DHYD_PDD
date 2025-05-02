@@ -59,13 +59,11 @@ def load_data_GSheet(name):
     if "Nhân viên yêu cầu" in df.columns:
         username = st.session_state.username
         df = df[df["Nhân viên yêu cầu"] == username]
-        index = []
         ngay_yc = []
         loai_yc = []
         nd_yc = []
         tt = []
         for i in range (0,len(df)):
-            index.append(int(i+1))
             ngay_yc.append(df.iloc[i,1])
             loai_yc.append(df.iloc[i,5])
             nd_yc.append(df.iloc[i,6]) 
@@ -79,13 +77,14 @@ def load_data_GSheet(name):
                     tt.append("Hoàn thành")
                 elif df.iloc[i,8] == 0:
                     tt.append("Từ chối")
-        k = {"STT": pd.Series(index),
-            "Ngày gửi yêu cầu": pd.Series(ngay_yc),
+        k = {   "Ngày gửi yêu cầu": pd.Series(ngay_yc),
                 "Tình trạng": pd.Series(tt),
                 "Loại yêu cầu": pd.Series(loai_yc),
                 "Nội dung": pd.Series(nd_yc),
                 }
         df_yc = pd.DataFrame(k)
+        df_yc = pd.DataFrame(df_yc).sort_values("Ngày gửi yêu cầu", ascending=False)
+        df_yc.insert(0, 'STT', range(1, len(df_yc) + 1))
 
         return df_yc
     else:
@@ -146,7 +145,8 @@ st.markdown(f"""
  """, unsafe_allow_html=True)
 html_code = f'<p class="demuc"><i>Nhân viên gửi yêu cầu: {st.session_state.username}</i></p>'
 st.html(html_code)
-data_nv = load_data("Input-st-DSNS")
+sheeti1 = st.secrets["sheet_name"]["input_1"]
+data_nv = load_data(sheeti1)
 st.session_state.khoa_YC = data_nv.loc[data_nv["Nhân viên"]==st.session_state.username,"Khoa"].values[0]
 tab1, tab2 = st.tabs(["🔍 Gửi yêu cầu", "📊 Các yêu cầu trước đây"])
 with tab1:
@@ -171,19 +171,18 @@ with tab1:
         else:
             st.warning("Xin chọn loại yêu cầu và điền nội dung yêu cầu")
 with tab2:
-    data_yc = load_data_GSheet("Output-st-YC")
+    sheeto4 = st.secrets["sheet_name"]["output_4"]
+    data_yc = load_data_GSheet(sheeto4)
     if not data_yc.empty:
         st.subheader("Danh sách các yêu cầu của bạn:")
         placeholder = st.empty()
         styled_df = data_yc.style.applymap(highlight_status, subset=["Tình trạng"])
         placeholder.dataframe(styled_df, use_container_width=True, hide_index=True)
         # st.dataframe(data_yc[["STT", "Ngày gửi yêu cầu", "Loại yêu cầu", "Nội dung", "Tình trạng"]],hide_index=True)
-        button=st.button("Cập nhật")
-        if button:
-            data_yc = load_data_GSheet("Output-st-YC")
-            styled_df = data_yc.style.applymap(highlight_status, subset=["Tình trạng"])
-            placeholder.dataframe(styled_df, use_container_width=True, hide_index=True)
     else:
         st.warning("Không có yêu cầu nào được tìm thấy.")
-    
+    button=st.button("Cập nhật")
+    if button:
+        load_data_GSheet.clear()
+        st.rerun()
 
