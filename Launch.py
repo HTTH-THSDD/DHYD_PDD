@@ -94,8 +94,6 @@ def logout():
     st.rerun()
 
 #MS
-
-
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
 img = get_img_as_base64("pages/img/logo.png")
