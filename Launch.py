@@ -138,7 +138,7 @@ GDSK = st.Page("pages/3_GDSK.py",
                 icon="👄"
 )
 
-BC_GSQT = st.Page("reports/rp_GSQT.py", title="Báo cáo giám sát quy trình", icon="🔸")
+BC_GSQT = st.Page("reports/rp_GSQT.py", title="Báo cáo giám sát quy trình",  icon="🔸")
 BC_HSBA = st.Page("reports/rp_HSBA.py", title="Báo cáo hồ sơ bệnh án", icon="🔸")
 BC_GDSK = st.Page("reports/rp_GDSK.py", title="Báo cáo giáo dục sức khỏe", icon="🔸")
 
