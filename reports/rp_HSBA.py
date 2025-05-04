@@ -93,18 +93,16 @@ def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
     if y == "Chi tiết":
         df = pd.DataFrame(df).sort_values("Khoa")
-        df = pd.DataFrame(df).sort_values("Timestamp", ascending=False)
+        df = pd.DataFrame(df).sort_values("Timestamp", ascending=True)
         df = chuyendoi_phantram(df,"Tỉ lệ bước đúng, đủ")
         df = chuyendoi_phantram(df,"Tỉ lệ bước đúng, nhưng chưa đủ")
         df = chuyendoi_phantram(df,"Tỉ lệ bước Không thực hiện hoặc ghi sai")
         df = df.drop("Data",axis=1)
-        df.insert(0, 'STT', range(1, len(df) + 1))
         if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
             df = df.drop("Khoa",axis=1)
         return df
     else:
         df = pd.DataFrame(df).sort_values("Khoa")
-        df = pd.DataFrame(df).sort_values("Timestamp", ascending=False)
         df = chuyendoi_phantram(df,"Tỉ lệ bước đúng, đủ")
         df = chuyendoi_phantram(df,"Tỉ lệ bước đúng, nhưng chưa đủ")
         df = chuyendoi_phantram(df,"Tỉ lệ bước Không thực hiện hoặc ghi sai")

@@ -107,7 +107,8 @@ def upload_data_GDSK(len_data):
     gc = gspread.authorize(credentials)
     sheeto3 = st.secrets["sheet_name"]["output_3"]
     sheet = gc.open(sheeto3).sheet1
-    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))   
+    column_stt = len(sheet.get_all_values())
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_GDSK)
     column_svv = str(st.session_state.svv_GDSK)
@@ -140,7 +141,7 @@ def upload_data_GDSK(len_data):
         column_tl_buoc_biet = round(so_buoc_biet/tong_so_buoc_tru_KAD,4)
         column_tl_khong_biet = round(so_buoc_khong_biet/tong_so_buoc_tru_KAD,4)
     column_data=column_data.rstrip("#")
-    sheet.append_row([column_timestamp, column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data,column_tl_hieu,column_tl_buoc_biet,column_tl_khong_biet])
+    sheet.append_row([column_stt,column_timestamp, column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data,column_tl_hieu,column_tl_buoc_biet,column_tl_khong_biet])
     warning(3)
 
 def kiemtra_svv():

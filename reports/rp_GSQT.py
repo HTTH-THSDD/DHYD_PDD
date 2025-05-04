@@ -87,7 +87,7 @@ def load_data(x,sd,ed,khoa_select):
 def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
     #Lấy những cột cần cho hiển thị lên trang báo cáo
-    bo_cot = df[['Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tên người đánh giá', 'Tên người thực hiện']]
+    bo_cot = df[['Index','Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tên người đánh giá', 'Tên người thực hiện']]
     #Chuyển những cột tuân thủ thành dạng số nhờ đổi dấu "," thành "."
     bo_cot['Tỉ lệ tuân thủ'] = bo_cot['Tỉ lệ tuân thủ'].str.replace(',', '.')
     #Chuyển dạng số chính thức
@@ -98,9 +98,7 @@ def tao_thong_ke(x,y):
     bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].str.replace(',', '.')
     bo_cot['Tỉ lệ an toàn'] = pd.to_numeric(bo_cot["Tỉ lệ an toàn"], errors='coerce')
     if y == "Chi tiết":
-        bo_cot = pd.DataFrame(bo_cot).sort_values(["Timestamp","Tên quy trình"])
         bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
-        bo_cot.insert(0, 'STT', range(1, len(bo_cot) + 1))
         if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
             bo_cot = bo_cot.drop("Khoa",axis=1)
         return bo_cot
