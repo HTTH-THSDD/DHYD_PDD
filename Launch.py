@@ -102,45 +102,45 @@ logout_page = st.Page(logout, title="Đăng xuất", icon=":material/logout:")
 
 AD1 = st.Page("admin/admin1.py",
              title="Thông tin quản trị",
-             icon="🛰️",
+             icon="💡",
              )
 AD3 = st.Page("admin/admin3.py",
              title="Quản lí giám sát",
-             icon="🛸",
+             icon="⭐",
              )
 AD2 = st.Page("admin/admin2.py",
              title="Quản lí người dùng",
-             icon="🚀",
+             icon="💻",
              )
 PD = st.Page("users/1_thong_tin.py", 
                title="Thông tin cá nhân", 
-               icon="✨",
+               icon="👤",
 )
 YC = st.Page("users/2_yeu_cau.py", 
                title="Yêu cầu", 
-               icon="🙏",
+               icon="📤",
 )
 PS = st.Page("users/3_doi_mk.py", 
                title="Đổi mật khẩu", 
-               icon="⚓",
+               icon="🛅",
 )
 
 GSHS = st.Page("pages/1_GSQT.py", 
                title="Giám sát quy trình kỹ thuật", 
-               icon="🌑", default=True
+               icon="🌷", default=True
 )
 HSBA = st.Page("pages/2_HSBA.py", 
                title="Hồ sơ bệnh án", 
-               icon="🌓"
+               icon="📋"
 )
 GDSK = st.Page("pages/3_GDSK.py",
                 title="Giáo dục sức khỏe",
-                icon="🌕"
+                icon="👄"
 )
 
-BC_GSQT = st.Page("reports/rp_GSQT.py", title="Báo cáo giám sát quy trình", icon="🍡")
-BC_HSBA = st.Page("reports/rp_HSBA.py", title="Báo cáo hồ sơ bệnh án", icon="🍢")
-BC_GDSK = st.Page("reports/rp_GDSK.py", title="Báo cáo giáo dục sức khỏe", icon="🏸")
+BC_GSQT = st.Page("reports/rp_GSQT.py", title="Báo cáo giám sát quy trình", icon="🔸")
+BC_HSBA = st.Page("reports/rp_HSBA.py", title="Báo cáo hồ sơ bệnh án", icon="🔸")
+BC_GDSK = st.Page("reports/rp_GDSK.py", title="Báo cáo giáo dục sức khỏe", icon="🔸")
 
 
 if "username" in st.session_state:
