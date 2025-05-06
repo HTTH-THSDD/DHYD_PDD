@@ -142,7 +142,7 @@ def xuli(data,a,ten_ma,sd,ed):
         data.insert(0, 'ID', range(1, len(data) + 1))
         data['Tỉ lệ tuân thủ'] = data['Tỉ lệ tuân thủ'].str.slice(0, 4)
         data['Tỉ lệ an toàn'] = data['Tỉ lệ an toàn'].str.slice(0, 4)
-        data = data.drop([a,"Index"], axis=1)
+        data = data.drop([a,"STT"], axis=1)
         data["Data"] = data["Data"].str.replace("#", "\n")
         data["Data"] = data["Data"].str.replace("|", "  ")
         if data.empty:
