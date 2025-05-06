@@ -164,27 +164,6 @@ def xuli(data,a,ten_ma,sd,ed):
                 with st.expander("Thông tin chi tiết:"):
                     st.dataframe(data, hide_index=True)
 
-def xuli2(data,x):
-    data = data.loc[data["Họ tên người đánh giá"] == st.session_state.username]
-    data['Timestamp'] = pd.to_datetime(data['Timestamp'], errors='coerce')
-    start_date = sd
-    end_date = ed + timedelta(days=1)
-    data = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] <= pd.Timestamp(end_date))]
-    if data.empty:
-        if x == "hồ sơ bệnh án":
-            st.warning("Không có dữ liệu đánh giá hồ sơ bệnh án trong khoảng thời gian yêu cầu")
-        else:
-            st.warning("Không có dữ liệu đánh giá giáo dục sức khỏe trong khoảng thời gian yêu cầu")
-    else:
-        data.insert(0, 'ID', range(1, len(data) + 1))
-        data = data.drop(["Họ tên người đánh giá"], axis=1)
-        data = data.rename(columns={"Người đánh giá": "Vị trí đánh giá"})
-        data["Data"] = data["Data"].str.replace("#", "\n")
-        data["Data"] = data["Data"].str.replace("|", "  ")
-        html_code = f'<p class="ttcn"><i>Thông tin đánh giá {x}</i></p>'
-        st.html(html_code)
-        with st.expander("Thông tin chi tiết:"):
-            st.dataframe(data, hide_index=True)
 # Main Section ####################################################################################
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
@@ -230,10 +209,6 @@ html_code = f"""
 st.markdown(html_code, unsafe_allow_html=True)
 sheeto1 = st.secrets["sheet_name"]["output_1"]
 datags = load_data(sheeto1)
-sheeto2 = st.secrets["sheet_name"]["output_2"]
-databa = load_data(sheeto2)
-sheeto3 = st.secrets["sheet_name"]["output_3"]
-datagd = load_data(sheeto3)
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")) 
 md = date(2025, 1, 1)
 with st.form("Thời gian"):
@@ -263,5 +238,3 @@ if submit_thoigian:
     else:
         xuli(datags,"Tên người đánh giá",ten_ma,sd,ed)
         xuli(datags,"Tên người thực hiện",ten_ma,sd,ed)
-        xuli2(databa,"hồ sơ bệnh án")
-        xuli2(datagd,"giáo dục sức khỏe")
