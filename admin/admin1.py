@@ -74,6 +74,8 @@ def load_data_GSheet(name):
         df["Data"] = df["Data"].str.replace("|", "  ")
     if name == st.secrets["sheet_name"]["output_1"]:
         df = df.drop(["Mã quy trình","Tỉ lệ tuân thủ","Tỉ lệ an toàn"], axis=1)
+    if name == st.secrets["sheet_name"]["output_4"]:
+        df = pd.DataFrame(df).sort_values("Timestamp", ascending=False)
     return df
 
 def change_GS(stt,tt1,kq1):
