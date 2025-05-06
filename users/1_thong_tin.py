@@ -176,7 +176,7 @@ def xuli2(data,x):
         else:
             st.warning("Không có dữ liệu đánh giá giáo dục sức khỏe trong khoảng thời gian yêu cầu")
     else:
-        data.insert(0, 'STT', range(1, len(data) + 1))
+        data.insert(0, 'ID', range(1, len(data) + 1))
         data = data.drop(["Họ tên người đánh giá"], axis=1)
         data = data.rename(columns={"Người đánh giá": "Vị trí đánh giá"})
         data["Data"] = data["Data"].str.replace("#", "\n")
