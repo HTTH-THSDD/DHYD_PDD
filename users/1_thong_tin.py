@@ -139,7 +139,7 @@ def xuli(data,a,ten_ma,sd,ed):
         else:
             st.warning("Không có dữ liệu được giám sát trong khoảng thời gian yêu cầu")
     else:
-        data.insert(0, 'STT', range(1, len(data) + 1))
+        data.insert(0, 'ID', range(1, len(data) + 1))
         data['Tỉ lệ tuân thủ'] = data['Tỉ lệ tuân thủ'].str.slice(0, 4)
         data['Tỉ lệ an toàn'] = data['Tỉ lệ an toàn'].str.slice(0, 4)
         data = data.drop([a,"Index"], axis=1)
