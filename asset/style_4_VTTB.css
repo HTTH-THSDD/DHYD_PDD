@@ -329,6 +329,12 @@ label[for^="text_input_"] div p {
 [class*="st-key-so_luong_muon_"] label {
     display: none !important;
 }
+[class*="st-key-cho_khoa_khac_muon"] label {
+    display: none !important;
+}
+[class*="st-key-so_luong_cho_muon_"] label {
+    display: none !important;
+}
 
 div[role="dialog"] {
     background-color: #ffffff;
@@ -415,3 +421,15 @@ div[role="dialog"] {
     padding-right: 2%;
     padding-bottom: 2rem;
 }
+
+div[data-testid="stExpander"] details summary span {
+    align-items: center;
+    justify-content: center;
+}
+div[data-testid="stExpander"] details summary span div p {
+    color: #006d8b;
+    font-weight: bold;
+    font-size: 18px !important;
+    font-family: "Source Sans Pro", sans-serif;
+}
+

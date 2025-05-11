@@ -98,11 +98,11 @@ def tao_thong_ke(x,y):
         df = chuyendoi_phantram(df,"Tỉ lệ biết")
         df = chuyendoi_phantram(df,"Tỉ lệ không biết")
         df = df.drop("Data",axis=1)
-        df.insert(0, 'STT', range(1, len(df) + 1))
         if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
             df = df.drop("Khoa",axis=1)
         return df
     else:
+        df = pd.DataFrame(df).drop("STT",axis=1)
         df = pd.DataFrame(df).sort_values("Khoa")
         df = pd.DataFrame(df).sort_values("Timestamp", ascending=False)
         df = chuyendoi_phantram(df,"Tỉ lệ hiểu")
@@ -123,7 +123,7 @@ def tao_thong_ke(x,y):
 def chon_khoa(khoa):
     placeholder1 = st.empty()
     if st.session_state.phan_quyen in ["1","2","3"]:
-        if st.checkbox("Tất cả"):
+        if st.checkbox("Tất cả các Khoa"):
             placeholder1.empty()
             khoa_select = "Tất cả"
         else:
@@ -183,7 +183,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:green">BÁO CÁO GIÁO DỤC SỨC KHỎE</p>
+        <p style="color:green">THỐNG KÊ GIÁO DỤC SỨC KHỎE</p>
         </div>
     </div>
     <div class="header-underline"></div>
@@ -215,7 +215,7 @@ with st.form("Thời gian"):
         format="DD/MM/YYYY",
         )
     khoa_select = chon_khoa(khoa)
-    submit_thoigian = st.form_submit_button("Xem thống kê")
+    submit_thoigian = st.form_submit_button("OK")
 if submit_thoigian:
     if ed < sd:
         st.error("Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  

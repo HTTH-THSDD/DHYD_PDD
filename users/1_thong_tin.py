@@ -147,20 +147,20 @@ def xuli(data,a,ten_ma,sd,ed):
         data["Data"] = data["Data"].str.replace("|", "  ")
         if data.empty:
             if a == "Tên người đánh giá":
-                st.write("Bạn chưa không tham gia đánh giá quy trình kỹ thuật trong thời gian yêu cầu")
+                st.write("Bạn chưa giám sát quy trình kỹ thuật nào trong thời gian yêu cầu")
             else:
-                st.write("Bạn chưa được đánh giá kỹ thuật thực hiện quy trình trong thời gian yêu cầu")
+                st.write("Bạn chưa được giám sát quy trình kỹ thuật nào trong thời gian yêu cầu")
         else:
             if a == "Tên người đánh giá":
                 html_code = f'<p class="ttcn"><i>Thông tin tham gia đánh giá giám sát quy trình:</i></p>'
                 st.html(html_code)
-                st.write(f"Nhân viên {ten_ma} đã tham gia giám sát {len(data)} lần trong thời gian yêu cầu.")
+                st.write(f"Nhân viên {ten_ma} đã tham gia giám sát {len(data)} lần trong khoảng thời gian được chọn.")
                 with st.expander("Thông tin chi tiết:"):
                     st.dataframe(data, hide_index=True)
             else:
                 html_code = f'<p class="ttcn"><i>Thông tin được đánh giá thực hiện quy trình:</i></p>'
                 st.html(html_code)
-                st.write(f"Nhân viên {ten_ma} đã được đánh giá kỹ thuật {len(data)} lần trong thời gian yêu cầu.")
+                st.write(f"Nhân viên {ten_ma} đã được giám sát {len(data)} lần trong khoảng thời gian được chọn.")
                 with st.expander("Thông tin chi tiết:"):
                     st.dataframe(data, hide_index=True)
 

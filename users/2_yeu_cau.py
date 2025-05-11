@@ -186,3 +186,18 @@ with tab2:
         load_data_GSheet.clear()
         st.rerun()
 
+
+st.markdown("""
+    <br><br><br>
+    <hr style="border: 1.325px solid #195e83; margin: 15px 0;">
+    <p style="font-size: 13.5px; color: #333;">
+        <i>Nếu có thắc mắc, Quý Anh/Chị vui lòng liên hệ 
+        <span style="color: #042f66; font-weight: bold;">CNĐD. Huỳnh Thị Thanh Hằng (5379)</span> 
+        hoặc 
+        <span style="color: #042f66; font-weight: bold;">CNĐD. Võ Thị Cẩm Nhung (5624)</span>. 
+        <br> Xin cảm ơn Quý Anh/Chị!
+        </i>
+    </p>
+""", unsafe_allow_html=True)
+
+

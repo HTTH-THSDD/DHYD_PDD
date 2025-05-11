@@ -115,6 +115,7 @@ input_data = {
               "input_2":"Giám sát quy trình",
               "input_3":"Hồ sơ bệnh án",
               "input_4":"Giáo dục sức khỏe",
+              "input_5":"Báo cáo thiết bị",
               }
 inp = st.selectbox(label="Input",
             options=["---"]+ list(input_data.values()),

@@ -65,17 +65,17 @@ def load_data(x,sd,ed,khoa_select):
     header = data[0]
     values = data[1:]
     data = pd.DataFrame(values, columns=header)
-    if khoa_select == "Tất cả" and st.session_state.username == st.secrets["user_special"]["u1"]:
+    if khoa_select == "Tất cả các Khoa" and st.session_state.username == st.secrets["user_special"]["u1"]:
         khoa_select = [st.secrets["user_special"]["u1_khoa1"],
                         st.secrets["user_special"]["u1_khoa2"],
                         st.secrets["user_special"]["u1_khoa3"],]
-    if khoa_select == "Tất cả" and st.session_state.username == st.secrets["user_special"]["u2"]:
+    if khoa_select == "Tất cả các Khoa" and st.session_state.username == st.secrets["user_special"]["u2"]:
         khoa_select = [st.secrets["user_special"]["u2_khoa1"],
                             st.secrets["user_special"]["u2_khoa2"]]
-    if khoa_select == "Tất cả" and st.session_state.username == st.secrets["user_special"]["u3"]:
+    if khoa_select == "Tất cả các Khoa" and st.session_state.username == st.secrets["user_special"]["u3"]:
         khoa_select = [st.secrets["user_special"]["u3_khoa1"],
                             st.secrets["user_special"]["u3_khoa2"]]
-    if khoa_select == "Tất cả" and st.session_state.phan_quyen in ["1","2","3"]:
+    if khoa_select == "Tất cả các Khoa" and st.session_state.phan_quyen in ["1","2","3"]:
         khoa_select = data["Khoa"]
     data = data.loc[data["Khoa"].isin(khoa_select)]
     data['Timestamp'] = pd.to_datetime(data['Timestamp'], errors='coerce')
@@ -87,7 +87,7 @@ def load_data(x,sd,ed,khoa_select):
 def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
     #Lấy những cột cần cho hiển thị lên trang báo cáo
-    bo_cot = df[['Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tên người đánh giá', 'Tên người thực hiện']]
+    bo_cot = df[['STT','Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tên người đánh giá', 'Tên người thực hiện']]
     #Chuyển những cột tuân thủ thành dạng số nhờ đổi dấu "," thành "."
     bo_cot['Tỉ lệ tuân thủ'] = bo_cot['Tỉ lệ tuân thủ'].str.replace(',', '.')
     #Chuyển dạng số chính thức
@@ -100,7 +100,6 @@ def tao_thong_ke(x,y):
     if y == "Chi tiết":
         bo_cot = pd.DataFrame(bo_cot).sort_values(["Timestamp","Tên quy trình"])
         bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
-        bo_cot.insert(0, 'STT', range(1, len(bo_cot) + 1))
         if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
             bo_cot = bo_cot.drop("Khoa",axis=1)
         return bo_cot
@@ -136,9 +135,9 @@ def tao_thong_ke(x,y):
 def chon_khoa(khoa):
     placeholder1 = st.empty()
     if st.session_state.phan_quyen in ["1","2","3"]:
-        if st.checkbox("Tất cả"):
+        if st.checkbox("Tất cả các Khoa"):
             placeholder1.empty()
-            khoa_select = "Tất cả"
+            khoa_select = "Tất cả các Khoa"
         else:
             with placeholder1:
                 khoa_select = st.multiselect(label="Chọn khoa",
@@ -149,7 +148,7 @@ def chon_khoa(khoa):
         if st.session_state.username == st.secrets["user_special"]["u1"]:
             if st.checkbox("Cả 3 khoa"):
                 placeholder1.empty()
-                khoa_select = "Tất cả"
+                khoa_select = "Tất cả các Khoa"
             else:
                 with placeholder1:
                     khoa_select = st.multiselect(label="Chọn khoa",
@@ -161,7 +160,7 @@ def chon_khoa(khoa):
         elif st.session_state.username == st.secrets["user_special"]["u2"]:
             if st.checkbox("Cả 2 khoa"):
                 placeholder1.empty()
-                khoa_select = "Tất cả"
+                khoa_select = "Tất cả các Khoa"
             else:
                 with placeholder1:
                     khoa_select = st.multiselect(label="Chọn khoa",
@@ -172,7 +171,7 @@ def chon_khoa(khoa):
         elif st.session_state.username == st.secrets["user_special"]["u3"]:
             if st.checkbox("Cả 2 khoa"):
                 placeholder1.empty()
-                khoa_select = "Tất cả"
+                khoa_select = "Tất cả các Khoa"
             else:
                 with placeholder1:
                     khoa_select = st.multiselect(label="Chọn khoa",
@@ -197,7 +196,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:green">BÁO CÁO GIÁM SÁT QUY TRÌNH KỸ THUẬT</p>
+        <p style="color:green">THỐNG KÊ GIÁM SÁT QUY TRÌNH KỸ THUẬT</p>
         </div>
     </div>
     <div class="header-underline"></div>
@@ -239,7 +238,7 @@ with st.form("Thời gian"):
             index=0,             
             )
     khoa_select = chon_khoa(khoa)
-    submit_thoigian = st.form_submit_button("Xem thống kê")
+    submit_thoigian = st.form_submit_button("OK")
 if submit_thoigian:
     if ed < sd:
         st.error("Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  

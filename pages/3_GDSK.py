@@ -67,8 +67,8 @@ def thong_tin_hanh_chinh():
             del st.session_state["khoa_GDSK"]
 
 def vitri_gdsk():
-    vitri_gsv=["Điều dưỡng trưởng tại khoa lâm sàng", "Điều dưỡng trưởng giám sát chéo", "Điều dưỡng trưởng phiên","Điều dưỡng viên giám sát chéo", "Nhân viên Phòng Điều dưỡng"]
-    vitri = st.radio(label="Vị trí nhân viên giám sát",
+    vitri_gsv=["Điều dưỡng trưởng tại khoa lâm sàng", "Điều dưỡng trưởng đánh giá chéo", "Điều dưỡng trưởng phiên","Điều dưỡng viên đánh giá chéo", "Nhân viên Phòng Điều dưỡng"]
+    vitri = st.radio(label="Vị trí nhân viên đánh giá",
                  options=vitri_gsv,
                  index=None,
                  )
@@ -107,6 +107,7 @@ def upload_data_GDSK(len_data):
     gc = gspread.authorize(credentials)
     sheeto3 = st.secrets["sheet_name"]["output_3"]
     sheet = gc.open(sheeto3).sheet1
+    column_index = len(sheet.get_all_values())
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_GDSK)
@@ -140,7 +141,7 @@ def upload_data_GDSK(len_data):
         column_tl_buoc_biet = round(so_buoc_biet/tong_so_buoc_tru_KAD,4)
         column_tl_khong_biet = round(so_buoc_khong_biet/tong_so_buoc_tru_KAD,4)
     column_data=column_data.rstrip("#")
-    sheet.append_row([column_timestamp, column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data,column_tl_hieu,column_tl_buoc_biet,column_tl_khong_biet])
+    sheet.append_row([column_index, column_timestamp, column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data,column_tl_hieu,column_tl_buoc_biet,column_tl_khong_biet])
     warning(3)
 
 def kiemtra_svv():
@@ -163,7 +164,7 @@ def warning(x):
         st.warning("Số vào viện không hợp lệ. Vui lòng nhập lại VD: 25-1234567")
 
 
-# Main section
+############################ Main section ##################
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
 img = get_img_as_base64("pages/img/logo.png")
@@ -176,7 +177,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p>GIÁO DỤC SỨC KHỎE</p>
+        <p>ĐÁNH GIÁ GIÁO DỤC SỨC KHỎE</p>
         </div>
     </div>
     <div class="header-underline"></div>

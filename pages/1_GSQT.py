@@ -250,3 +250,4 @@ if (
             st.warning(f"Các bước chưa chọn kết quả: {buoc_chua_dien_str}") 
 else:
     st.warning("Vui lòng chọn đầy đủ các mục")
+
