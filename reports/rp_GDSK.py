@@ -93,7 +93,7 @@ def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
     if y == "Chi tiết":
         df = pd.DataFrame(df).sort_values(["Khoa"])
-        df = pd.DataFrame(df).sort_values("Timestamp", ascending=False)
+        df = pd.DataFrame(df).sort_values("Timestamp", ascending=True)
         df = chuyendoi_phantram(df,"Tỉ lệ hiểu")
         df = chuyendoi_phantram(df,"Tỉ lệ biết")
         df = chuyendoi_phantram(df,"Tỉ lệ không biết")

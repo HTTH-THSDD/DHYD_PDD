@@ -93,7 +93,7 @@ def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
     if y == "Chi tiết":
         df = pd.DataFrame(df).sort_values("Khoa")
-        df = pd.DataFrame(df).sort_values("Timestamp", ascending=False)
+        df = pd.DataFrame(df).sort_values("Timestamp", ascending=True)
         df = chuyendoi_phantram(df,"Tỉ lệ bước đúng, đủ")
         df = chuyendoi_phantram(df,"Tỉ lệ bước đúng, nhưng chưa đủ")
         df = chuyendoi_phantram(df,"Tỉ lệ bước Không thực hiện hoặc ghi sai")
@@ -104,7 +104,6 @@ def tao_thong_ke(x,y):
     else:
         df = pd.DataFrame(df).drop("STT",axis=1)
         df = pd.DataFrame(df).sort_values("Khoa")
-        df = pd.DataFrame(df).sort_values("Timestamp", ascending=False)
         df = chuyendoi_phantram(df,"Tỉ lệ bước đúng, đủ")
         df = chuyendoi_phantram(df,"Tỉ lệ bước đúng, nhưng chưa đủ")
         df = chuyendoi_phantram(df,"Tỉ lệ bước Không thực hiện hoặc ghi sai")

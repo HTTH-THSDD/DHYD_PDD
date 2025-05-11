@@ -142,10 +142,17 @@ VTTB = st.Page("pages/4_VTTB.py",
                 icon="🦽"
 )
 
+<<<<<<< HEAD
 BC_GSQT = st.Page("reports/rp_GSQT.py", title="TK Giám sát quy trình",  icon="🔶")
 BC_HSBA = st.Page("reports/rp_HSBA.py", title="TK Hồ sơ bệnh án", icon="🔶")
 BC_GDSK = st.Page("reports/rp_GDSK.py", title="TK Giáo dục sức khỏe", icon="🔶")
 BC_VTTB = st.Page("reports/rp_VTTB.py", title="TK Báo cáo thiết bị hằng ngày", icon="🔶")
+=======
+BC_GSQT = st.Page("reports/rp_GSQT.py", title="Báo cáo giám sát quy trình", icon="🔸")
+BC_HSBA = st.Page("reports/rp_HSBA.py", title="Báo cáo hồ sơ bệnh án", icon="🔸")
+BC_GDSK = st.Page("reports/rp_GDSK.py", title="Báo cáo giáo dục sức khỏe", icon="🔸")
+
+>>>>>>> 125067bc691932de10fca9932c003cfc0cf83af4
 
 if "username" in st.session_state:
     if st.session_state.phan_quyen in ["1"]:

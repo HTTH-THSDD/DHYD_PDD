@@ -69,12 +69,13 @@ def load_data_GSheet(name):
     start_date = st.session_state.sd
     end_date = st.session_state.ed + timedelta(days=1)
     df = df[(df['Timestamp'] >= pd.Timestamp(start_date)) & (df['Timestamp'] < pd.Timestamp(end_date))]
-    print('yyyyyyyyyyyyy',name != st.secrets["sheet_name"]["output_4"])
     if name != st.secrets["sheet_name"]["output_4"]:
         df["Data"] = df["Data"].str.replace("#", "\n")
         df["Data"] = df["Data"].str.replace("|", "  ")
     if name == st.secrets["sheet_name"]["output_1"]:
         df = df.drop(["Mã quy trình","Tỉ lệ tuân thủ","Tỉ lệ an toàn"], axis=1)
+    if name == st.secrets["sheet_name"]["output_4"]:
+        df = pd.DataFrame(df).sort_values("Timestamp", ascending=False)
     return df
 
 def change_GS(stt,tt1,kq1):
@@ -86,6 +87,26 @@ def change_GS(stt,tt1,kq1):
     sheet.update_cell(stt+1, 9, kq1)
     st.toast("Đã cập nhật thay đổi")
 
+def xoa_dong(stt_xx,sheetb):
+    credentials = load_credentials()
+    gc = gspread.authorize(credentials)
+    sheet = gc.open(sheetb).sheet1
+    sheet.delete_rows(stt_xx+1)
+    stt_xx = [[i] for i in range(1, len(sheet.get_all_values()))]  # Danh sách số thứ tự
+
+    # Xây vùng cần cập nhật (ví dụ A2:A101 nếu cột A là STT)
+    start_row = 2  # Bỏ qua tiêu đề
+    end_row = len(sheet.get_all_values())
+    col_letter = chr(64 + 1)  # 1 -> A, 2 -> B, ...
+    cell_range = f"{col_letter}{start_row}:{col_letter}{end_row}"
+
+    # Dùng batch update
+    cell_range_obj = sheet.range(cell_range)
+    for i, cell in enumerate(cell_range_obj):
+        cell.value = i + 1  # STT bắt đầu từ 1
+
+    sheet.update_cells(cell_range_obj)  # Gửi 1 lần duy nhất
+    st.toast("Đã xóa dòng theo yêu cầu")
 #########################################################################################################
 #Cài thời gian sẵn
 css_path = pathlib.Path("asset/style.css")
@@ -168,7 +189,7 @@ if outp and outp != "---":
                 submit_thoigian = st.form_submit_button("Cập nhật ngày")
             if submit_thoigian:
                 if ed < sd:
-                    st.error("Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")            
+                    st.error("Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")                    
             try:
                 placeholder = st.empty()
                 b = get_key_from_value(output_data, outp)
@@ -206,6 +227,7 @@ if outp and outp != "---":
                             if (tt == "Chưa xem" and kq == "Từ chối") or (tt == "Chưa xem" and kq == "Hoàn thành"):
                                 st.write("Giá trị kết quả không phù hợp")
                             else:
+                                print('qqqq')
                                 if tt == "Chưa xem":
                                     tt1 = ""
                                     kq1 = ""
@@ -220,9 +242,22 @@ if outp and outp != "---":
                                 change_GS(stt,tt1,kq1)
                                 data_out = load_data_GSheet(sheetb)
                                 placeholder.dataframe(data_out, hide_index=True)
-            except:
-                st.write("Không tìm thấy giá trị tương ứng")
-        
+                    else:
+                        # col = st.columns([5,5])
+                        # with col[0]:
+                        with st.form("Xóa và sửa bảng"):
+                            stt_xx = st.number_input(label="STT dòng cần xóa", 
+                                                min_value=1, 
+                                                max_value=len(data_out), 
+                                                step=1,
+                                                key="stt_xx",
+                                                )
+                            submitxs = st.form_submit_button("Xóa")
+                        if submitxs:
+                            xoa_dong(stt_xx,sheetb)
+            except Exception as e:
+                st.write("Lỗi xảy ra:", e)
+                
                        
         
         
