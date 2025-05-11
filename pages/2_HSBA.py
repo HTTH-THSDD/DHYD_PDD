@@ -82,13 +82,8 @@ def upload_data_HSBA(len_data):
     gc = gspread.authorize(credentials)
     sheeto2 = st.secrets["sheet_name"]["output_2"]
     sheet = gc.open(sheeto2).sheet1
-<<<<<<< HEAD
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
     column_index = len(sheet.get_all_values())
-=======
-    column_stt = len(sheet.get_all_values())
-    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
->>>>>>> 125067bc691932de10fca9932c003cfc0cf83af4
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_HSBA)
     column_svv = str(st.session_state.svv_HSBA)
@@ -121,11 +116,7 @@ def upload_data_HSBA(len_data):
         column_tl_dung_nhung_chua_du = round(so_buoc_dung_nhung_chua_du/tong_so_buoc_tru_KAD,4)
         column_tl_Khong_thuc_hien = round(so_buoc_Khong_thuc_hien/tong_so_buoc_tru_KAD,4)
     column_data=column_data.rstrip("#")
-<<<<<<< HEAD
     sheet.append_row([column_index, column_timestamp, column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data,column_tl_dung_du,column_tl_dung_nhung_chua_du,column_tl_Khong_thuc_hien])
-=======
-    sheet.append_row([column_stt,column_timestamp, column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data,column_tl_dung_du,column_tl_dung_nhung_chua_du,column_tl_Khong_thuc_hien])
->>>>>>> 125067bc691932de10fca9932c003cfc0cf83af4
     warning (3)
 
 def kiemtra_svv():
