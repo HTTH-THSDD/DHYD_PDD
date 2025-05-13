@@ -106,17 +106,17 @@ def upload_data_VTTB():
         SCD_muon_khoa_khac = st.session_state[f"muon_tu_khoa_khac_{idx}"]
         SCD_so_luong_muon = str(st.session_state[f"so_luong_muon_{idx}"])
         if SCD_muon_khoa_khac != "Chọn khoa" and SCD_so_luong_muon != 0:
-                columnn_SCD_muon_khoa_khac += SCD_muon_khoa_khac + ":" + SCD_so_luong_muon + "+"
+                columnn_SCD_muon_khoa_khac += SCD_muon_khoa_khac + ":" + SCD_so_luong_muon + " + "
     if columnn_SCD_muon_khoa_khac != "":
-        columnn_SCD_muon_khoa_khac = columnn_SCD_muon_khoa_khac.rstrip("+")
+        columnn_SCD_muon_khoa_khac = columnn_SCD_muon_khoa_khac.rstrip(" + ")
     columnn_SCD_cho_khoa_khac_muon =""
     for idx in st.session_state.additional_columns_2:
         SCD_cho_khoa_khac = st.session_state[f"cho_khoa_khac_muon{idx}"]
         SCD_so_luong_cho_muon = str(st.session_state[f"so_luong_cho_muon_{idx}"])
         if SCD_cho_khoa_khac != "Chọn khoa" and SCD_so_luong_cho_muon != 0:
-                columnn_SCD_cho_khoa_khac_muon += SCD_cho_khoa_khac + ":" + SCD_so_luong_cho_muon + "+"
+                columnn_SCD_cho_khoa_khac_muon += SCD_cho_khoa_khac + ":" + SCD_so_luong_cho_muon + " + "
     if columnn_SCD_cho_khoa_khac_muon != "":
-        columnn_SCD_muon_khoa_khac = columnn_SCD_muon_khoa_khac.rstrip("+")
+        columnn_SCD_muon_khoa_khac = columnn_SCD_muon_khoa_khac.rstrip(" + ")
     sheet.append_row([column_timestamp, column_ngay_bao_cao, column_khoa_bao_cao, column_nguoi_bao_cao, column_tb_thong_thuong, column_SCD_bo_sung, columnn_SCD_muon_khoa_khac, columnn_SCD_cho_khoa_khac_muon])
     st.toast("Báo cáo đã được gửi thành công")
 # Main Section ####################################################################################
@@ -213,7 +213,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 )  
                 st.selectbox(
                     label="Nguyên nhân chưa thực hiện",
-                    options=["Trống","Không có máy", "Không có vớ", "Nguyên nhân khác"],
+                    options=["","Không có máy", "Không có vớ", "Nguyên nhân khác"],
                     key=f"nguyen_nhan_{i}",
                 )
                 #### Mượn từ khoa khác
@@ -232,7 +232,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                     with col1:
                         st.selectbox(
                             label="-",
-                            options=["Chọn khoa"]+list(data_vttb["Khoa"].unique()),
+                            options=["--Chọn khoa--"]+list(data_vttb["Khoa"].unique()),
                             key=f"muon_tu_khoa_khac_{idx}",
                         )
                     with col2:
@@ -268,7 +268,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                     with col1:
                         st.selectbox(
                             label="-",
-                            options=["Chọn khoa"]+list(data_vttb["Khoa"].unique()),
+                            options=["--Chọn khoa--"]+list(data_vttb["Khoa"].unique()),
                             key=f"cho_khoa_khac_muon{idx}",
                         )
                     with col2:

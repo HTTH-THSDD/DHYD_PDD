@@ -137,6 +137,7 @@ input_data = {
               "input_3":"Hồ sơ bệnh án",
               "input_4":"Giáo dục sức khỏe",
               "input_5":"Báo cáo thiết bị",
+              "input_6":"PRIME duy trì",
               }
 inp = st.selectbox(label="Input",
             options=["---"]+ list(input_data.values()),
@@ -152,10 +153,12 @@ if inp and inp != "---":
         except:
             st.write("Chọn bảng input")
 output_data = {
-              "output_1":"Data giám sát quy trình",
+              "output_1":"Data giám sát quy trình kỹ thuậtthuật",
               "output_2":"Data hồ sơ bệnh án",
               "output_3":"Data giáo dục sức khỏe",
-              "output_4":"Các yêu cầu bổ sung/phân quyền"
+              "output_4":"Các yêu cầu bổ sung/phân quyền",
+              "output_5":"Data báo cáo thiết bị hằng ngày",
+              "output_6":"Data PRIME duy trì",
               }
 outp = st.selectbox(label="Output",
             options=["---"]+ list(output_data.values()),

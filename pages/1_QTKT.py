@@ -90,7 +90,7 @@ def vitrigs():
 def bang_kiem_quy_trinh():
     sheeti2 = st.secrets["sheet_name"]["input_2"]
     data_qt2 = load_data(sheeti2)
-    chon_qt = st.selectbox("Tên quy trình",
+    chon_qt = st.selectbox("Tên quy trình kỹ thuật",
                              options=data_qt2["Tên quy trình"].unique(),
                              index=None,
                              key="qt",
@@ -138,8 +138,8 @@ def upload_data_GS(data):
     sheeto1 = st.secrets["sheet_name"]["output_1"]
     sheet = gc.open(sheeto1).sheet1
     sheet = gc.open("Output-st-GSQT").sheet1
-    column_index = len(sheet.get_all_values())
-    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+    column_index = len(sheet.get_all_values())    
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_GSQT)
     column_nvgs = str(st.session_state.username)

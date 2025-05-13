@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 import pathlib
 import base64
 from google.oauth2.service_account import Credentials
+import numpy as np
 
 @st.cache_data(ttl=3600)
 def get_img_as_base64(file):
@@ -43,6 +44,7 @@ def load_credentials():
         scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     )
     return credentials
+
 @st.cache_data(ttl=10)
 def load_data1(x):
     credentials = load_credentials()
@@ -54,7 +56,6 @@ def load_data1(x):
     data = pd.DataFrame(values, columns=header)
     return data
 
-
 @st.cache_data(ttl=10)
 def load_data(x,sd,ed,khoa_select):
     credentials = load_credentials()
@@ -64,18 +65,18 @@ def load_data(x,sd,ed,khoa_select):
     header = data[0]
     values = data[1:]
     data = pd.DataFrame(values, columns=header)
-    if khoa_select == "Tất cả" and st.session_state.username == st.secrets["user_special"]["u1"]:
+    if khoa_select == "Chọn tất cả khoa" and st.session_state.username == st.secrets["user_special"]["u1"]:
         khoa_select = [st.secrets["user_special"]["u1_khoa1"],
                         st.secrets["user_special"]["u1_khoa2"],
                         st.secrets["user_special"]["u1_khoa3"],]
-    if khoa_select == "Tất cả" and st.session_state.username == st.secrets["user_special"]["u2"]:
+    if khoa_select == "Chọn tất cả khoa" and st.session_state.username == st.secrets["user_special"]["u2"]:
         khoa_select = [st.secrets["user_special"]["u2_khoa1"],
                             st.secrets["user_special"]["u2_khoa2"]]
-    if khoa_select == "Tất cả" and st.session_state.username == st.secrets["user_special"]["u3"]:
+    if khoa_select == "Chọn tất cả khoa" and st.session_state.username == st.secrets["user_special"]["u3"]:
         khoa_select = [st.secrets["user_special"]["u3_khoa1"],
                             st.secrets["user_special"]["u3_khoa2"]]
-    if khoa_select == "Tất cả" and st.session_state.phan_quyen in ["1","2","3"]:
-        khoa_select = data["Khoa"]
+    if khoa_select == "Chọn tất cả khoa" and st.session_state.phan_quyen in ["1","2","3"]:
+        khoa_select = data["Khoa"].unique()
     data = data.loc[data["Khoa"].isin(khoa_select)]
     data['Timestamp'] = pd.to_datetime(data['Timestamp'], errors='coerce')
     start_date = sd
@@ -83,49 +84,30 @@ def load_data(x,sd,ed,khoa_select):
     data_final = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] < pd.Timestamp(end_date))]
     return data_final
 
-def chuyendoi_phantram(df,x):
-    df[x] = df[x].str.replace(',', '.')
-    df[x] = pd.to_numeric(df[x], errors='coerce')
-    df[x] = df[x] * 100
-    return df
-
 def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
-    if y == "Chi tiết":
-        df = pd.DataFrame(df).sort_values(["Khoa"])
-        df = pd.DataFrame(df).sort_values("Timestamp", ascending=True)
-        df = chuyendoi_phantram(df,"Tỉ lệ hiểu")
-        df = chuyendoi_phantram(df,"Tỉ lệ biết")
-        df = chuyendoi_phantram(df,"Tỉ lệ không biết")
-        df = df.drop("Data",axis=1)
-        if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
-            df = df.drop("Khoa",axis=1)
-        return df
-    else:
-        df = pd.DataFrame(df).drop("STT",axis=1)
-        df = pd.DataFrame(df).sort_values("Khoa")
-        df = pd.DataFrame(df).sort_values("Timestamp", ascending=False)
-        df = chuyendoi_phantram(df,"Tỉ lệ hiểu")
-        df = chuyendoi_phantram(df,"Tỉ lệ biết")
-        df = chuyendoi_phantram(df,"Tỉ lệ không biết")
-        df["Tháng"] = df["Timestamp"].dt.strftime("%m/%Y")
-        df = df.groupby(["Tháng","Khoa"]).agg({
-        "Tháng": "count",
-        "Tỉ lệ hiểu": "mean",
-        "Tỉ lệ biết": "mean",
-        "Tỉ lệ không biết": "mean",
-        }).rename(columns={"Tháng": "Số lượt"}).reset_index()
-        df.insert(0, 'STT', range(1, len(df) + 1))
-        if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
-            df=df.drop("Khoa",axis=1)
-        return df
+    #Lấy những cột cần cho hiển thị lên trang báo cáo
+#<<<<<<< HEAD
+    bo_cot = df[['STT','Timestamp','Khoa', 'Tên bảng kiểm', 'Tỉ lệ đạt','Tên người đánh giá', 'Tên người thực hiện']]
+#=======
+    # bo_cot = df[['STT','Timestamp','Khoa', 'Tên bảng kiểm', 'Tỉ lệ đạt','Tên người đánh giá', 'Tên người thực hiện']]
+#>>>>>>> 125067bc691932de10fca9932c003cfc0cf83af4
+    #Chuyển những cột tuân thủ thành dạng số nhờ đổi dấu "," thành "."
+    bo_cot['Tỉ lệ đạt'] = bo_cot['Tỉ lệ đạt'].str.replace(',', '.')
+    #Chuyển dạng số chính thức
+    bo_cot['Tỉ lệ đạt'] = pd.to_numeric(bo_cot["Tỉ lệ đạt"], errors='coerce')
+     # Loại bỏ các hàng có Tỉ lệ đạt là NaN
+    bo_cot = bo_cot.dropna(subset=['Tỉ lệ đạt'])
+    #Nhân 100 thành tỉ lệ phần trăm
+    bo_cot['Tỉ lệ đạt'] = bo_cot['Tỉ lệ đạt'] * 100
     
+
 def chon_khoa(khoa):
     placeholder1 = st.empty()
     if st.session_state.phan_quyen in ["1","2","3"]:
-        if st.checkbox("Tất cả các Khoa"):
+        if st.checkbox("Chọn tất cả khoa"):
             placeholder1.empty()
-            khoa_select = "Tất cả"
+            khoa_select = "Chọn tất cả khoa"
         else:
             with placeholder1:
                 khoa_select = st.multiselect(label="Chọn khoa",
@@ -136,7 +118,7 @@ def chon_khoa(khoa):
         if st.session_state.username == st.secrets["user_special"]["u1"]:
             if st.checkbox("Cả 3 khoa"):
                 placeholder1.empty()
-                khoa_select = "Tất cả"
+                khoa_select = "Chọn tất cả khoa"
             else:
                 with placeholder1:
                     khoa_select = st.multiselect(label="Chọn khoa",
@@ -148,7 +130,7 @@ def chon_khoa(khoa):
         elif st.session_state.username == st.secrets["user_special"]["u2"]:
             if st.checkbox("Cả 2 khoa"):
                 placeholder1.empty()
-                khoa_select = "Tất cả"
+                khoa_select = "Chọn tất cả khoa"
             else:
                 with placeholder1:
                     khoa_select = st.multiselect(label="Chọn khoa",
@@ -159,7 +141,7 @@ def chon_khoa(khoa):
         elif st.session_state.username == st.secrets["user_special"]["u3"]:
             if st.checkbox("Cả 2 khoa"):
                 placeholder1.empty()
-                khoa_select = "Tất cả"
+                khoa_select = "Chọn tất cả khoa"
             else:
                 with placeholder1:
                     khoa_select = st.multiselect(label="Chọn khoa",
@@ -171,6 +153,7 @@ def chon_khoa(khoa):
             khoa_select = st.session_state.khoa
             khoa_select = [khoa_select]
             return khoa_select
+
 ##################################### Main Section ###############################################
 load_css(css_path)
 img = get_img_as_base64("pages/img/logo.png")
@@ -183,7 +166,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:green">THỐNG KÊ GIÁO DỤC SỨC KHỎE</p>
+        <p style="color:green">THỐNG KÊ ĐÁNH GIÁ PRIME DUY TRÌ</p>
         </div>
     </div>
     <div class="header-underline"></div>
@@ -194,55 +177,53 @@ st.html(html_code)
 sheeti1 = st.secrets["sheet_name"]["input_1"]
 data = load_data1(sheeti1)
 khoa = data["Khoa"]
-now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")) 
+now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
 md = date(2025, 1, 1)
 with st.form("Thời gian"):
     cold = st.columns([5,5])
     with cold[0]:
         sd = st.date_input(
         label="Ngày bắt đầu",
-        value= md,
-        min_value= md,
-        max_value= now_vn.date(), 
+        value=md,
+        min_value=md,
+        max_value=now_vn.date(), 
         format="DD/MM/YYYY",
         )
     with cold[1]:
         ed = st.date_input(
         label="Ngày kết thúc",
         value=now_vn.date(),
-        min_value= md,
+        min_value=md,
         max_value=now_vn.date(), 
         format="DD/MM/YYYY",
         )
+  
     khoa_select = chon_khoa(khoa)
     submit_thoigian = st.form_submit_button("OK")
 if submit_thoigian:
     if ed < sd:
-        st.error("Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
+        st.error("Lỗi ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
     else:
-        sheeto3 = st.secrets["sheet_name"]["output_3"]
-        data = load_data(sheeto3,sd,ed,khoa_select)
+        sheeto6 = st.secrets["sheet_name"]["output_6"]
+        data = load_data(sheeto6,sd,ed,khoa_select)
         if data.empty:
             st.toast("Không có dữ liệu theo yêu cầu")
-        else:
+        else:      
             with st.expander("Thống kê tổng quát"):
                 thongke = tao_thong_ke(data,"Tổng quát")
                 st.dataframe(thongke, 
                             hide_index=True,
                             column_config = {
-                        "Tỉ lệ hiểu": st.column_config.NumberColumn(format="%.2f %%"),
-                        "Tỉ lệ biết": st.column_config.NumberColumn(format="%.2f %%"),
-                        "Tỉ lệ không biết": st.column_config.NumberColumn(format="%.2f %%"),
-                            })
+                                    "Tỉ lệ đạt": st.column_config.NumberColumn(format="%.2f %%")
+                                    })
             with st.expander("Thống kê chi tiết"):
                 thongkechitiet = tao_thong_ke(data,"Chi tiết")
                 st.dataframe(thongkechitiet,
-                        hide_index=True,
-                        column_config = {
-                        "Tỉ lệ hiểu": st.column_config.NumberColumn(format="%.2f %%"),
-                        "Tỉ lệ biết": st.column_config.NumberColumn(format="%.2f %%"),
-                        "Tỉ lệ không biết": st.column_config.NumberColumn(format="%.2f %%"),
-                        })
+                            hide_index=True, 
+                            column_config = {
+                                    "Tỉ lệ đạt": st.column_config.NumberColumn(format="%.2f %%")
+                                    })
+
 
     
 

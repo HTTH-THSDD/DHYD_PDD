@@ -125,9 +125,13 @@ PS = st.Page("users/3_doi_mk.py",
                icon="🔑",
 )
 
-GSHS = st.Page("pages/1_GSQT.py", 
+QTKT = st.Page("pages/1_QTKT.py", 
                title="Giám sát quy trình kỹ thuật", 
                icon="🩺", default=True
+)
+PRIME = st.Page("pages/1.1_PRIME.py", 
+               title="PRIME duy trì", 
+               icon="💉"
 )
 HSBA = st.Page("pages/2_HSBA.py", 
                title="Hồ sơ bệnh án", 
@@ -142,10 +146,11 @@ VTTB = st.Page("pages/4_VTTB.py",
                 icon="🦽"
 )
 
-BC_GSQT = st.Page("reports/rp_GSQT.py", title="TK Giám sát quy trình",  icon="🔶")
-BC_HSBA = st.Page("reports/rp_HSBA.py", title="TK Hồ sơ bệnh án", icon="🔶")
-BC_GDSK = st.Page("reports/rp_GDSK.py", title="TK Giáo dục sức khỏe", icon="🔶")
-BC_VTTB = st.Page("reports/rp_VTTB.py", title="TK Báo cáo thiết bị hằng ngày", icon="🔶")
+BC_QTKT = st.Page("reports/1_rp_QTKT.py", title="TK Giám sát quy trình",  icon="🔶")
+BC_PRIME = st.Page("reports/1.1_rp_PRIME.py", title="TK PRIME duy trì ", icon="🔶")
+BC_HSBA = st.Page("reports/2_rp_HSBA.py", title="TK Hồ sơ bệnh án", icon="🔶")
+BC_GDSK = st.Page("reports/3_rp_GDSK.py", title="TK Giáo dục sức khỏe", icon="🔶")
+BC_VTTB = st.Page("reports/4_rp_VTTB.py", title="TK Báo cáo thiết bị hằng ngày", icon="🔶")
 
 
 if "username" in st.session_state:
@@ -153,9 +158,9 @@ if "username" in st.session_state:
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Nhập kết quả": [GSHS, HSBA, GDSK,VTTB],
-                "Thống kê báo cáo": [BC_GSQT, BC_HSBA,BC_GDSK,BC_VTTB],
-                "Quản trị viên admin": [AD1, AD2, AD3],
+                "Nhập kết quả": [QTKT, PRIME, HSBA, GDSK,VTTB],
+                "Thống kê báo cáo": [BC_QTKT, BC_PRIME, BC_HSBA,BC_GDSK,BC_VTTB],
+                "Quản trị viên": [AD1, AD2, AD3],
             },
         expanded=False,
         )
@@ -163,8 +168,8 @@ if "username" in st.session_state:
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Giám sát": [GSHS, HSBA, GDSK,VTTB],
-                "Báo cáo": [BC_GSQT, BC_HSBA,BC_GDSK,BC_VTTB],
+                "Nhập kết quả": [QTKT,PRIME, HSBA, GDSK,VTTB],
+                "Báo cáo": [BC_QTKT, BC_PRIME,BC_HSBA,BC_GDSK,BC_VTTB],
                 "Quản trị viên": [AD1],
             },
         expanded=False,
@@ -173,8 +178,8 @@ if "username" in st.session_state:
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Giám sát": [GSHS, HSBA, GDSK,VTTB],
-                "Báo cáo": [BC_GSQT, BC_HSBA,BC_GDSK,BC_VTTB],
+                "Nhập kết quả": [QTKT, PRIME, HSBA, GDSK,VTTB],
+                "Báo cáo": [BC_QTKT, BC_PRIME, BC_HSBA,BC_GDSK,BC_VTTB],
             },
         expanded=False,
         )
@@ -182,8 +187,8 @@ if "username" in st.session_state:
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Giám sát": [GSHS, HSBA, GDSK,VTTB],
-                "Báo cáo": [BC_GSQT, BC_HSBA,BC_GDSK],
+                "Nhập kết quả": [QTKT, PRIME, HSBA, GDSK,VTTB],
+                "Báo cáo": [BC_QTKT,BC_PRIME, BC_HSBA,BC_GDSK],
             },
         expanded=False,
         )
@@ -191,7 +196,7 @@ if "username" in st.session_state:
         pg = st.navigation(
                 {
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                    "Giám sát": [GSHS, HSBA, GDSK, VTTB],
+                    "Nhập kết quả": [QTKT, PRIME, HSBA, GDSK, VTTB],
                 },
         expanded=False,
         )

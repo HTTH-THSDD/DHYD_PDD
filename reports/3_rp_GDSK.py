@@ -43,7 +43,6 @@ def load_credentials():
         scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     )
     return credentials
-
 @st.cache_data(ttl=10)
 def load_data1(x):
     credentials = load_credentials()
@@ -54,6 +53,7 @@ def load_data1(x):
     values = data[1:]
     data = pd.DataFrame(values, columns=header)
     return data
+
 
 @st.cache_data(ttl=10)
 def load_data(x,sd,ed,khoa_select):
@@ -92,11 +92,11 @@ def chuyendoi_phantram(df,x):
 def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
     if y == "Chi tiết":
-        df = pd.DataFrame(df).sort_values("Khoa")
+        df = pd.DataFrame(df).sort_values(["Khoa"])
         df = pd.DataFrame(df).sort_values("Timestamp", ascending=True)
-        df = chuyendoi_phantram(df,"Tỉ lệ bước đúng, đủ")
-        df = chuyendoi_phantram(df,"Tỉ lệ bước đúng, nhưng chưa đủ")
-        df = chuyendoi_phantram(df,"Tỉ lệ bước Không thực hiện hoặc ghi sai")
+        df = chuyendoi_phantram(df,"Tỉ lệ hiểu")
+        df = chuyendoi_phantram(df,"Tỉ lệ biết")
+        df = chuyendoi_phantram(df,"Tỉ lệ không biết")
         df = df.drop("Data",axis=1)
         if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
             df = df.drop("Khoa",axis=1)
@@ -104,31 +104,33 @@ def tao_thong_ke(x,y):
     else:
         df = pd.DataFrame(df).drop("STT",axis=1)
         df = pd.DataFrame(df).sort_values("Khoa")
-        df = chuyendoi_phantram(df,"Tỉ lệ bước đúng, đủ")
-        df = chuyendoi_phantram(df,"Tỉ lệ bước đúng, nhưng chưa đủ")
-        df = chuyendoi_phantram(df,"Tỉ lệ bước Không thực hiện hoặc ghi sai")
+        df = pd.DataFrame(df).sort_values("Timestamp", ascending=False)
+        df = chuyendoi_phantram(df,"Tỉ lệ hiểu")
+        df = chuyendoi_phantram(df,"Tỉ lệ biết")
+        df = chuyendoi_phantram(df,"Tỉ lệ không biết")
         df["Tháng"] = df["Timestamp"].dt.strftime("%m/%Y")
         df = df.groupby(["Tháng","Khoa"]).agg({
         "Tháng": "count",
-        "Tỉ lệ bước đúng, đủ": "mean",
-        "Tỉ lệ bước đúng, nhưng chưa đủ": "mean",
-        "Tỉ lệ bước Không thực hiện hoặc ghi sai": "mean",
+        "Tỉ lệ hiểu": "mean",
+        "Tỉ lệ biết": "mean",
+        "Tỉ lệ không biết": "mean",
         }).rename(columns={"Tháng": "Số lượt"}).reset_index()
         df.insert(0, 'STT', range(1, len(df) + 1))
         if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
             df=df.drop("Khoa",axis=1)
         return df
-
+    
 def chon_khoa(khoa):
     placeholder1 = st.empty()
     if st.session_state.phan_quyen in ["1","2","3"]:
-        if st.checkbox("Tất cả"):
+        if st.checkbox("Chọn tất cả khoa"):
             placeholder1.empty()
             khoa_select = "Tất cả"
         else:
             with placeholder1:
                 khoa_select = st.multiselect(label="Chọn khoa",
                                                   options= khoa.unique())
+            st.write("Hãy chọn khoa xem thống kê")
         return khoa_select
     else:
         if st.session_state.username == st.secrets["user_special"]["u1"]:
@@ -181,7 +183,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:green">THỐNG KÊ HỒ SƠ BỆNH ÁN</p>
+        <p style="color:green">THỐNG KÊ GIÁO DỤC SỨC KHỎE</p>
         </div>
     </div>
     <div class="header-underline"></div>
@@ -192,23 +194,23 @@ st.html(html_code)
 sheeti1 = st.secrets["sheet_name"]["input_1"]
 data = load_data1(sheeti1)
 khoa = data["Khoa"]
-now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")) 
 md = date(2025, 1, 1)
 with st.form("Thời gian"):
     cold = st.columns([5,5])
     with cold[0]:
         sd = st.date_input(
         label="Ngày bắt đầu",
-        value=md,
-        min_value=md,
-        max_value=now_vn.date(), 
+        value= md,
+        min_value= md,
+        max_value= now_vn.date(), 
         format="DD/MM/YYYY",
         )
     with cold[1]:
         ed = st.date_input(
         label="Ngày kết thúc",
         value=now_vn.date(),
-        min_value=md,
+        min_value= md,
         max_value=now_vn.date(), 
         format="DD/MM/YYYY",
         )
@@ -216,10 +218,10 @@ with st.form("Thời gian"):
     submit_thoigian = st.form_submit_button("OK")
 if submit_thoigian:
     if ed < sd:
-        st.error("Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
+        st.error("Lỗi ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
     else:
-        sheeto2 = st.secrets["sheet_name"]["output_2"]
-        data = load_data(sheeto2,sd,ed,khoa_select)
+        sheeto3 = st.secrets["sheet_name"]["output_3"]
+        data = load_data(sheeto3,sd,ed,khoa_select)
         if data.empty:
             st.toast("Không có dữ liệu theo yêu cầu")
         else:
@@ -228,19 +230,19 @@ if submit_thoigian:
                 st.dataframe(thongke, 
                             hide_index=True,
                             column_config = {
-                                    "Tỉ lệ bước đúng, đủ": st.column_config.NumberColumn(format="%.2f %%"),
-                                    "Tỉ lệ bước đúng, nhưng chưa đủ": st.column_config.NumberColumn(format="%.2f %%"),
-                                    "Tỉ lệ bước Không thực hiện hoặc ghi sai": st.column_config.NumberColumn(format="%.2f %%"),
-                                    })
+                        "Tỉ lệ hiểu": st.column_config.NumberColumn(format="%.2f %%"),
+                        "Tỉ lệ biết": st.column_config.NumberColumn(format="%.2f %%"),
+                        "Tỉ lệ không biết": st.column_config.NumberColumn(format="%.2f %%"),
+                            })
             with st.expander("Thống kê chi tiết"):
                 thongkechitiet = tao_thong_ke(data,"Chi tiết")
                 st.dataframe(thongkechitiet,
                         hide_index=True,
                         column_config = {
-                        "Tỉ lệ bước đúng, đủ": st.column_config.NumberColumn(format="%.2f %%"),
-                                    "Tỉ lệ bước đúng, nhưng chưa đủ": st.column_config.NumberColumn(format="%.2f %%"),
-                                    "Tỉ lệ bước Không thực hiện hoặc ghi sai": st.column_config.NumberColumn(format="%.2f %%"),
-                                    })
+                        "Tỉ lệ hiểu": st.column_config.NumberColumn(format="%.2f %%"),
+                        "Tỉ lệ biết": st.column_config.NumberColumn(format="%.2f %%"),
+                        "Tỉ lệ không biết": st.column_config.NumberColumn(format="%.2f %%"),
+                        })
 
     
 

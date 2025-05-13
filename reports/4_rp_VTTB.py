@@ -65,7 +65,7 @@ def load_data1(sheeto5,sd,ed,khoa_select):
     header = data[0]
     values = data[1:]
     data = pd.DataFrame(values, columns=header)
-    if khoa_select != "Tất cả":
+    if khoa_select != "Chọn tất cả khoa":
         data = data.loc[data["Khoa báo cáo"].isin(khoa_select)]
     data['Timestamp'] = pd.to_datetime(data['Timestamp'], errors='coerce')
     start_date = sd
@@ -74,8 +74,8 @@ def load_data1(sheeto5,sd,ed,khoa_select):
     return data_final
 
 def chon_khoa(khoa):
-    if st.checkbox("Tất cả"):
-        khoa_select = "Tất cả"
+    if st.checkbox("Chọn tất cả khoa"):
+        khoa_select = "Chọn tất cả khoa"
     else:
         khoa_select = st.multiselect(label="Chọn khoa",
                                                 options= khoa)
@@ -159,7 +159,7 @@ with st.form("Thời gian"):
     submit_thoigian = st.form_submit_button("OK")
 if submit_thoigian:
     if ed < sd:
-        st.error("Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
+        st.error("Lỗi nngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
     else:
         sheeto5 = st.secrets["sheet_name"]["output_5"]
         data1 = load_data1(sheeto5,sd,ed,khoa_select)
