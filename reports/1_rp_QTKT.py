@@ -65,17 +65,17 @@ def load_data(x,sd,ed,khoa_select):
     header = data[0]
     values = data[1:]
     data = pd.DataFrame(values, columns=header)
-    if khoa_select == "Tất cả các Khoa" and st.session_state.username == st.secrets["user_special"]["u1"]:
+    if khoa_select == "Chọn tất cả khoa" and st.session_state.username == st.secrets["user_special"]["u1"]:
         khoa_select = [st.secrets["user_special"]["u1_khoa1"],
                         st.secrets["user_special"]["u1_khoa2"],
                         st.secrets["user_special"]["u1_khoa3"],]
-    if khoa_select == "Tất cả các Khoa" and st.session_state.username == st.secrets["user_special"]["u2"]:
+    if khoa_select == "Chọn tất cả khoa" and st.session_state.username == st.secrets["user_special"]["u2"]:
         khoa_select = [st.secrets["user_special"]["u2_khoa1"],
                             st.secrets["user_special"]["u2_khoa2"]]
-    if khoa_select == "Tất cả các Khoa" and st.session_state.username == st.secrets["user_special"]["u3"]:
+    if khoa_select == "Chọn tất cả khoa" and st.session_state.username == st.secrets["user_special"]["u3"]:
         khoa_select = [st.secrets["user_special"]["u3_khoa1"],
                             st.secrets["user_special"]["u3_khoa2"]]
-    if khoa_select == "Tất cả các Khoa" and st.session_state.phan_quyen in ["1","2","3"]:
+    if khoa_select == "Chọn tất cả khoa" and st.session_state.phan_quyen in ["1","2","3"]:
         khoa_select = data["Khoa"]
     data = data.loc[data["Khoa"].isin(khoa_select)]
     data['Timestamp'] = pd.to_datetime(data['Timestamp'], errors='coerce')
@@ -138,9 +138,9 @@ def tao_thong_ke(x,y):
 def chon_khoa(khoa):
     placeholder1 = st.empty()
     if st.session_state.phan_quyen in ["1","2","3"]:
-        if st.checkbox("Tất cả các Khoa"):
+        if st.checkbox("Chọn tất cả khoa"):
             placeholder1.empty()
-            khoa_select = "Tất cả các Khoa"
+            khoa_select = "Chọn tất cả khoa"
         else:
             with placeholder1:
                 khoa_select = st.multiselect(label="Chọn khoa",
@@ -151,7 +151,7 @@ def chon_khoa(khoa):
         if st.session_state.username == st.secrets["user_special"]["u1"]:
             if st.checkbox("Cả 3 khoa"):
                 placeholder1.empty()
-                khoa_select = "Tất cả các Khoa"
+                khoa_select = "Chọn tất cả khoa"
             else:
                 with placeholder1:
                     khoa_select = st.multiselect(label="Chọn khoa",
@@ -163,7 +163,7 @@ def chon_khoa(khoa):
         elif st.session_state.username == st.secrets["user_special"]["u2"]:
             if st.checkbox("Cả 2 khoa"):
                 placeholder1.empty()
-                khoa_select = "Tất cả các Khoa"
+                khoa_select = "Chọn tất cả khoa"
             else:
                 with placeholder1:
                     khoa_select = st.multiselect(label="Chọn khoa",
@@ -174,7 +174,7 @@ def chon_khoa(khoa):
         elif st.session_state.username == st.secrets["user_special"]["u3"]:
             if st.checkbox("Cả 2 khoa"):
                 placeholder1.empty()
-                khoa_select = "Tất cả các Khoa"
+                khoa_select = "Chọn tất cả khoa"
             else:
                 with placeholder1:
                     khoa_select = st.multiselect(label="Chọn khoa",

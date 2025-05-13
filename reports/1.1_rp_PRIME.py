@@ -7,6 +7,7 @@ import pathlib
 import base64
 from google.oauth2.service_account import Credentials
 import numpy as np
+import io
 
 @st.cache_data(ttl=3600)
 def get_img_as_base64(file):
@@ -86,20 +87,16 @@ def load_data(x,sd,ed,khoa_select):
 
 def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
-    #Lấy những cột cần cho hiển thị lên trang báo cáo
-#<<<<<<< HEAD
-    bo_cot = df[['STT','Timestamp','Khoa', 'Tên bảng kiểm', 'Tỉ lệ đạt','Tên người đánh giá', 'Tên người thực hiện']]
-#=======
-    # bo_cot = df[['STT','Timestamp','Khoa', 'Tên bảng kiểm', 'Tỉ lệ đạt','Tên người đánh giá', 'Tên người thực hiện']]
-#>>>>>>> 125067bc691932de10fca9932c003cfc0cf83af4
-    #Chuyển những cột tuân thủ thành dạng số nhờ đổi dấu "," thành "."
+    bo_cot = df[['STT','Timestamp','Khoa', 'Tỉ lệ đạt','Tên người đánh giá', 'Tên người thực hiện']]
     bo_cot['Tỉ lệ đạt'] = bo_cot['Tỉ lệ đạt'].str.replace(',', '.')
-    #Chuyển dạng số chính thức
     bo_cot['Tỉ lệ đạt'] = pd.to_numeric(bo_cot["Tỉ lệ đạt"], errors='coerce')
-     # Loại bỏ các hàng có Tỉ lệ đạt là NaN
     bo_cot = bo_cot.dropna(subset=['Tỉ lệ đạt'])
-    #Nhân 100 thành tỉ lệ phần trăm
     bo_cot['Tỉ lệ đạt'] = bo_cot['Tỉ lệ đạt'] * 100
+    if y == "Tổng quát":
+        bo_cot["Thời gian"] = bo_cot["Timestamp"].dt.strftime("%m - %Y")
+        bo_cot = bo_cot.groupby(['Khoa', 'Thời gian']).agg({'Khoa':'count','Tỉ lệ đạt': 'mean'}).rename(columns={"Khoa": "Số lượt"}).reset_index()
+        bo_cot.insert(0, 'STT', range(1, len(bo_cot) + 1))
+    return bo_cot
     
 
 def chon_khoa(khoa):

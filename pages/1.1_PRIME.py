@@ -90,9 +90,7 @@ def vitrigs():
 def bang_kiem_quy_trinh():
     sheeti6 = st.secrets["sheet_name"]["input_6"]
     data_qt6 = load_data(sheeti6)
-    chon_qt="PRIME duy trì"
-    qtx = data_qt6.loc[data_qt6["Tên quy trình"]==chon_qt]
-    st.session_state.quy_trinh = qtx
+    st.session_state.quy_trinh = data_qt6
 
 def precheck_table():
     tieu_chi = []
@@ -181,6 +179,14 @@ vitrigs()
 thong_tin_hanh_chinh()
 st.divider()
 st.markdown("<h4 style='text-align: center;'>Bảng kiểm PRIME duy trì</h4>", unsafe_allow_html=True)
+with st.expander("Tải xuống biểu mẫu"):
+    with open("https://drive.google.com/drive/u/1/folders/1D5pkCJQaJYAPLEeHrmaxu-gyvEfeogfI", "rb") as pdf_file:
+        pdf_data = pdf_file.read()  
+    st.download_button(
+        label="Tải xuống biểu mẫu đánh giá",
+        file_name="PRIME duy trì.pdf",
+        mime="application/pdf"
+    )
 bang_kiem_quy_trinh()
 luachon = ["Đạt", "Không đạt"]
 if (
