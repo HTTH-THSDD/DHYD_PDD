@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 import pathlib
 import base64
 from google.oauth2.service_account import Credentials
+import plotly.express as px
 
 @st.cache_data(ttl=3600)
 def get_img_as_base64(file):
@@ -190,6 +191,11 @@ def tinh_phan_tram_su_dung(data, headers):
     phan_tram_df = pd.concat([phan_tram_df.iloc[:-1], avg_row], ignore_index=True)
     return phan_tram_df
 
+def highlight_total_row_generic(row, total_row_idx):
+    if row.name == total_row_idx:
+        return ['background-color: #ffe599; color: #cf1c00'] * len(row)
+    return [''] * len(row)
+
 ##################################### Main Section ###############################################
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
@@ -257,14 +263,32 @@ if submit_thoigian:
                 st.warning("Không có dữ liệu theo yêu cầu")
             else:
                 st.markdown("<h5 style='text-align: center;'>Số lượng sử dụng các thiết bị toàn viện</h5>", unsafe_allow_html=True)
-                st.dataframe(data_tong_hop, use_container_width=True, hide_index=True)
+                st.dataframe(data_tong_hop,use_container_width=True, hide_index=True)
             st.markdown("<h5 style='text-align: center;'>Hiệu suất sử dụng các thiết bị toàn viện (%)</h5>", unsafe_allow_html=True)
             phan_tram_df = tinh_phan_tram_su_dung(data_output5, headers)
             for header in headers:
                     phan_tram_df[header] = phan_tram_df[header].apply(
                         lambda x: f"{round(float(x),2)}" if pd.notna(x) and x != "" else ""
                     )
-            st.dataframe(phan_tram_df, use_container_width=True, hide_index=True)
+            st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True)
+                        # Sau khi đã có phan_tram_df và headers
+            # Lấy dòng trung bình (dòng cuối cùng)
+            avg_row = phan_tram_df.iloc[-1]
+            # Loại bỏ cột "Ngày báo cáo"
+            avg_row = avg_row.drop("Ngày báo cáo")
+            # Chuyển giá trị về float (nếu đang là string có ký tự %)
+            avg_row_float = avg_row.apply(lambda x: float(str(x).replace("%", "")) if x != "" else 0)
+            fig = px.bar(
+                x=headers,
+                y=[avg_row_float[header] for header in headers],
+                labels={'x': '', 'y': 'Hiệu suất sử dụng (%)'},
+                text=[avg_row_float[header] for header in headers],
+                color_discrete_sequence=["#1f77b4"],
+            )
+            fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
+            fig.update_layout(yaxis_tickformat='.2f')
+            st.markdown("<h5 style='text-align: center;'>Biểu đồ hiệu suất sử dụng các thiết bị toàn viện</h5>", unsafe_allow_html=True)
+            st.plotly_chart(fig, use_container_width=True)
         with tab3:                            
             sheeti5 = st.secrets["sheet_name"]["input_5"]
             data_input5 = load_data(sheeti5)
@@ -278,6 +302,16 @@ if submit_thoigian:
                     data_expanded[header] = data_output5["Thiết bị thông thường"].apply(
                         lambda x: tach_cot_lay_dang_su_dung(x, header)
                     )
+                sum_row = {col: "" for col in data_expanded.columns}
+                for header in headers:
+                    sum_row[header] = data_expanded[header].sum()
+                sum_row["Người báo cáo"] = "Tổng"
+                data_expanded = pd.concat([data_expanded, pd.DataFrame([sum_row])], ignore_index=True)
                 st.markdown("<h5 style='text-align: center;'>Số lượng sử dụng các thiết bị</h5>", unsafe_allow_html=True)
-                st.dataframe(data_expanded, use_container_width=True, hide_index=True)
+                st.dataframe(
+                    data_expanded.style.apply(lambda row: highlight_total_row_generic(row, len(data_expanded) - 1), axis=1),
+                    use_container_width=True,
+                    hide_index=True
+                )
+
                 
