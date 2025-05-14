@@ -202,7 +202,7 @@ html_code = f"""
         <tr><td><b>Bằng cấp chuyên môn:</b></td><td>{data_final_dict["Bằng cấp chuyên môn"]}</td></tr>
         <tr><td><b>Phân cấp năng lực:</b></td><td>{data_final_dict["Phân cấp năng lực"]}</td></tr>
         <tr><td><b>Email:</b></td><td>{data_final_dict["Email"]}</td></tr>
-        <tr><td><b>SĐT:</b></td><td>{data_final_dict["Sđt"]}</td></tr>
+        <tr><td><b>SĐT:</b></td><td>0{data_final_dict["Sđt"]}</td></tr>
     </table>
 </div>
 """

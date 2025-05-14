@@ -97,8 +97,6 @@ def tao_thong_ke(x,y):
         bo_cot = bo_cot.groupby(['Khoa', 'Thời gian']).agg({'Khoa':'count','Tỉ lệ đạt': 'mean'}).rename(columns={"Khoa": "Số lượt"}).reset_index()
         bo_cot.insert(0, 'STT', range(1, len(bo_cot) + 1))
     return bo_cot
-    
-
 def chon_khoa(khoa):
     placeholder1 = st.empty()
     if st.session_state.phan_quyen in ["1","2","3"]:
@@ -220,6 +218,10 @@ if submit_thoigian:
                             column_config = {
                                     "Tỉ lệ đạt": st.column_config.NumberColumn(format="%.2f %%")
                                     })
+powerbi_url = "https://app.powerbi.com/groups/fbea42ac-f40a-4ada-bdbe-95cd1dc34b62/reports/e4d93ac2-150f-4e45-9932-e93fc32666e8/49312121a00775315830?experience=power-bi"
+st.markdown(f"[📊 Xem báo cáo chi tiết tại Power BI]({powerbi_url})", unsafe_allow_html=True)
+
+
 
 
     

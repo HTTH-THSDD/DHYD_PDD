@@ -243,6 +243,8 @@ if submit_thoigian:
                         "Tỉ lệ biết": st.column_config.NumberColumn(format="%.2f %%"),
                         "Tỉ lệ không biết": st.column_config.NumberColumn(format="%.2f %%"),
                         })
+powerbi_url = "https://app.powerbi.com/groups/fbea42ac-f40a-4ada-bdbe-95cd1dc34b62/reports/9e25c2e8-fd54-408d-8e5d-052514a8068f/02c5ac7c60ddcd72191d?experience=power-bi"
+st.markdown(f"[📊 Xem báo cáo chi tiết tại Power BI]({powerbi_url})", unsafe_allow_html=True)
 
     
 

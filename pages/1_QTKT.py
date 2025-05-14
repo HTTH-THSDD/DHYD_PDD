@@ -137,7 +137,6 @@ def upload_data_GS(data):
     gc = gspread.authorize(credentials)
     sheeto1 = st.secrets["sheet_name"]["output_1"]
     sheet = gc.open(sheeto1).sheet1
-    sheet = gc.open("Output-st-GSQT").sheet1
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
     column_index = len(sheet.get_all_values())    
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
@@ -175,12 +174,12 @@ def upload_data_GS(data):
     column_data=column_data.rstrip("#")
     column_mqt = st.session_state.ma_quy_trinh
     sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan])
-    warning(3)
+    warning(3,2)
 
 @st.dialog("Thông báo")
-def warning(x):
+def warning(x,y):
     if x == 1:
-        st.warning("Các bước bị thiếu được liệt kê bên dưới")
+        st.warning(f"Các bước bị thiếu thông tin: {y}")
     if x == 2:
         st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
     if x == 3:
@@ -246,8 +245,7 @@ if (
             if st.button("Lưu"):
                 upload_data_GS(prechecktable)
         else:
-            warning(1)
-            st.warning(f"Các bước chưa chọn kết quả: {buoc_chua_dien_str}") 
+            warning(1,buoc_chua_dien_str)
 else:
     st.warning("Vui lòng chọn đầy đủ các mục")
 

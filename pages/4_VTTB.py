@@ -78,6 +78,10 @@ def kiem_tra():
             so_thiet_bi_thieu.append(f"{st.session_state.thiet_bi['Tên thiết bị'].iloc[i]}")
     return so_thiet_bi_thieu
 
+@st.dialog("Thông báo")
+def warning(a):
+    st.warning(f"Vui lòng điền đẩy đủ thông tin các thiết bị: {', '.join(a)}")
+
 def upload_data_VTTB():
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
@@ -99,13 +103,13 @@ def upload_data_VTTB():
     column_SCD_bo_sung = ""
     SCD_so_bn = str(st.session_state[f"chua_thuc_hien_{i}"])
     SCD_nguyen_nhan = str(st.session_state[f"nguyen_nhan_{i}"])
-    if SCD_so_bn != 0 and SCD_nguyen_nhan != "Trống":
+    if SCD_so_bn != 0 and SCD_nguyen_nhan != "":
         column_SCD_bo_sung += SCD_so_bn + "|" + SCD_nguyen_nhan
     columnn_SCD_muon_khoa_khac =""
     for idx in st.session_state.additional_columns:
         SCD_muon_khoa_khac = st.session_state[f"muon_tu_khoa_khac_{idx}"]
         SCD_so_luong_muon = str(st.session_state[f"so_luong_muon_{idx}"])
-        if SCD_muon_khoa_khac != "Chọn khoa" and SCD_so_luong_muon != 0:
+        if SCD_muon_khoa_khac != "--Chọn khoa--" and SCD_so_luong_muon != 0:
                 columnn_SCD_muon_khoa_khac += SCD_muon_khoa_khac + ":" + SCD_so_luong_muon + " + "
     if columnn_SCD_muon_khoa_khac != "":
         columnn_SCD_muon_khoa_khac = columnn_SCD_muon_khoa_khac.rstrip(" + ")
@@ -113,7 +117,7 @@ def upload_data_VTTB():
     for idx in st.session_state.additional_columns_2:
         SCD_cho_khoa_khac = st.session_state[f"cho_khoa_khac_muon{idx}"]
         SCD_so_luong_cho_muon = str(st.session_state[f"so_luong_cho_muon_{idx}"])
-        if SCD_cho_khoa_khac != "Chọn khoa" and SCD_so_luong_cho_muon != 0:
+        if SCD_cho_khoa_khac != "--Chọn khoa--" and SCD_so_luong_cho_muon != 0:
                 columnn_SCD_cho_khoa_khac_muon += SCD_cho_khoa_khac + ":" + SCD_so_luong_cho_muon + " + "
     if columnn_SCD_cho_khoa_khac_muon != "":
         columnn_SCD_muon_khoa_khac = columnn_SCD_muon_khoa_khac.rstrip(" + ")
@@ -294,6 +298,8 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
         a = kiem_tra()
         if len(a) == 0:
             upload_data_VTTB()
+        else:
+            warning(a)
 else:
     st.warning("Vui lòng chọn khoa cần báo cáo")
 

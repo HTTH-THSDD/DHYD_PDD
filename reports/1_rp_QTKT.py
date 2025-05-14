@@ -272,6 +272,8 @@ if submit_thoigian:
                                 column_config = {
                                     "Tỉ lệ tuân thủ": st.column_config.NumberColumn(format="%.2f %%"),
                                     "Tỉ lệ an toàn": st.column_config.NumberColumn(format="%.2f %%")})
+powerbi_url = "https://app.powerbi.com/groups/fbea42ac-f40a-4ada-bdbe-95cd1dc34b62/reports/e4d93ac2-150f-4e45-9932-e93fc32666e8/ReportSection?experience=power-bi"
+st.markdown(f"[📊 Xem báo cáo chi tiết tại Power BI]({powerbi_url})", unsafe_allow_html=True)
 
 
     

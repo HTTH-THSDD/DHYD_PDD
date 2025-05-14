@@ -84,6 +84,7 @@ def chon_khoa(khoa):
 def khoa_chua_bao_cao(khoa,sd,ed):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
+    sheeto5 = st.secrets["sheet_name"]["output_5"]
     sheet = gc.open(sheeto5).sheet1
     data = sheet.get_all_values()
     header = data[0]
@@ -111,6 +112,84 @@ def khoa_chua_bao_cao(khoa,sd,ed):
     data["Các khoa đã báo cáo"] = data["Các khoa đã báo cáo"].str.replace(",", "\n")
     data["Các khoa chưa báo cáo"] = data["Các khoa chưa báo cáo"].str.replace(", ", "\n")
     return data
+
+
+# Hàm hỗ trợ để tách giá trị từ cột "Thiết bị thông thường"
+def tach_cot_lay_dang_su_dung(column_data, header):
+    """
+    Tách giá trị từ cột "Thiết bị thông thường" dựa trên header.
+    """
+    if pd.isna(column_data):
+        return None
+    for item in column_data.split("#"):  # Giả sử các cụm thiết bị được phân tách bằng dấu "#"
+        parts = item.split("|")
+        if len(parts) >= 3 and parts[0].strip() == header:  # Kiểm tra header
+            try:
+                return int(parts[2].strip())  # Lấy giá trị nằm giữa dấu "|" thứ 2 và thứ 3
+            except ValueError:
+                return None
+    return None
+
+def tinh_tong_dang_su_dung(data, header):
+    result = pd.DataFrame()
+    result["Ngày báo cáo"] = data["Ngày báo cáo"].unique()
+    # Tính tổng cho từng thiết bị theo ngày báo cáo
+    for header in headers:
+        result[header] = result["Ngày báo cáo"].apply(
+            lambda date: data[data["Ngày báo cáo"] == date]["Thiết bị thông thường"].apply(
+                lambda x: tach_cot_lay_dang_su_dung(x, header)
+            ).sum()
+        )
+    avg_row = pd.DataFrame(result[headers].mean(axis=0)).T
+    avg_row.insert(0, "Ngày báo cáo", "Trung bình")
+    result = pd.concat([result, avg_row], ignore_index=True)
+    return result
+
+def tach_gia_tri_co_so(column_data, header):
+    """
+    Lấy giá trị cơ số từ cột "Thiết bị thông thường" dựa trên header.
+    (Giá trị nằm giữa dấu | thứ 1 và thứ 2)
+    """
+    if pd.isna(column_data):
+        return 0
+    for item in column_data.split("#"):
+        parts = item.split("|")
+        if len(parts) >= 3 and parts[0].strip() == header:
+            try:
+                return int(parts[1].strip())
+            except ValueError:
+                return 0
+    return 0
+
+def tinh_phan_tram_su_dung(data, headers):
+    """
+    Trả về DataFrame phần trăm sử dụng theo ngày và thiết bị.
+    """
+    # Lấy danh sách ngày báo cáo
+    ngay_bao_cao = data["Ngày báo cáo"].unique()
+    # Tạo bảng tổng số lượng đang sử dụng
+    tong_su_dung = tinh_tong_dang_su_dung(data, headers)
+    # Tạo bảng tổng cơ số
+    co_so_dict = {}
+    for header in headers:
+        co_so_dict[header] = []
+        for ngay in ngay_bao_cao:
+            mask = data["Ngày báo cáo"] == ngay
+            co_so = data.loc[mask, "Thiết bị thông thường"].apply(lambda x: tach_gia_tri_co_so(x, header)).sum()
+            co_so_dict[header].append(co_so)
+    # Tạo DataFrame cơ số
+    co_so_df = pd.DataFrame(co_so_dict)
+    co_so_df.insert(0, "Ngày báo cáo", ngay_bao_cao)
+    # Tính phần trăm
+    phan_tram_df = tong_su_dung.copy()
+    for header in headers:
+        phan_tram_df[header] = (tong_su_dung[header] / co_so_df[header].replace(0, pd.NA) * 100).round(2)
+    # Dòng trung bình
+    avg_row = pd.DataFrame(phan_tram_df[headers].mean(axis=0)).T
+    avg_row.insert(0, "Ngày báo cáo", "Trung bình")
+    phan_tram_df = pd.concat([phan_tram_df.iloc[:-1], avg_row], ignore_index=True)
+    return phan_tram_df
+
 ##################################### Main Section ###############################################
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
@@ -159,19 +238,46 @@ with st.form("Thời gian"):
     submit_thoigian = st.form_submit_button("OK")
 if submit_thoigian:
     if ed < sd:
-        st.error("Lỗi nngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
-    else:
+        st.error("Lỗi ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
+    else:           
         sheeto5 = st.secrets["sheet_name"]["output_5"]
-        data1 = load_data1(sheeto5,sd,ed,khoa_select)
-        if data1.empty:
-            st.warning("Không có dữ liệu theo yêu cầu")
-        else:
-            st.write(f"Các báo cáo thiết bị của {khoa_select}")
+        tab1, tab2, tab3 = st.tabs(["Báo cáo thiết bị hằng ngày", "Thống kê toàn viện","Thống kê theo khoa"])
+        with tab1:
+            data1 = khoa_chua_bao_cao(khoa,sd,ed)
+            st.write(f"Thống kê báo cáo theo ngày")
             st.dataframe(data1, use_container_width=True, hide_index=True)
-        data2 = khoa_chua_bao_cao(khoa,sd,ed)
-        if data2.empty:
-            st.warning("Không có dữ liệu theo yêu cầu")
-        else:
-            st.write(f"Tổng kết báo cáo theo ngày")
-            st.dataframe(data2, use_container_width=True, hide_index=True)
-
+        with tab2:
+            sheeti5 = st.secrets["sheet_name"]["input_5"]
+            data_input5 = load_data(sheeti5)
+            headers = data_input5["Tên thiết bị"].unique()
+            data_output5 = load_data1(sheeto5, sd, ed, khoa_select)
+            data_output5["Thiết bị thông thường"] = data_output5["Thiết bị thông thường"].fillna("").astype(str)
+            data_tong_hop = tinh_tong_dang_su_dung(data_output5, headers)
+            if data_output5.empty:
+                st.warning("Không có dữ liệu theo yêu cầu")
+            else:
+                st.markdown("<h5 style='text-align: center;'>Số lượng sử dụng các thiết bị toàn viện</h5>", unsafe_allow_html=True)
+                st.dataframe(data_tong_hop, use_container_width=True, hide_index=True)
+            st.markdown("<h5 style='text-align: center;'>Hiệu suất sử dụng các thiết bị toàn viện (%)</h5>", unsafe_allow_html=True)
+            phan_tram_df = tinh_phan_tram_su_dung(data_output5, headers)
+            for header in headers:
+                    phan_tram_df[header] = phan_tram_df[header].apply(
+                        lambda x: f"{round(float(x),2)}" if pd.notna(x) and x != "" else ""
+                    )
+            st.dataframe(phan_tram_df, use_container_width=True, hide_index=True)
+        with tab3:                            
+            sheeti5 = st.secrets["sheet_name"]["input_5"]
+            data_input5 = load_data(sheeti5)
+            headers = data_input5["Tên thiết bị"].unique()
+            data_output5 = load_data1(sheeto5, sd, ed, khoa_select)
+            if data_output5.empty:
+                st.warning("Không có dữ liệu theo yêu cầu")
+            else:
+                data_expanded = data_output5[["Timestamp", "Ngày báo cáo", "Khoa báo cáo", "Người báo cáo"]].copy()
+                for header in headers:
+                    data_expanded[header] = data_output5["Thiết bị thông thường"].apply(
+                        lambda x: tach_cot_lay_dang_su_dung(x, header)
+                    )
+                st.markdown("<h5 style='text-align: center;'>Số lượng sử dụng các thiết bị</h5>", unsafe_allow_html=True)
+                st.dataframe(data_expanded, use_container_width=True, hide_index=True)
+                

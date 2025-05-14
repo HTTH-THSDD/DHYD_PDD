@@ -241,6 +241,8 @@ if submit_thoigian:
                                     "Tỉ lệ bước đúng, nhưng chưa đủ": st.column_config.NumberColumn(format="%.2f %%"),
                                     "Tỉ lệ bước Không thực hiện hoặc ghi sai": st.column_config.NumberColumn(format="%.2f %%"),
                                     })
+powerbi_url = "https://app.powerbi.com/groups/fbea42ac-f40a-4ada-bdbe-95cd1dc34b62/reports/99d39735-915d-4541-b91e-b0a79a6f861e/ReportSection24ec544e962f63829565?experience=power-bi"
+st.markdown(f"[📊 Xem báo cáo chi tiết tại Power BI]({powerbi_url})", unsafe_allow_html=True)
 
     
 

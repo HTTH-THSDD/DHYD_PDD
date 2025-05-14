@@ -117,7 +117,7 @@ def upload_data_HSBA(len_data):
         column_tl_Khong_thuc_hien = round(so_buoc_Khong_thuc_hien/tong_so_buoc_tru_KAD,4)
     column_data=column_data.rstrip("#")
     sheet.append_row([column_index, column_timestamp, column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data,column_tl_dung_du,column_tl_dung_nhung_chua_du,column_tl_Khong_thuc_hien])
-    warning (3)
+    warning (3,3)
 
 def kiemtra_svv():
     match = re.match(r"^\d{2}-\d{7}$",st.session_state.svv_HSBA)
@@ -127,9 +127,9 @@ def kiemtra_svv():
         return False
 
 @st.dialog("Thông báo")
-def warning(x):
+def warning(x,y):
     if x == 1:
-        st.warning("Các bước bị thiếu được liệt kê bên dưới")
+        st.warning(f"Xin kiểm tra lại các bước sau: {y}")
     if x == 2:
         st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
     if x == 3:
@@ -204,7 +204,7 @@ if "khoa_HSBA" in st.session_state and st.session_state["khoa_HSBA"] and "vtgs_H
     if submitbutton:
         if "svv_HSBA" in st.session_state and st.session_state.svv_HSBA and "yob_HSBA" in st.session_state and st.session_state.yob_HSBA:
             if kiemtra_svv() != True:
-                warning(4)
+                warning(4,4)
             else:
                 buoc_chua_dien = []
                 for j in range (0,len(data_hsba)):
@@ -214,10 +214,9 @@ if "khoa_HSBA" in st.session_state and st.session_state["khoa_HSBA"] and "vtgs_H
                 if buoc_chua_dien_str == "":
                     upload_data_HSBA(len(data_hsba))
                 else:
-                    warning(1)
-                    st.write(f"Các bước chưa chọn kết quả: {buoc_chua_dien_str}")
+                    warning(1,buoc_chua_dien_str)
         else:
-            warning(2)
+            warning(2,2)
 else:
     st.warning("Vui lòng chọn đầy đủ các mục")
         

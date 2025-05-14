@@ -69,9 +69,12 @@ def load_data_GSheet(name):
     start_date = st.session_state.sd
     end_date = st.session_state.ed + timedelta(days=1)
     df = df[(df['Timestamp'] >= pd.Timestamp(start_date)) & (df['Timestamp'] < pd.Timestamp(end_date))]
-    if name != st.secrets["sheet_name"]["output_4"]:
-        df["Data"] = df["Data"].str.replace("#", "\n")
-        df["Data"] = df["Data"].str.replace("|", "  ")
+    if name == st.secrets["sheet_name"]["output_5"]:
+        df["Thiết bị thông thường"] = df["Thiết bị thông thường"].str.replace("#", "\n")
+    else:
+        if name != st.secrets["sheet_name"]["output_4"]:
+            df["Data"] = df["Data"].str.replace("#", "\n")
+            df["Data"] = df["Data"].str.replace("|", "  ")
     if name == st.secrets["sheet_name"]["output_1"]:
         df = df.drop(["Mã quy trình","Tỉ lệ tuân thủ","Tỉ lệ an toàn"], axis=1)
     if name == st.secrets["sheet_name"]["output_4"]:

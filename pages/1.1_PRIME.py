@@ -144,16 +144,14 @@ def upload_data_GS(data):
     tltt = round(so_buoc_dat/tong_so_buoc,4)
 
     sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,tltt])
-    warning(3)
+    warning(3,3)
 
 @st.dialog("Thông báo")
-def warning(x):
+def warning(x,y):
     if x == 1:
-        st.warning("Các tiêu chí bị thiếu được liệt kê bên dưới")
-    if x == 2:
-        st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
+        st.warning("Các tiêu chí bị thiếu: " + str(y))
     if x == 3:
-        st.success("Đã gửi thành công")
+        st.success("Gửi thành công")
 # Main Section ####################################################################################
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
@@ -179,6 +177,18 @@ vitrigs()
 thong_tin_hanh_chinh()
 st.divider()
 st.markdown("<h4 style='text-align: center;'>Bảng kiểm PRIME duy trì</h4>", unsafe_allow_html=True)
+file_id = "1HdoVbeB8LkOD_PGZrGNmAF9j6YjUNa9M"
+download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+st.markdown(
+    f"""
+    <div style="text-align: center;">
+        <a href="{download_url}" download target="_blank">
+            <button style="padding:5px 5px; font-size:13px; color:#03069c; background-color:#cdf8fa; border: none;">Tải biểu mẫu PDF</button>
+        </a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 bang_kiem_quy_trinh()
 luachon = ["Đạt", "Không đạt"]
 if (
@@ -215,8 +225,10 @@ if (
             if st.button("Gửi"):
                 upload_data_GS(prechecktable)
         else:
-            warning(1)
-            st.warning(f"Các tiêu chí chưa chọn kết quả: {buoc_chua_dien_str}") 
+            warning(1,buoc_chua_dien_str)
 else:
     st.warning("Vui lòng chọn đầy đủ các mục")
+
+
+
 
