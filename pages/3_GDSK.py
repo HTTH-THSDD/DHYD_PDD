@@ -155,7 +155,7 @@ def kiemtra_svv():
 @st.dialog("Thông báo")
 def warning(x):
     if x == 1:
-        st.warning("Các bước bị thiếu được liệt kê bên dưới")
+        st.warning("Các bước chưa đánh giá được liệt kê bên dưới")
     if x == 2:
         st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
     if x == 3:

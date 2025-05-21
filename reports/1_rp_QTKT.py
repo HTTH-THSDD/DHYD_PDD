@@ -88,9 +88,9 @@ def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
     #Lấy những cột cần cho hiển thị lên trang báo cáo
 #<<<<<<< HEAD
-    bo_cot = df[['STT','Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tên người đánh giá', 'Tên người thực hiện']]
+    bo_cot = df[['STT','Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tỉ lệ nhận dạng NB','Tên người đánh giá', 'Tên người thực hiện']]
 #=======
-    bo_cot = df[['STT','Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tên người đánh giá', 'Tên người thực hiện']]
+    bo_cot = df[['STT','Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tỉ lệ nhận dạng NB','Tên người đánh giá', 'Tên người thực hiện']]
 #>>>>>>> 125067bc691932de10fca9932c003cfc0cf83af4
     #Chuyển những cột tuân thủ thành dạng số nhờ đổi dấu "," thành "."
     bo_cot['Tỉ lệ tuân thủ'] = bo_cot['Tỉ lệ tuân thủ'].str.replace(',', '.')
@@ -101,8 +101,13 @@ def tao_thong_ke(x,y):
     #Tương tự với tỉ lệ an toàn
     bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].str.replace(',', '.')
     bo_cot['Tỉ lệ an toàn'] = pd.to_numeric(bo_cot["Tỉ lệ an toàn"], errors='coerce')
+    #Tỉ lệ nhận dạng NB
+    bo_cot['Tỉ lệ nhận dạng NB'] = bo_cot['Tỉ lệ nhận dạng NB'].str.replace(',', '.')
+    bo_cot['Tỉ lệ nhận dạng NB'] = pd.to_numeric(bo_cot["Tỉ lệ nhận dạng NB"], errors='coerce')
+
     if y == "Chi tiết":
         bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
+        bo_cot['Tỉ lệ nhận dạng NB'] = bo_cot['Tỉ lệ nhận dạng NB'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
         if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
             bo_cot = bo_cot.drop("Khoa",axis=1)
         return bo_cot
@@ -110,23 +115,38 @@ def tao_thong_ke(x,y):
         bo_cot = bo_cot.drop(["Timestamp","Tên người đánh giá", "Tên người thực hiện"], axis=1)
         # Lọc ra 1 bảng chứa những dòng có giá trị an toàn là số
         bang_co_tlan = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ an toàn"])]
+        bang_co_tlnd = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ nhận dạng NB"])]
         # Nhóm lại bảng đó theo khoa và tên quy trình, tạo thêm 3 cột, là tỉ lệ an toàn bàng trung bình, tỉ lệ tuân thủ bằng trung bình, và cột số lượt là bằng count số lần của tên quy trình
         ket_qua1 = bang_co_tlan.groupby(["Khoa","Tên quy trình"]).agg({
         "Tên quy trình": "count",
         "Tỉ lệ tuân thủ": "mean",
-        "Tỉ lệ an toàn": "mean",
+        "Tỉ lệ an toàn": "mean"
         }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
-        # Làm tương tự với bảng chứa các giá trị an toàn là NaN, tiêng cột giá trị an toàn không fungd hàm mean nữa mà mình sẽ lấy giá trị đầu tiên cũng chính là NaN
+        
+        ket_qua1_1 = bang_co_tlnd.groupby(["Khoa","Tên quy trình"]).agg({
+        "Tên quy trình": "count",
+        "Tỉ lệ tuân thủ": "mean",
+        "Tỉ lệ nhận dạng NB": "mean",
+        }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
+        # Làm tương tự với bảng chứa các giá trị an toàn là NaN, riêng cột giá trị an toàn không dùng hàm mean nữa mà mình sẽ lấy giá trị đầu tiên cũng chính là NaN
         bang_khong_tlan = bo_cot.loc[pd.isna(bo_cot["Tỉ lệ an toàn"])]
+        bang_khong_tlnd = bo_cot.loc[pd.isna(bo_cot["Tỉ lệ nhận dạng NB"])]
         ket_qua2 = bang_khong_tlan.groupby(["Khoa","Tên quy trình"]).agg({
         "Tên quy trình": "count",
         "Tỉ lệ tuân thủ": "mean",
-        "Tỉ lệ an toàn": "first",
+        "Tỉ lệ an toàn": "first"
+        }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
+
+        ket_qua2_1 = bang_khong_tlnd.groupby(["Khoa","Tên quy trình"]).agg({
+        "Tên quy trình": "count",
+        "Tỉ lệ tuân thủ": "mean",
+        "Tỉ lệ nhận dạng NB": "first",
         }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
         # Gép 2 bảng lại
-        ket_qua = pd.concat([ket_qua1, ket_qua2], ignore_index=True)
+        ket_qua = pd.concat([ket_qua1, ket_qua1_1, ket_qua2, ket_qua2_1], ignore_index=True)
         # Forrmat lại với điều kiện nếu giá trị trong cột an toàn không là NaN (if pd.notna(x)) thì giá trị đó được * 100 để chuyển sang dạng %, còn ngược lại (else thì sẽ giữ nguyên giá trị là NaN)
         ket_qua['Tỉ lệ an toàn'] = ket_qua['Tỉ lệ an toàn'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
+        ket_qua['Tỉ lệ nhận dạng NB'] = ket_qua['Tỉ lệ nhận dạng NB'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
         # Sort kết quả theo tên khoa
         ket_qua = pd.DataFrame(ket_qua).sort_values("Khoa")
         # Gắn thêm cột số thứ tự cho i chạy từ 1 đến số dòng của bảng mới gộp
@@ -263,7 +283,8 @@ if submit_thoigian:
                                 hide_index=True, 
                                 column_config = {
                                     "Tỉ lệ tuân thủ": st.column_config.NumberColumn(format="%.2f %%"),
-                                    "Tỉ lệ an toàn": st.column_config.NumberColumn(format="%.2f %%")
+                                    "Tỉ lệ an toàn": st.column_config.NumberColumn(format="%.2f %%"),
+                                    "Tỉ lệ nhận dạng NB": st.column_config.NumberColumn(format="%.2f %%")
                                     })
                 with st.expander("Thống kê chi tiết"):
                     thongkechitiet = tao_thong_ke(data,"Chi tiết")
@@ -271,7 +292,9 @@ if submit_thoigian:
                                 hide_index=True, 
                                 column_config = {
                                     "Tỉ lệ tuân thủ": st.column_config.NumberColumn(format="%.2f %%"),
-                                    "Tỉ lệ an toàn": st.column_config.NumberColumn(format="%.2f %%")})
+                                    "Tỉ lệ an toàn": st.column_config.NumberColumn(format="%.2f %%"),
+                                    "Tỉ lệ nhận dạng NB": st.column_config.NumberColumn(format="%.2f %%")
+                                    })
 powerbi_url = "https://app.powerbi.com/groups/fbea42ac-f40a-4ada-bdbe-95cd1dc34b62/reports/e4d93ac2-150f-4e45-9932-e93fc32666e8/ReportSection?experience=power-bi"
 st.markdown(f"[📊 Xem báo cáo chi tiết tại Power BI]({powerbi_url})", unsafe_allow_html=True)
 

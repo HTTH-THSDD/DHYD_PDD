@@ -152,15 +152,15 @@ def xuli(data,a,ten_ma,sd,ed):
                 st.write("Bạn chưa được giám sát quy trình kỹ thuật nào trong thời gian yêu cầu")
         else:
             if a == "Tên người đánh giá":
-                html_code = f'<p class="ttcn"><i>Thông tin tham gia đánh giá giám sát quy trình:</i></p>'
+                html_code = f'<p class="ttcn"><i>Thông tin tham gia giám sát quy trình:</i></p>'
                 st.html(html_code)
-                st.write(f"Nhân viên {ten_ma} đã tham gia giám sát {len(data)} lần trong khoảng thời gian được chọn.")
+                st.write(f"Nhân viên {ten_ma} **đã tham gia giám sát {len(data)} lần** trong khoảng thời gian được chọn.")
                 with st.expander("Thông tin chi tiết:"):
                     st.dataframe(data, hide_index=True)
             else:
                 html_code = f'<p class="ttcn"><i>Thông tin được đánh giá thực hiện quy trình:</i></p>'
                 st.html(html_code)
-                st.write(f"Nhân viên {ten_ma} đã được giám sát {len(data)} lần trong khoảng thời gian được chọn.")
+                st.markdown(f"Nhân viên {ten_ma} **đã được giám sát {len(data)} lần** trong khoảng thời gian được chọn.")
                 with st.expander("Thông tin chi tiết:"):
                     st.dataframe(data, hide_index=True)
 
@@ -234,7 +234,7 @@ with st.form("Thời gian"):
     submit_thoigian = st.form_submit_button("Xem thống kê")
 if submit_thoigian:
     if ed < sd:
-        st.error("Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
+        st.error("Lỗi ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
     else:
         xuli(datags,"Tên người đánh giá",ten_ma,sd,ed)
         xuli(datags,"Tên người thực hiện",ten_ma,sd,ed)

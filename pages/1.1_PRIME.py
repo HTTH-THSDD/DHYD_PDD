@@ -149,7 +149,7 @@ def upload_data_GS(data):
 @st.dialog("Thông báo")
 def warning(x,y):
     if x == 1:
-        st.warning("Các tiêu chí bị thiếu: " + str(y))
+        st.warning("Các tiêu chí chưa đánh giá: " + str(y))
     if x == 3:
         st.success("Gửi thành công")
 # Main Section ####################################################################################

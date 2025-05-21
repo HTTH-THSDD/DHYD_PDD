@@ -129,7 +129,7 @@ def kiemtra_svv():
 @st.dialog("Thông báo")
 def warning(x,y):
     if x == 1:
-        st.warning(f"Xin kiểm tra lại các bước sau: {y}")
+        st.warning(f"Vui lòng kiểm tra lại các bước sau: {y}")
     if x == 2:
         st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
     if x == 3:

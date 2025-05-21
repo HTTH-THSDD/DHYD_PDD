@@ -73,7 +73,7 @@ def load_data_GSheet(name):
                 tt.append("Đang chờ")
             else:
                 if df.iloc[i,8] == "" or df.iloc[i,8] == None:
-                    tt.append("Đang cập nhât")
+                    tt.append("Đang cập nhật")
                 elif df.iloc[i,8] == 1:
                     tt.append("Hoàn thành")
                 elif df.iloc[i,8] == 0:
@@ -94,7 +94,7 @@ def load_data_GSheet(name):
 def highlight_status(val):
     if val == "Hoàn thành":
         color = "green"
-    elif val == "Đang cập nhât":
+    elif val == "Đang cập nhật":
         color = "orange"
     elif val == "Từ chối":
         color = "red"
@@ -191,10 +191,10 @@ st.markdown("""
     <br><br><br>
     <hr style="border: 1.325px solid #195e83; margin: 15px 0;">
     <p style="font-size: 13.5px; color: #333;">
-        <i>Nếu có thắc mắc, Quý Anh/Chị vui lòng liên hệ 
+        <i>Nếu có thắc mắc, Quý Anh/Chị vui lòng liên hệ:<br> 
         <span style="color: #042f66; font-weight: bold;">CNĐD. Huỳnh Thị Thanh Hằng (5379)</span> 
         hoặc 
-        <span style="color: #042f66; font-weight: bold;">CNĐD. Võ Thị Cẩm Nhung (5624)</span>. 
+        <span style="color: #042f66; font-weight: bold;">CNĐD. Võ Thị Cẩm Nhung (5624)</span>
         <br> Xin cảm ơn Quý Anh/Chị!
         </i>
     </p>

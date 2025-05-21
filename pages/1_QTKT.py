@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import gspread
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -111,6 +112,21 @@ def bang_kiem_quy_trinh():
         if "quy_trinh" in st.session_state:
             del st.session_state["quy_trinh"]
 
+    if chon_qt:
+        qtx = data_qt2.loc[data_qt2["Tên quy trình"]==chon_qt]
+        st.session_state.quy_trinh = qtx
+        st.session_state.ten_quy_trinh =  qtx["Tên quy trình"].iloc[0]
+        ma_quy_trinh = qtx["Mã bước QT"].iloc[0]    
+        danh_sach_buoc_nhan_dang = []
+        for i in range(0,len(qtx)):
+            if qtx["Nhận dạng"].iloc[i] == "x":
+                danh_sach_buoc_nhan_dang.append(int(qtx["Bước"].iloc[i]))
+        st.session_state.ds_buocNDNB = danh_sach_buoc_nhan_dang
+        st.session_state.ma_quy_trinh = ma_quy_trinh[:4]
+    else:
+        if "quy_trinh" in st.session_state:
+            del st.session_state["quy_trinh"]
+
 def precheck_table():
     buoc = []
     nd = []
@@ -150,6 +166,8 @@ def upload_data_GS(data):
     tong_so_buoc_tru_KAD = len(data)
     buoc_an_toan_dung_du = 0
     tong_an_toan_tru_an_toan_va_KAD = len(st.session_state.ds_buocantoan)
+    buoc_nhan_dang_dung_du = 0
+    tong_nhan_dang_tru_nhan_dang_va_KAD = len(st.session_state.ds_buocNDNB)
     for i in range (0, len(data)):
         buoc = str(data.iloc[i]["Bước"])  
         ketqua = str(data.iloc[i]["Kết quả"])  
@@ -157,29 +175,35 @@ def upload_data_GS(data):
         if ketqua == "Thực hiện đúng, đủ":
             so_buoc_dung_du +=1
             if i+1 in st.session_state.ds_buocantoan:
-               buoc_an_toan_dung_du +=1 
+               buoc_an_toan_dung_du +=1
+            if i+1 in st.session_state.ds_buocNDNB:
+               buoc_nhan_dang_dung_du +=1  
         if ketqua == "KHÔNG ÁP DỤNG":
             tong_so_buoc_tru_KAD -=1
             if i+1 in st.session_state.ds_buocantoan:
-                tong_an_toan_tru_an_toan_va_KAD -=1   
+                tong_an_toan_tru_an_toan_va_KAD -=1 
+            if i+1 in st.session_state.ds_buocNDNB:
+                tong_nhan_dang_tru_nhan_dang_va_KAD -=1   
         if tondong in ["Chưa điền",""]:
             column_data += buoc + "|" + ketqua + "|#"
         else:
             column_data += buoc + "|" + ketqua + "|" + tondong + "#"
     tltt = round(so_buoc_dung_du/tong_so_buoc_tru_KAD,4)
-    if tong_an_toan_tru_an_toan_va_KAD == 0:
-        tlan = ""
-    else:
+    tlan = ""
+    tlnd = ""
+    if tong_an_toan_tru_an_toan_va_KAD != 0:
         tlan = round(buoc_an_toan_dung_du/tong_an_toan_tru_an_toan_va_KAD,4)
+    if tong_nhan_dang_tru_nhan_dang_va_KAD != 0:
+        tlnd = round(buoc_nhan_dang_dung_du/tong_nhan_dang_tru_nhan_dang_va_KAD,4)
     column_data=column_data.rstrip("#")
     column_mqt = st.session_state.ma_quy_trinh
-    sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan])
+    sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan,tlnd])
     warning(3,2)
 
 @st.dialog("Thông báo")
 def warning(x,y):
     if x == 1:
-        st.warning(f"Các bước bị thiếu thông tin: {y}")
+        st.warning(f"Các bước chưa đánh giá: {y}")
     if x == 2:
         st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
     if x == 3:
