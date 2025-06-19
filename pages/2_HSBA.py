@@ -99,11 +99,10 @@ def upload_data_HSBA(len_data):
         buoc = f"B{i+1}" 
         ketqua = str(st.session_state[f"hsbaradio_{i}"])  
         tondong = str(st.session_state[f"hsbatext_{i}"]) 
-        ngay_taophieu = str(st.session_state[f"hsbadateinput_{i}"])
         if tondong == "":
-            column_data += buoc + "|" + ketqua + "|" + ngay_taophieu + "|#"
+            column_data += buoc + "|" + ketqua + "|#"
         else:
-            column_data += buoc + "|" + ketqua + "|" + ngay_taophieu + "|" + tondong + "#"
+            column_data += buoc + "|" + ketqua + "|" + tondong + "#"
         if ketqua == "Thực hiện đúng, đủ":
             so_buoc_dung_du +=1
         elif ketqua == "Thực hiện đúng nhưng chưa đủ":
@@ -169,7 +168,6 @@ if "khoa_HSBA" in st.session_state and st.session_state["khoa_HSBA"] and "vtgs_H
 ''',unsafe_allow_html=True)
     luachon = [ "KHÔNG ÁP DỤNG", "KHÔNG thực hiện, hoặc ghi sai", "Thực hiện đúng nhưng chưa đủ", "Thực hiện đúng, đủ"]
     with st.form(key="hsba"):
-        
         row1 = st.columns([5,5])
         st.session_state.svv_HSBA = row1[0].text_input("Số vào viện", max_chars=10, placeholder="VD: 25-1234567",)
         st.session_state.yob_HSBA = row1[1].number_input(
@@ -194,12 +192,6 @@ if "khoa_HSBA" in st.session_state and st.session_state["khoa_HSBA"] and "vtgs_H
                     placeholder="Ghi rõ tồn đọng",
                     key=f"hsbatext_{i}",
                 )
-            st.date_input(
-                label="Ngày tạo phiếu",
-                key=f"hsbadateinput_{i}",
-                value=now_vn.date(), 
-                format="DD/MM/YYYY",
-            )
         submitbutton = st.form_submit_button("Gửi")
     if submitbutton:
         if "svv_HSBA" in st.session_state and st.session_state.svv_HSBA and "yob_HSBA" in st.session_state and st.session_state.yob_HSBA:

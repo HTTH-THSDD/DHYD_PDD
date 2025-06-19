@@ -124,11 +124,10 @@ def upload_data_GDSK(len_data):
         buoc = f"ND{i+1}" 
         ketqua = str(st.session_state[f"gdskradio_{i}"])  
         tondong = str(st.session_state[f"gdsktext_{i}"]) 
-        ngay_taophieu = str(st.session_state[f"gdskdateinput_{i}"])
         if tondong =="":
-            column_data += buoc + "|" + ketqua + "|" + ngay_taophieu + "#"
+            column_data += buoc + "|" + ketqua + "#"
         else:
-            column_data += buoc + "|" + ketqua + "|" + ngay_taophieu + "|" + tondong +"#"
+            column_data += buoc + "|" + ketqua + "|" + tondong +"#"
         if ketqua == "Hiểu":
             so_buoc_hieu +=1
         elif ketqua == "Biết":
@@ -220,12 +219,6 @@ if "khoa_GDSK" in st.session_state and st.session_state["khoa_GDSK"] and "vtgs_G
                     placeholder="Ghi rõ tồn đọng",
                     key=f"gdsktext_{i}",
                 )
-            st.date_input(
-                label="Ngày tạo phiếu",
-                key=f"gdskdateinput_{i}",
-                value=now_vn.date(),
-                format="DD/MM/YYYY",
-            )
         submitbutton = st.form_submit_button("Gửi")
     if submitbutton:
         if "svv_GDSK" in st.session_state and st.session_state.svv_GDSK and "yob_GDSK" in st.session_state and st.session_state.yob_GDSK:

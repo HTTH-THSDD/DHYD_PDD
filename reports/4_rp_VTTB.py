@@ -209,7 +209,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:green">THỐNG KÊ VẬT TƯ THIẾT BỊ</p>
+        <p style="color:green">THỐNG KÊ BÁO CÁO THIẾT BỊ HẰNG NGÀY</p>
         </div>
     </div>
     <div class="header-underline"></div>
@@ -264,6 +264,8 @@ if submit_thoigian:
             else:
                 st.markdown("<h5 style='text-align: center;'>Số lượng sử dụng các thiết bị toàn viện</h5>", unsafe_allow_html=True)
                 st.dataframe(data_tong_hop,use_container_width=True, hide_index=True)
+            
+            # Tính Hiệu suất sử dụng (%)
             st.markdown("<h5 style='text-align: center;'>Hiệu suất sử dụng các thiết bị toàn viện (%)</h5>", unsafe_allow_html=True)
             phan_tram_df = tinh_phan_tram_su_dung(data_output5, headers)
             for header in headers:
@@ -313,5 +315,28 @@ if submit_thoigian:
                     use_container_width=True,
                     hide_index=True
                 )
+            st.markdown("<h5 style='text-align: center;'>Hiệu suất sử dụng các thiết bị toàn viện (%)</h5>", unsafe_allow_html=True)
+            phan_tram_df = tinh_phan_tram_su_dung(data_output5, headers)
+            for header in headers:
+                    phan_tram_df[header] = phan_tram_df[header].apply(
+                        lambda x: f"{round(float(x),2)}" if pd.notna(x) and x != "" else ""
+                    )
+            st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True)
+                        # Sau khi đã có phan_tram_df và headers
+            # Lấy dòng trung bình (dòng cuối cùng)
+            avg_row = phan_tram_df.iloc[-1]
+            # Loại bỏ cột "Ngày báo cáo"
+            avg_row = avg_row.drop("Ngày báo cáo")
+            # Chuyển giá trị về float (nếu đang là string có ký tự %)
+            avg_row_float = avg_row.apply(lambda x: float(str(x).replace("%", "")) if x != "" else 0)
+            fig = px.bar(
+                x=headers,
+                y=[avg_row_float[header] for header in headers],
+                labels={'x': '', 'y': 'Hiệu suất sử dụng (%)'},
+                text=[avg_row_float[header] for header in headers],
+                color_discrete_sequence=["#1f77b4"],
+            )
+            fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
+            fig.update_layout(yaxis_tickformat='.2f')
 
                 

@@ -156,15 +156,15 @@ st.date_input(
     max_value=now_vn.date(),
 )  
 if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None:
-    st.markdown('''
-    <h4><span style="color:#003b62">Phần báo cáo thiết bị hằng ngày
-                </span></h4>
-''', unsafe_allow_html=True)
+#     st.markdown('''
+#     <h4><span style="color:#003b62">Phần báo cáo thiết bị hằng ngày
+#                 </span></h4>
+# ''', unsafe_allow_html=True)
     
     thiet_bi = st.session_state.thiet_bi
     for i in range(0, len(thiet_bi)):
         ten = thiet_bi['Tên thiết bị'].iloc[i]
-        Ten_thiet_bi = f"Thiết bị {thiet_bi['Mã thiết bị'].iloc[i]}: {thiet_bi['Tên thiết bị'].iloc[i]}"
+        Ten_thiet_bi = f"{thiet_bi['Mã thiết bị'].iloc[i]}: {thiet_bi['Tên thiết bị'].iloc[i]}"
         st.markdown(f'''
                 <p style="font-size: 15px; 
                     color: #005259; 

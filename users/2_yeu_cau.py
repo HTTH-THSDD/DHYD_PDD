@@ -169,7 +169,7 @@ with tab1:
         if "lyc" in st.session_state and st.session_state["lyc"] and "ndyc" in st.session_state and st.session_state["ndyc"]:
             upload_data_yc()
         else:
-            st.warning("Xin chọn loại yêu cầu và điền nội dung yêu cầu")
+            st.warning("Anh/Chị vui lòng chọn loại yêu cầu và điền nội dung yêu cầu")
 with tab2:
     sheeto4 = st.secrets["sheet_name"]["output_4"]
     data_yc = load_data_GSheet(sheeto4)
@@ -191,7 +191,7 @@ st.markdown("""
     <br><br><br>
     <hr style="border: 1.325px solid #195e83; margin: 15px 0;">
     <p style="font-size: 13.5px; color: #333;">
-        <i>Nếu có thắc mắc, Quý Anh/Chị vui lòng liên hệ:<br> 
+        <i>Các yêu cầu thông thường sẽ được giải quyết trong vòng 72 giờ. Sau thời gian này nếu yêu cầu của Quý Anh/Chị chưa được giải quyết hoặc có những thắc mắc khác, Quý Anh/Chị vui lòng liên hệ:
         <span style="color: #042f66; font-weight: bold;">CNĐD. Huỳnh Thị Thanh Hằng (5379)</span> 
         hoặc 
         <span style="color: #042f66; font-weight: bold;">CNĐD. Võ Thị Cẩm Nhung (5624)</span>

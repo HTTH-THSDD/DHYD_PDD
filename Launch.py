@@ -4,6 +4,9 @@ import base64
 import gspread
 from google.oauth2.service_account import Credentials
 import pathlib
+import smtplib
+from email.mime.text import MIMEText
+import time
 
 def load_css(file_path):
     with open(file_path) as f:
@@ -48,7 +51,56 @@ def load_data(x):
     data_final = pd.DataFrame(values, columns=header)
     return data_final
 
+def gui_email_quen_mat_khau(receiver_email):
+    info = "\n".join([f"{k}: {v}" for k, v in st.session_state.vote.items()])
+    ten = st.session_state.vote["Họ và tên"]
+    subject = f"Quên mật khẩu - nhân viên {ten}"
+    body = f"Thông tin nhân viên quên mật khẩu:\n{info}"
+    # Thiết lập thông tin email
+    sender_email = st.secrets["email_info"]["sender_email"]
+    sender_password = st.secrets["email_info"]["sender_password"]
+
+    msg = MIMEText(body, "plain", "utf-8")
+    msg["Subject"] = subject
+    msg["From"] = sender_email
+    msg["To"] = receiver_email
+
+    # Gửi email
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, receiver_email, msg.as_string())
+    st.session_state.sendemail = True
+    st.session_state.sendemail_time = time.time()
+
+@st.dialog("NHẬP THÔNG TIN CẤP LẠI MẬT KHẨU")
+def cap_lai_mat_khau():
+    sheeti1 = st.secrets["sheet_name"]["input_1"]
+    data_nv = load_data(sheeti1)
+    chon_khoa = st.selectbox("Chọn Khoa/Đơn nguyên ",
+                            options=data_nv["Khoa"].unique(),
+                            index=None,
+                            placeholder=""
+                            )
+    HoTen = st.text_input("Họ và tên")
+    MNV = st.text_input("Mã nhân viên")
+    Email = st.text_input("Email",placeholder="Mật khẩu mới sẽ được gửi đến email này")
+    Gui = st.button("Gửi thông tin đến quản trị viên")
+    if Gui:
+        st.session_state.vote = {"Họ và tên": HoTen,
+                                "Mã nhân viên": MNV,
+                                "Khoa": chon_khoa,
+                                "Email": Email}
+        receiver_email = st.secrets["email_info"]["receiver_email"]
+        gui_email_quen_mat_khau(receiver_email)
+        st.rerun()
+
 def login():
+    if st.session_state.get("sendemail", False):
+        if time.time() - st.session_state.get("sendemail_time", 0) < 5:
+            st.toast("Đã gửi thông tin đến quản trị viên! Vui lòng chờ phản hồi",icon="✅")
+        else:
+            del st.session_state["sendemail"]
+            del st.session_state["sendemail_time"]
     found = 0
     st.markdown(f"""
     <div class="login-header">
@@ -70,8 +122,9 @@ def login():
                             options= data["Nhân viên"].unique(),
                             index = None,
                             placeholder="",)
-        code = st.text_input("Mật khẩu", type="password",placeholder="",)
+        code = st.text_input("Mật khẩu", type="password",placeholder="",  key="matkhau_login",)
         submit_button = st.form_submit_button("Đăng nhập")
+        QuenMatKhau = st.form_submit_button("Quên mật khẩu",type="tertiary")
     if submit_button:
         index = 0
         code=code.upper()
@@ -87,6 +140,8 @@ def login():
             st.session_state["username"] = name
             st.session_state["phan_quyen"] = quyen
             st.rerun()
+    if QuenMatKhau:
+        cap_lai_mat_khau()
 
 def logout():
     for key in st.session_state.keys():
@@ -130,7 +185,7 @@ QTKT = st.Page("pages/1_QTKT.py",
                icon="🩺", default=True
 )
 PRIME = st.Page("pages/1.1_PRIME.py", 
-               title="PRIME duy trì", 
+               title="PRIME", 
                icon="💉"
 )
 HSBA = st.Page("pages/2_HSBA.py", 

@@ -165,7 +165,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p>NHẬP KẾT QUẢ PRIME DUY TRÌ</p>
+        <p>NHẬP KẾT QUẢ PRIME</p>
         </div>
     </div>
     <div class="header-underline"></div>
@@ -176,7 +176,7 @@ st.html(html_code)
 vitrigs()
 thong_tin_hanh_chinh()
 st.divider()
-st.markdown("<h4 style='text-align: center;'>Bảng kiểm PRIME duy trì</h4>", unsafe_allow_html=True)
+st.markdown("<h4 style='text-align: center;'>Bảng kiểm PRIME</h4>", unsafe_allow_html=True)
 file_id = "1HdoVbeB8LkOD_PGZrGNmAF9j6YjUNa9M"
 download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
 st.markdown(

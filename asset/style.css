@@ -330,6 +330,21 @@ label[for^="text_input_"] div p {
     display: none !important;
 }
 
+[class*="st-key-matkhau_login"] p{
+    padding-left: 0px !important;
+}
+[class*="LoginForm---ng-nh-p"] {
+    margin: auto;
+}
+[class*="LoginForm---ng-nh-p"] button {
+    width: 20rem;;
+}
+
+[class*="LoginForm-Qu-n-m-t-kh-u"] {
+    display: flex;
+    justify-content: flex-end;
+}
+
 div[role="dialog"] {
     background-color: #ffffff;
     border: 2px solid #0887c2;

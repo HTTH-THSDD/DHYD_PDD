@@ -161,7 +161,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:green">THỐNG KÊ ĐÁNH GIÁ PRIME DUY TRÌ</p>
+        <p style="color:green">THỐNG KÊ ĐÁNH GIÁ PRIME</p>
         </div>
     </div>
     <div class="header-underline"></div>

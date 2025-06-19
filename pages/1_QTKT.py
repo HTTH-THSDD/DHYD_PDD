@@ -7,6 +7,9 @@ from zoneinfo import ZoneInfo
 import pathlib
 import base64
 from google.oauth2.service_account import Credentials
+import smtplib
+from email.mime.text import MIMEText
+import time
 # FS
 
 @st.cache_data(ttl=3600)
@@ -70,6 +73,7 @@ def thong_tin_hanh_chinh():
         
         if chon_nhanvien:
             st.session_state.nv_thuchien_GSQT = chon_nhanvien
+            st.session_state.email_nvthqt = data_nv1.loc[data_nv1["Nhân viên"]==chon_nhanvien, "Email"].values[0]
         else:
             if "nv_thuchien_GSQT" in st.session_state:
                 del st.session_state["nv_thuchien_GSQT"]
@@ -89,14 +93,26 @@ def vitrigs():
             del st.session_state["vtgs_GSQT"]
 
 def bang_kiem_quy_trinh():
+    loaiquytrinh = st.radio(label="Loại quy trình kỹ thuật",
+             options=["Quy trình kỹ thuật cơ bản","Quy trình kỹ thuật chuyên khoa"],
+             index=None,
+             key="loai_quy_trinh",
+             horizontal=True,
+             )
     sheeti2 = st.secrets["sheet_name"]["input_2"]
     data_qt2 = load_data(sheeti2)
-    chon_qt = st.selectbox("Tên quy trình kỹ thuật",
-                             options=data_qt2["Tên quy trình"].unique(),
-                             index=None,
-                             key="qt",
-                             placeholder="",
-                             )
+    if loaiquytrinh == "Quy trình kỹ thuật cơ bản":
+        chon_qt = st.selectbox("Tên quy trình kỹ thuật",
+                                options=data_qt2["Tên quy trình"].loc[data_qt2["Mã bước QT"].str[:4] == "QTCB"].unique(),
+                                index=None,
+                                placeholder="",
+                                )
+    else:
+        chon_qt = st.selectbox("Tên quy trình kỹ thuật",
+                                options=data_qt2["Tên quy trình"].loc[data_qt2["Mã bước QT"].str[:4] == "QTCK"].unique(),
+                                index=None,
+                                placeholder="",
+                                )
     if chon_qt:
         qtx = data_qt2.loc[data_qt2["Tên quy trình"]==chon_qt]
         st.session_state.quy_trinh = qtx
@@ -126,6 +142,40 @@ def bang_kiem_quy_trinh():
     else:
         if "quy_trinh" in st.session_state:
             del st.session_state["quy_trinh"]
+
+def gui_email_qtkt(receiver_email,data):
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+    timestamp = now_vn.strftime('%H:%M %d-%m-%Y')
+    subject = f"Bảng giám sát quy trình kĩ thuật - {timestamp}"
+    html_table = data.to_html(index=False, border=1, justify='left')
+    tltt = float(st.session_state.tltt)*100
+    # Tạo nội dung email dạng HTML, bạn có thể tùy chỉnh style thêm nếu muốn
+    body = f"""
+    <html>
+      <body>
+        <p>Xin chào,{st.session_state.nv_thuchien_GSQT}</p>
+        <p>Dưới đây là bảng giám sát {st.session_state.ten_quy_trinh}</p>
+        <p>Nhân viên giám sát: {st.session_state.username}</p>
+        <p>Thời gian giám sát: {timestamp}</p>
+        <p>Tỉ lệ tuân thủ: {tltt}%</p>
+        {html_table}
+        <p>Trân trọng,<br>Phòng Điều dưỡng</p>
+      </body>
+    </html>
+    """
+    # Thiết lập thông tin email
+    sender_email = st.secrets["email_info"]["sender_email"]
+    sender_password = st.secrets["email_info"]["sender_password"]
+
+    msg = MIMEText(body, "html", "utf-8")
+    msg["Subject"] = subject
+    msg["From"] = sender_email
+    msg["To"] = receiver_email
+
+    # Gửi email
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, receiver_email, msg.as_string())
 
 def precheck_table():
     buoc = []
@@ -189,6 +239,7 @@ def upload_data_GS(data):
         else:
             column_data += buoc + "|" + ketqua + "|" + tondong + "#"
     tltt = round(so_buoc_dung_du/tong_so_buoc_tru_KAD,4)
+    st.session_state.tltt = tltt
     tlan = ""
     tlnd = ""
     if tong_an_toan_tru_an_toan_va_KAD != 0:
@@ -199,6 +250,7 @@ def upload_data_GS(data):
     column_mqt = st.session_state.ma_quy_trinh
     sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan,tlnd])
     warning(3,2)
+    gui_email_qtkt("enti.antoni@gmail.com",data)
 
 @st.dialog("Thông báo")
 def warning(x,y):
