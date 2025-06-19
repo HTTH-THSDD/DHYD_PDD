@@ -264,10 +264,6 @@
 }}
 
 [data-testid="stToolbar"] {
-    top: 0px;
-    right: 0px;
-    position:fixed;
-    z-index: 0;
     opacity: 0.5;
 }
 
@@ -421,7 +417,8 @@ div[role="dialog"] {
 }
 [data-testid="stHeader"] {
     height: 0% !important;
-    background:#ffffff
+    background:#ffffff;
+    opacity: 0.5;
 }
 [data-testid="stBaseButton-header"] div span {
     visibility: hidden;
