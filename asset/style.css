@@ -263,9 +263,9 @@
     font-size: 18px !important;
 }}
 
-[data-testid="stToolbar"] {
+/* [data-testid="stToolbar"] {
     opacity: 0.5;
-}
+} */
 
 [data-testid="stRadio"] p {
     font-size: 15px; 
