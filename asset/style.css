@@ -266,8 +266,9 @@
 [data-testid="stToolbar"] {
     top: 0px;
     right: 0px;
-    position: absolute/fixed;
+    position:fixed;
     z-index: 0;
+    opacity: 0.5;
 }
 
 [data-testid="stRadio"] p {
