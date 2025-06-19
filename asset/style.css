@@ -263,10 +263,6 @@
     font-size: 18px !important;
 }}
 
-[data-testid="stToolbar"] {
-    z-index: 1010;
-}
-
 [data-testid="stRadio"] p {
     font-size: 15px; 
     color: #003b62; 
