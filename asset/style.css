@@ -414,8 +414,8 @@ div[role="dialog"] {
 [data-testid="stHeader"] {
     height: 0% !important;
     background:#ffffff;
-    opacity: 0.5;
-    z-index: 0;
+    opacity: 0.2;
+    z-index: 1002;
 }
 [data-testid="stBaseButton-header"] div span {
     visibility: hidden;

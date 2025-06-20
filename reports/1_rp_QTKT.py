@@ -233,8 +233,6 @@ khoa = data["Khoa"]
 loai_qtkt = {  "All":"Tất cả",
               "QTCB":"Quy trình cơ bản",
               "QTCK":"Quy trình chuyên khoa",
-              "CSCS":"Chỉ số chăm sóc điều dưỡng",
-              "KHAC":"Khác",
               }
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
 md = date(2025, 1, 1)
@@ -256,10 +254,11 @@ with st.form("Thời gian"):
         max_value=now_vn.date(), 
         format="DD/MM/YYYY",
         )
-    chon_loai_qtkt = st.selectbox(label="Loại quy trình kỹ thuật",
+    chon_loai_qtkt = st.radio(label="Loại quy trình kỹ thuật",
             options=list(loai_qtkt.values()),
             index=0,             
             )
+            
     khoa_select = chon_khoa(khoa)
     submit_thoigian = st.form_submit_button("OK")
 if submit_thoigian:

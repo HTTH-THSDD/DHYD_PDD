@@ -137,7 +137,6 @@ def chon_cscs(ten_cscs):
         with placeholder1:
             cscs_select = st.multiselect(label="Chọn tên chỉ số chăm sóc",
                                             options= ten_cscs.unique())
-        st.write("Hãy chọn tên chỉ số chăm sóc")
     return cscs_select
 
 
@@ -151,7 +150,6 @@ def chon_khoa(khoa):
             with placeholder1:
                 khoa_select = st.multiselect(label="Chọn khoa",
                                                   options= khoa.unique())
-            st.write("Hãy chọn khoa xem thống kê")
         return khoa_select
     else:
         if st.session_state.username == st.secrets["user_special"]["u1"]:

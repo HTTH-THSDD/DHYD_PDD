@@ -114,6 +114,7 @@ def bang_kiem_quy_trinh():
                                 placeholder="",
                                 )
     if chon_qt:
+        st.session_state.loaiqt = chon_qt
         qtx = data_qt2.loc[data_qt2["Tên quy trình"]==chon_qt]
         st.session_state.quy_trinh = qtx
         st.session_state.ten_quy_trinh =  qtx["Tên quy trình"].iloc[0]
@@ -194,6 +195,7 @@ def gui_email_qtkt(receiver_email,data):
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, receiver_email, msg.as_string())
 
+
 def precheck_table():
     buoc = []
     nd = []
@@ -214,6 +216,15 @@ def precheck_table():
                 }
     precheck_table = pd.DataFrame(k)
     return precheck_table
+
+def clear_session_state():
+    keys_to_clear = [
+        "khoa_GSQT", "nv_thuchien_GSQT", "vtgs_GSQT", "quy_trinh"
+    ]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.rerun()
 
 def upload_data_GS(data):
     credentials = load_credentials()
@@ -252,7 +263,9 @@ def upload_data_GS(data):
             if i+1 in st.session_state.ds_buocNDNB:
                 tong_nhan_dang_tru_nhan_dang_va_KAD -=1
             if tong_so_buoc_tru_KAD == 0:
-                warning(3,2)
+                st.session_state.loi_KAD = True
+                st.session_state.loi_KADtime = time.time()
+                st.rerun()
         if tondong in ["Chưa điền",""]:
             column_data += buoc + "|" + ketqua + "|#"
         else:
@@ -270,7 +283,8 @@ def upload_data_GS(data):
     sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan,tlnd])
     warning(4,2)
     gui_email_qtkt("yulhmoon@gmail.com",data)
-
+    clear_session_state()
+    
 @st.dialog("Thông báo")
 def warning(x,y):
     if x == 1:
@@ -283,6 +297,12 @@ def warning(x,y):
         st.success("Đã lưu thành công")
 
 # Main Section ####################################################################################
+if st.session_state.get("loi_KAD", False):
+        if time.time() - st.session_state.get("loi_KADtime", 0) < 2:
+            warning(3,2)
+        else:
+            del st.session_state["loi_KAD"]
+            del st.session_state["loi_KADtime"]
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
 img = get_img_as_base64("pages/img/logo.png")
@@ -355,7 +375,7 @@ if (
                 prechecktable = precheck_table()         
                 upload_data_GS(prechecktable)
                 gui_email_qtkt(st.session_state.email_nvthqt, prechecktable)
-                st.rerun()
+                clear_session_state()
         else:
             warning(1,buoc_chua_dien_str)
   
