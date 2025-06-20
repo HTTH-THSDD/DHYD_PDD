@@ -282,8 +282,6 @@ def upload_data_GS(data):
     column_mqt = st.session_state.ma_quy_trinh
     sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan,tlnd])
     warning(4,2)
-    gui_email_qtkt("yulhmoon@gmail.com",data)
-    clear_session_state()
     
 @st.dialog("Thông báo")
 def warning(x,y):
