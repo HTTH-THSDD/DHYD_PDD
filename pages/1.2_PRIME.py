@@ -171,7 +171,7 @@ st.markdown(f"""
     <div class="header-underline"></div>
 
  """, unsafe_allow_html=True)
-html_code = f'<p class="demuc"><i>Nhân viên đánh giá: {st.session_state.username}</i></p>'
+html_code = f'<p class="demuc"><i>Nhân viên đang đánh giá: {st.session_state.username}</i></p>'
 st.html(html_code)
 vitrigs()
 thong_tin_hanh_chinh()

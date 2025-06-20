@@ -66,7 +66,7 @@ def thong_tin_hanh_chinh():
     if chon_khoa:
         st.session_state.khoa_GSQT = chon_khoa
         data_nv1=data_nv.loc[data_nv["Khoa"]==f"{chon_khoa}"]
-        chon_nhanvien = st.selectbox(label="Nhân viên thực hiện quy trình",
+        chon_nhanvien = st.selectbox(label="Nhân viên được giám sát",
                                     options=data_nv1["Nhân viên"],
                                     index=None,
                                     placeholder="")
@@ -93,106 +93,24 @@ def vitrigs():
             del st.session_state["vtgs_GSQT"]
 
 def bang_kiem_quy_trinh():
-    loaiquytrinh = st.radio(label="Loại quy trình kỹ thuật",
-             options=["Quy trình kỹ thuật cơ bản","Quy trình kỹ thuật chuyên khoa"],
-             index=None,
-             key="loai_quy_trinh",
-             horizontal=True,
-             )
-    sheeti2 = st.secrets["sheet_name"]["input_2"]
+    sheeti2 = st.secrets["sheet_name"]["input_7"]
     data_qt2 = load_data(sheeti2)
-    if loaiquytrinh == "Quy trình kỹ thuật cơ bản":
-        chon_qt = st.selectbox("Tên quy trình kỹ thuật",
-                                options=data_qt2["Tên quy trình"].loc[data_qt2["Mã bước QT"].str[:4] == "QTCB"].unique(),
-                                index=None,
-                                placeholder="",
-                                )
-    else:
-        chon_qt = st.selectbox("Tên quy trình kỹ thuật",
-                                options=data_qt2["Tên quy trình"].loc[data_qt2["Mã bước QT"].str[:4] == "QTCK"].unique(),
-                                index=None,
-                                placeholder="",
-                                )
+    chon_qt = st.selectbox("Tên chỉ số chăm sóc",
+                        options=data_qt2["Tên chỉ số chăm sóc"].unique(),
+                        index=None,
+                        placeholder="",
+                        )
     if chon_qt:
-        qtx = data_qt2.loc[data_qt2["Tên quy trình"]==chon_qt]
+        qtx = data_qt2.loc[data_qt2["Tên chỉ số chăm sóc"]==chon_qt]
         st.session_state.quy_trinh = qtx
-        st.session_state.ten_quy_trinh =  qtx["Tên quy trình"].iloc[0]
+        st.session_state.ten_quy_trinh =  qtx["Tên chỉ số chăm sóc"].iloc[0]
         ma_quy_trinh = qtx["Mã bước QT"].iloc[0]
-        danh_sach_buoc_an_toan = []
-        for i in range(0,len(qtx)):
-            if qtx["Chỉ số an toàn"].iloc[i] == "x":
-                danh_sach_buoc_an_toan.append(int(qtx["Bước"].iloc[i]))
-        st.session_state.ds_buocantoan = danh_sach_buoc_an_toan
         st.session_state.ma_quy_trinh = ma_quy_trinh[:4]
     else:
         if "quy_trinh" in st.session_state:
             del st.session_state["quy_trinh"]
 
-    if chon_qt:
-        qtx = data_qt2.loc[data_qt2["Tên quy trình"]==chon_qt]
-        st.session_state.quy_trinh = qtx
-        st.session_state.ten_quy_trinh =  qtx["Tên quy trình"].iloc[0]
-        ma_quy_trinh = qtx["Mã bước QT"].iloc[0]    
-        danh_sach_buoc_nhan_dang = []
-        for i in range(0,len(qtx)):
-            if qtx["Nhận dạng"].iloc[i] == "x":
-                danh_sach_buoc_nhan_dang.append(int(qtx["Bước"].iloc[i]))
-        st.session_state.ds_buocNDNB = danh_sach_buoc_nhan_dang
-        st.session_state.ma_quy_trinh = ma_quy_trinh[:4]
-    else:
-        if "quy_trinh" in st.session_state:
-            del st.session_state["quy_trinh"]
 
-def gui_email_qtkt(receiver_email,data):
-    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-    timestamp = now_vn.strftime('%H:%M %d-%m-%Y')
-    subject = f"KẾT QUẢ GIÁM SÁT QUY TRÌNH KỸ THUẬT - {timestamp}"
-    html_table = data.to_html(index=False, border=1, justify='left')
-    tltt = float(st.session_state.tltt)*100
-    # Tạo nội dung email dạng HTML, bạn có thể tùy chỉnh style thêm nếu muốn
-    body = f"""
-    <html>
-        <body>
-            <h4 style="color:DodgerBlue;">Kính gửi Điều dưỡng: {st.session_state.nv_thuchien_GSQT}</h4>
-
-            <p>
-              Căn cứ theo kế hoạch giám sát thường quy/ đột xuất của Phòng Điều dưỡng và các Khoa/Đơn vị lâm sàng,
-            Phòng Điều dưỡng xin gửi kết quả giám sát quy trình kỹ thuật vừa thực hiện của Quý Anh/Chị như sau:
-            </p>
-
-            <div class="highlight">
-            <p><strong>Tên quy trình kỹ thuật:</strong>{st.session_state.ten_quy_trinh}</p>
-            <p><strong>Khoa/Đơn vị:</strong> {st.session_state.khoa_GSQT}</p>
-            <p><strong>Nhân viên giám sát:</strong> {st.session_state.username}</p>
-            <p><strong>Thời gian giám sát:</strong> {timestamp}</p>
-            <p><strong>Tỉ lệ tuân thủ:</strong> {tltt}%</p>
-            </div>
-
-            <p><strong>Bảng chi tiết kết quả giám sát:</strong></p>
-            {html_table}
-            <br><br><br><br><br>
-            <p class="footer">
-            Trân trọng./.<br />
-            <h4 style="color:DodgerBlue;">Phòng Điều dưỡng - BVĐHYD TPHCM</h4>
-            </p>
-        </body>
-    </html>
-    """
-
-
-    # Thiết lập thông tin email
-    sender_email = st.secrets["email_info"]["sender_email"]
-    sender_password = st.secrets["email_info"]["sender_password"]
-
-    msg = MIMEText(body, "html", "utf-8")
-    msg["Subject"] = subject
-    msg["From"] = sender_email
-    msg["To"] = receiver_email
-
-    # Gửi email
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, receiver_email, msg.as_string())
 
 def precheck_table():
     buoc = []
@@ -218,8 +136,8 @@ def precheck_table():
 def upload_data_GS(data):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
-    sheeto1 = st.secrets["sheet_name"]["output_1"]
-    sheet = gc.open(sheeto1).sheet1
+    sheeto7 = st.secrets["sheet_name"]["output_7"]
+    sheet = gc.open(sheeto7).sheet1
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
     column_index = len(sheet.get_all_values())    
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
@@ -231,45 +149,78 @@ def upload_data_GS(data):
     column_data=""
     so_buoc_dung_du = 0
     tong_so_buoc_tru_KAD = len(data)
-    buoc_an_toan_dung_du = 0
-    tong_an_toan_tru_an_toan_va_KAD = len(st.session_state.ds_buocantoan)
-    buoc_nhan_dang_dung_du = 0
-    tong_nhan_dang_tru_nhan_dang_va_KAD = len(st.session_state.ds_buocNDNB)
+
     for i in range (0, len(data)):
         buoc = str(data.iloc[i]["Bước"])  
         ketqua = str(data.iloc[i]["Kết quả"])  
         tondong = str(data.iloc[i]["Tồn đọng"])
         if ketqua == "Thực hiện đúng, đủ":
             so_buoc_dung_du +=1
-            if i+1 in st.session_state.ds_buocantoan:
-               buoc_an_toan_dung_du +=1
-            if i+1 in st.session_state.ds_buocNDNB:
-               buoc_nhan_dang_dung_du +=1  
         if ketqua == "KHÔNG ÁP DỤNG":
             tong_so_buoc_tru_KAD -=1
-            if i+1 in st.session_state.ds_buocantoan:
-                tong_an_toan_tru_an_toan_va_KAD -=1 
-            if i+1 in st.session_state.ds_buocNDNB:
-                tong_nhan_dang_tru_nhan_dang_va_KAD -=1
-            if tong_so_buoc_tru_KAD == 0:
-                warning(3,2)
         if tondong in ["Chưa điền",""]:
             column_data += buoc + "|" + ketqua + "|#"
         else:
             column_data += buoc + "|" + ketqua + "|" + tondong + "#"
-    tltt = round(so_buoc_dung_du/tong_so_buoc_tru_KAD,4)
-    st.session_state.tltt = tltt
-    tlan = ""
-    tlnd = ""
-    if tong_an_toan_tru_an_toan_va_KAD != 0:
-        tlan = round(buoc_an_toan_dung_du/tong_an_toan_tru_an_toan_va_KAD,4)
-    if tong_nhan_dang_tru_nhan_dang_va_KAD != 0:
-        tlnd = round(buoc_nhan_dang_dung_du/tong_nhan_dang_tru_nhan_dang_va_KAD,4)
-    column_data=column_data.rstrip("#")
-    column_mqt = st.session_state.ma_quy_trinh
-    sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan,tlnd])
-    warning(4,2)
-    gui_email_qtkt("yulhmoon@gmail.com",data)
+    if tong_so_buoc_tru_KAD == 0:
+        warning(3,2)
+    else:
+        tltt = round(so_buoc_dung_du/tong_so_buoc_tru_KAD,4)
+        st.session_state.tltt = tltt
+        column_data=column_data.rstrip("#")
+        column_mqt = st.session_state.ma_quy_trinh
+        sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt])
+        warning(4,2)
+
+
+def gui_email_cscs(receiver_email,data):
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+    timestamp = now_vn.strftime('%H:%M %d-%m-%Y')
+    subject = f"KẾT QUẢ GIÁM SÁT CHỈ SỐ CHĂM SÓC - {timestamp}"
+    html_table = data.to_html(index=False, border=1, justify='left')
+    tltt = float(st.session_state.tltt)*100
+    # Tạo nội dung email dạng HTML, bạn có thể tùy chỉnh style thêm nếu muốn
+    body = f"""
+    <html>
+        <body>
+            <h4 style="color:DodgerBlue;">Kính gửi Điều dưỡng: {st.session_state.nv_thuchien_GSQT}</h4>
+
+            <p>
+              Căn cứ theo kế hoạch giám sát thường quy/ đột xuất của Phòng Điều dưỡng và các Khoa/Đơn vị lâm sàng,
+            Phòng Điều dưỡng xin gửi kết quả giám sát chỉ số chăm sóc vừa thực hiện của Quý Anh/Chị như sau:
+            </p>
+
+            <div class="highlight">
+            <p><strong>Tên chỉ số chăm sóc:</strong>{st.session_state.ten_quy_trinh}</p>
+            <p><strong>Khoa/Đơn vị:</strong> {st.session_state.khoa_GSQT}</p>
+            <p><strong>Nhân viên giám sát:</strong> {st.session_state.username}</p>
+            <p><strong>Thời gian giám sát:</strong> {timestamp}</p>
+            <p><strong>Tỉ lệ tuân thủ:</strong> {tltt}%</p>
+            </div>
+
+            <p><strong>Bảng chi tiết kết quả giám sát:</strong></p>
+            {html_table}
+            <br><br><br><br><br>
+            <p class="footer">
+            Trân trọng./.<br />
+            <h4 style="color:DodgerBlue;">Phòng Điều dưỡng - BVĐHYD TPHCM</h4>
+            </p>
+        </body>
+    </html>
+    """
+    # Thiết lập thông tin email
+    sender_email = st.secrets["email_info"]["sender_email"]
+    sender_password = st.secrets["email_info"]["sender_password"]
+
+    msg = MIMEText(body, "html", "utf-8")
+    msg["Subject"] = subject
+    msg["From"] = sender_email
+    msg["To"] = receiver_email
+
+    # Gửi email
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, receiver_email, msg.as_string())
 
 @st.dialog("Thông báo")
 def warning(x,y):
@@ -295,7 +246,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p>GIÁM SÁT QUY TRÌNH KỸ THUẬT</p>
+        <p>GIÁM SÁT CÁC CHỈ SỐ CHĂM SÓC ĐIỀU DƯỠNG</p>
         </div>
     </div>
     <div class="header-underline"></div>
@@ -308,7 +259,7 @@ vitrigs()
 thong_tin_hanh_chinh()
 st.divider()
 bang_kiem_quy_trinh()
-luachon = ["Thực hiện đúng, đủ","Thực hiện đúng nhưng chưa đủ","Thực hiện chưa đúng, KHÔNG thực hiện","KHÔNG ÁP DỤNG"]
+luachon = ["Thực hiện đúng, đủ","Thực hiện đúng nhưng chưa đủ", "Thực hiện chưa đúng, KHÔNG thực hiện", "KHÔNG ÁP DỤNG"]
 if (
     "khoa_GSQT" in st.session_state and st.session_state["khoa_GSQT"] 
     and "nv_thuchien_GSQT" in st.session_state and st.session_state["nv_thuchien_GSQT"] 
@@ -352,14 +303,12 @@ if (
                 buoc_chua_dien.append(f"{quy_trinh.iloc[j,6]}")
         buoc_chua_dien_str = ", ".join(buoc_chua_dien)
         if buoc_chua_dien_str == "":
-                prechecktable = precheck_table()         
-                upload_data_GS(prechecktable)
-                gui_email_qtkt(st.session_state.email_nvthqt, prechecktable)
-                st.rerun()
+            prechecktable = precheck_table()         
+            upload_data_GS(prechecktable)
+            gui_email_cscs(st.session_state.email_nvthqt, prechecktable)
+            st.rerun()
         else:
             warning(1,buoc_chua_dien_str)
-  
-        
 else:
     st.warning("Vui lòng chọn đầy đủ các mục")
 
