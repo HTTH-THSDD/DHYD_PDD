@@ -184,11 +184,11 @@ QTKT = st.Page("pages/1_QTKT.py",
                title="Giám sát quy trình kỹ thuật", 
                icon="🩺", default=True
 )
-CSCS = st.Page("pages/1.1_CSCS.py", 
+CSCS = st.Page("pages/1.2_CSCS.py", 
                title="Chỉ số chăm sóc", 
                icon="🩹"
 )
-PRIME = st.Page("pages/1.2_PRIME.py", 
+PRIME = st.Page("pages/1.1_PRIME.py", 
                title="PRIME", 
                icon="💉"
 )
@@ -206,8 +206,8 @@ VTTB = st.Page("pages/4_VTTB.py",
 )
 
 BC_QTKT = st.Page("reports/1_rp_QTKT.py", title="TK Giám sát quy trình",  icon="🔹")
-BC_CSCS = st.Page("reports/1.1_rp_CSCS.py", title="TK Chỉ số chăm sóc ", icon="🔹")
-BC_PRIME = st.Page("reports/1.2_rp_PRIME.py", title="TK PRIME ", icon="🔹")
+BC_CSCS = st.Page("reports/1.2_rp_CSCS.py", title="TK Chỉ số chăm sóc ", icon="🔹")
+BC_PRIME = st.Page("reports/1.1_rp_PRIME.py", title="TK PRIME ", icon="🔹")
 BC_HSBA = st.Page("reports/2_rp_HSBA.py", title="TK Hồ sơ bệnh án", icon="🔹")
 BC_GDSK = st.Page("reports/3_rp_GDSK.py", title="TK Giáo dục sức khỏe", icon="🔹")
 BC_VTTB = st.Page("reports/4_rp_VTTB.py", title="TK Báo cáo thiết bị", icon="🔹")
