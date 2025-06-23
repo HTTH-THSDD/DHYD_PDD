@@ -189,7 +189,7 @@ def tinh_phan_tram_su_dung(data, headers):
 
 # Tính toán phần trăm và làm tròn
         phan_tram_df[header] = (
-            tong_su_dung[header] / co_so_df[header].replace(0, pd.NA)
+                tong_su_dung[header] / co_so_df[header].mask(co_so_df[header] == 0)
             ).round(2)
     # Dòng trung bình
     avg_row = pd.DataFrame(phan_tram_df[headers].mean(axis=0)).T
