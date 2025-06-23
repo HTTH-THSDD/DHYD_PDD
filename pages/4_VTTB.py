@@ -188,7 +188,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
             
         with col2:
             st.number_input(
-                label="Đang sử dụng",
+                label="Đang dùng",
                 value=SL,  # Chuyển đổi giá trị thành số nguyên
                 step=1,
                 key=f"dang_su_dung_{i}",
