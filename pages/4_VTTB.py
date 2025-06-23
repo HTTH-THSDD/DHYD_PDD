@@ -132,7 +132,7 @@ st.markdown(f"""
         <div class="header-content">
             <img src="data:image/png;base64,{img}" alt="logo">
             <div class="header-text">
-                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH®<br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
             </div>
         </div>
         <div class="header-subtext">
@@ -191,7 +191,9 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 label="Đang sử dụng",
                 value=SL,  # Chuyển đổi giá trị thành số nguyên
                 step=1,
-                key=f"dang_su_dung_{i}"
+                key=f"dang_su_dung_{i}",
+                max_value=SL,
+                min_value=0,
             )
         with col3:
             st.number_input(
@@ -199,14 +201,18 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 step=1,
                 key=f"trong_{i}",
                 value=None,
-            )
+                max_value=SL,
+                min_value=0,
+                )
         with col4:
             st.number_input(
                 label="Hư",
                 step=1,
                 key=f"hu_{i}",
                 value=None,
-            )
+                max_value=SL,
+                min_value=0,
+                )
         if ma_thiet_bi[0] != "A":
             with st.expander(f"Thông tin bổ sung thiết bị {ten}", expanded=False):
                 st.number_input(

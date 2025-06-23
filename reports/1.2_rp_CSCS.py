@@ -199,7 +199,7 @@ st.markdown(f"""
         <div class="header-content">
             <img src="data:image/png;base64,{img}" alt="logo">
             <div class="header-text">
-                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH®<br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
             </div>
         </div>
         <div class="header-subtext">

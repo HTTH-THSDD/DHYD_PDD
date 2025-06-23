@@ -181,7 +181,7 @@
 .header-text h1 {
     font-size: 11px;
     line-height: 1;
-    color: #003b62; 
+    color: #2c25b3; 
     font-family: "Source Sans Pro", sans-serif;
     padding-bottom: 0%;
     padding-top:0.2rem;
@@ -205,6 +205,7 @@
 .login-header-text h4 {
     margin-top: 5px;               
     line-height: 1.2;
+    color:#2c25b3;
 }
 
 
@@ -223,6 +224,7 @@
     padding-top: 0px;          
     line-height: 1.2;
     font-size: 12px;
+    color:#2c25b3;
 }
 .logo-img {
     height: 33px;

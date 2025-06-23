@@ -193,10 +193,66 @@ def tinh_phan_tram_su_dung(data, headers):
     phan_tram_df = pd.concat([phan_tram_df.iloc[:-1], avg_row], ignore_index=True)
     return phan_tram_df
 
+#### Hàm để định dạng bảng thứ 1
+def highlight_last_row_factory(data):
+    def highlight(row):
+        if row.name == len(data) - 1:
+            return ['background-color: #ffe599; color: #cf1c00'] * len(row)
+        return [''] * len(row)
+    return highlight
+
+# Hàm định dạng từng ô (cell)
+def custom_format(cell, row_idx, is_last_row):
+    if isinstance(cell, (int, float)):
+        if is_last_row:
+            return f"{cell:,.2f}"
+        else:
+            return f"{int(cell):,}" if isinstance(cell, int) or cell == int(cell) else f"{cell:,.0f}"
+    return cell
+
+# Xử lý toàn bộ bảng: áp dụng định dạng theo từng dòng
+def format_per_row(df):
+    last_idx = len(df) - 1
+    formatted = df.copy()
+    for r in df.index:
+        for c in df.columns:
+            formatted.at[r, c] = custom_format(df.at[r, c], r, r == last_idx)
+    return formatted
+
+# Xử lý cột Ngày báo cáo (nếu có)
+def format_date_column(df, col_name="Ngày báo cáo"):
+    if col_name in df.columns:
+        df[col_name] = df[col_name].apply(
+            lambda x: x.strftime("%d/%m/%Y") if isinstance(x, pd.Timestamp) else x
+        )
+    return df
+#################################
+
 def highlight_total_row_generic(row, total_row_idx):
     if row.name == total_row_idx:
         return ['background-color: #ffe599; color: #cf1c00'] * len(row)
     return [''] * len(row)
+
+def extract_device_string(s, chon_thiet_bi):
+    if not isinstance(s, str):
+        return ""
+    # Tìm vị trí bắt đầu của tên thiết bị
+    start = s.find(chon_thiet_bi)
+    if start == -1:
+        return ""
+    # Tìm dấu # gần nhất bên phải sau tên thiết bị
+    end = s.find("#", start)
+    if end == -1:
+        return s[start:].strip()  # Nếu không có # thì lấy đến hết chuỗi
+    return s[start:end].strip()
+
+def lay_gia_tri_giua_3_4(s):
+    if not isinstance(s, str):
+        return ""
+    parts = s.split("|")
+    if len(parts) >= 4:
+        return parts[3].strip()  # phần tử giữa | thứ 2 và thứ 3
+    return ""
 
 ##################################### Main Section ###############################################
 css_path = pathlib.Path("asset/style.css")
@@ -207,7 +263,7 @@ st.markdown(f"""
         <div class="header-content">
             <img src="data:image/png;base64,{img}" alt="logo">
             <div class="header-text">
-                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH®<br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
             </div>
         </div>
         <div class="header-subtext">
@@ -224,121 +280,147 @@ data = load_data(sheeti5)
 khoa = data["Khoa"].unique()
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
 md = date(2025, 1, 1)
-with st.form("Thời gian"):
-    cold = st.columns([5,5])
-    with cold[0]:
-        sd = st.date_input(
-        label="Ngày bắt đầu",
-        value=md,
-        min_value=md,
-        max_value=now_vn.date(), 
-        format="DD/MM/YYYY",
+sheeto5 = st.secrets["sheet_name"]["output_5"]
+tab1, tab2 = st.tabs(["Báo cáo thiết bị hằng ngày", "Thống kê toàn viện"])
+with tab1:
+    with st.form("Báo cáo thiết bị hằng ngày"):
+        day = st.date_input(
+            label="Ngày báo cáo",
+            value=now_vn.date(),
+            min_value=md,
+            max_value=now_vn.date(), 
+            format="DD/MM/YYYY",
         )
-    with cold[1]:
-        ed = st.date_input(
-        label="Ngày kết thúc",
-        value=now_vn.date(),
-        min_value=md,
-        max_value=now_vn.date(), 
-        format="DD/MM/YYYY",
-        )
-    khoa_select = chon_khoa(khoa)
-    submit_thoigian = st.form_submit_button("OK")
-if submit_thoigian:
-    if ed < sd:
-        st.error("Lỗi ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
-    else:           
-        sheeto5 = st.secrets["sheet_name"]["output_5"]
-        tab1, tab2, tab3 = st.tabs(["Báo cáo thiết bị hằng ngày", "Thống kê toàn viện","Thống kê theo khoa"])
-        with tab1:
-            data1 = khoa_chua_bao_cao(khoa,sd,ed)
-            st.write(f"Thống kê báo cáo theo ngày")
-            st.dataframe(data1, use_container_width=True, hide_index=True)
-        with tab2:
-            sheeti5 = st.secrets["sheet_name"]["input_5"]
-            data_input5 = load_data(sheeti5)
-            headers = data_input5["Tên thiết bị"].unique()
-            data_output5 = load_data1(sheeto5, sd, ed, khoa_select)
-            data_output5["Thiết bị thông thường"] = data_output5["Thiết bị thông thường"].fillna("").astype(str)
-            data_tong_hop = tinh_tong_dang_su_dung(data_output5, headers)
-            if data_output5.empty:
-                st.warning("Không có dữ liệu theo yêu cầu")
+        khoa_tab1 = chon_khoa(khoa)
+        chon_thiet_bi = st.selectbox(label="Chọn thiết bị",options=data["Tên thiết bị"].unique())
+        submit_baocao = st.form_submit_button("OK")
+        if submit_baocao:
+            if not khoa_tab1:
+                st.error("Vui lòng chọn ít nhất một khoa")
             else:
-                st.markdown("<h5 style='text-align: center;'>Số lượng sử dụng các thiết bị toàn viện</h5>", unsafe_allow_html=True)
-                st.dataframe(data_tong_hop,use_container_width=True, hide_index=True)
-            
-            # Tính Hiệu suất sử dụng (%)
-            st.markdown("<h5 style='text-align: center;'>Hiệu suất sử dụng các thiết bị toàn viện (%)</h5>", unsafe_allow_html=True)
-            phan_tram_df = tinh_phan_tram_su_dung(data_output5, headers)
-            for header in headers:
-                    phan_tram_df[header] = phan_tram_df[header].apply(
-                        lambda x: f"{round(float(x),2)}" if pd.notna(x) and x != "" else ""
-                    )
-            st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True)
-                        # Sau khi đã có phan_tram_df và headers
-            # Lấy dòng trung bình (dòng cuối cùng)
-            avg_row = phan_tram_df.iloc[-1]
-            # Loại bỏ cột "Ngày báo cáo"
-            avg_row = avg_row.drop("Ngày báo cáo")
-            # Chuyển giá trị về float (nếu đang là string có ký tự %)
-            avg_row_float = avg_row.apply(lambda x: float(str(x).replace("%", "")) if x != "" else 0)
-            fig = px.bar(
-                x=headers,
-                y=[avg_row_float[header] for header in headers],
-                labels={'x': '', 'y': 'Hiệu suất sử dụng (%)'},
-                text=[avg_row_float[header] for header in headers],
-                color_discrete_sequence=["#1f77b4"],
+                sheeti5 = st.secrets["sheet_name"]["output_5"]
+                data_output5 = load_data(sheeti5)
+                data_output5["Ngày báo cáo"] = pd.to_datetime(data_output5["Ngày báo cáo"], errors="coerce").dt.date
+                filtered = data_output5.loc[data_output5["Ngày báo cáo"] == day]
+                if khoa_tab1 != "Chọn tất cả khoa":
+                    filtered = filtered.loc[filtered["Khoa báo cáo"].isin(khoa_tab1)]
+                if data_output5.empty:
+                    st.warning("Không có dữ liệu theo yêu cầu")
+                else:
+                    filtered["Chuỗi thiết bị"] = filtered["Thiết bị thông thường"].apply(lambda x: extract_device_string(x, chon_thiet_bi))
+                    filtered["Timestamp"] = pd.to_datetime(filtered["Timestamp"], errors="coerce")
+                    filtered_sorted = filtered.sort_values(["Khoa báo cáo", "Timestamp"], ascending=[True, False])
+                    filtered_unique = filtered_sorted.drop_duplicates(subset=["Khoa báo cáo"], keep="first").reset_index(drop=True)
+                   ###########
+                    st.divider()
+                    ds_khoa_da_bao_cao = filtered_unique["Khoa báo cáo"].tolist()
+                    ds_khoa_chua_bao_cao = list(set(khoa) - set(ds_khoa_da_bao_cao))
+
+                    # Hiển thị tổng quan
+                    col1, col2 = st.columns(2)
+                    col1.metric("#### Số khoa chưa báo cáo", len(ds_khoa_chua_bao_cao))
+                    col2.metric("#### Số khoa đã báo cáo", len(ds_khoa_da_bao_cao))
+                    st.divider()
+                    # Hiển thị danh sách khoa chưa báo cáo
+                    st.markdown("#### ❌ Danh sách khoa chưa báo cáo")
+                    for k in sorted(ds_khoa_chua_bao_cao):
+                        st.markdown(f"- {k}")
+                    # Hiển thị danh sách khoa đã báo cáo
+                    st.markdown("#### ✅ Danh sách khoa đã báo cáo")
+                    for k in sorted(ds_khoa_da_bao_cao):
+                        st.markdown(f"- {k}")
+                    st.divider()
+                    day1 = day.strftime("%d/%m/%Y")
+                    st.markdown(f"#### Thống kê số {chon_thiet_bi} trống trong ngày {day1}")
+                    filtered_unique["Số lượng trống"] = filtered_unique["Chuỗi thiết bị"].apply(lambda x: lay_gia_tri_giua_3_4(x))
+                    filtered_unique = filtered_unique[filtered_unique["Số lượng trống"].astype(float) > 0]
+                    if filtered_unique.empty:
+                        st.warning(f"Không có khoa nào hiện có trống {chon_thiet_bi} trong ngày báo cáo này")
+                    else:
+                        filtered_unique = filtered_unique[["Khoa báo cáo", "Số lượng trống"]]
+                        filtered_unique = filtered_unique.rename(columns={
+                            "Khoa báo cáo": "Khoa",
+                            "Số lượng trống": "Số lượng trống"
+                        })
+                        st.dataframe(filtered_unique, use_container_width=True, hide_index=True)
+with tab2:
+    with st.form("Thời gian"):
+        cold = st.columns([5,5])
+        with cold[0]:
+            sd = st.date_input(
+            label="Ngày bắt đầu",
+            value=md,
+            min_value=md,
+            max_value=now_vn.date(), 
+            format="DD/MM/YYYY",
             )
-            fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
-            fig.update_layout(yaxis_tickformat='.2f')
-            st.markdown("<h5 style='text-align: center;'>Biểu đồ hiệu suất sử dụng các thiết bị toàn viện</h5>", unsafe_allow_html=True)
-            st.plotly_chart(fig, use_container_width=True)
-        with tab3:                            
-            sheeti5 = st.secrets["sheet_name"]["input_5"]
-            data_input5 = load_data(sheeti5)
-            headers = data_input5["Tên thiết bị"].unique()
-            data_output5 = load_data1(sheeto5, sd, ed, khoa_select)
-            if data_output5.empty:
-                st.warning("Không có dữ liệu theo yêu cầu")
-            else:
-                data_expanded = data_output5[["Timestamp", "Ngày báo cáo", "Khoa báo cáo", "Người báo cáo"]].copy()
-                for header in headers:
-                    data_expanded[header] = data_output5["Thiết bị thông thường"].apply(
-                        lambda x: tach_cot_lay_dang_su_dung(x, header)
-                    )
-                sum_row = {col: "" for col in data_expanded.columns}
-                for header in headers:
-                    sum_row[header] = data_expanded[header].sum()
-                sum_row["Người báo cáo"] = "Tổng"
-                data_expanded = pd.concat([data_expanded, pd.DataFrame([sum_row])], ignore_index=True)
-                st.markdown("<h5 style='text-align: center;'>Số lượng sử dụng các thiết bị</h5>", unsafe_allow_html=True)
-                st.dataframe(
-                    data_expanded.style.apply(lambda row: highlight_total_row_generic(row, len(data_expanded) - 1), axis=1),
-                    use_container_width=True,
-                    hide_index=True
+        with cold[1]:
+            ed = st.date_input(
+            label="Ngày kết thúc",
+            value=now_vn.date(),
+            min_value=md,
+            max_value=now_vn.date(), 
+            format="DD/MM/YYYY",
+            )
+        khoa_select = chon_khoa(khoa)
+        submit_thoigian = st.form_submit_button("OK")
+        if submit_thoigian:
+            if ed < sd:
+                st.error("Lỗi ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
+            else:      
+                sheeti5 = st.secrets["sheet_name"]["input_5"]
+                data_input5 = load_data(sheeti5)
+                headers = data_input5["Tên thiết bị"].unique()
+                data_output5 = load_data1(sheeto5, sd, ed, khoa_select)
+                data_output5["Thiết bị thông thường"] = data_output5["Thiết bị thông thường"].fillna("").astype(str)
+                data_tong_hop = tinh_tong_dang_su_dung(data_output5, headers)
+                if data_output5.empty:
+                    st.warning("Không có dữ liệu theo yêu cầu")
+                else:
+                    st.markdown("<h5 style='text-align: center;'>Số lượng sử dụng các thiết bị toàn viện</h5>", unsafe_allow_html=True)
+                    data_tong_hop["Ngày báo cáo"] = data_tong_hop["Ngày báo cáo"].apply(
+                            lambda x: pd.to_datetime(x) if isinstance(x, str) and x.lower() != "trung bình" else x
+                        )
+
+                formatted_df = format_per_row(data_tong_hop.copy())
+                formatted_df = format_date_column(formatted_df, "Ngày báo cáo")
+
+                # Hiển thị bảng đã định dạng + highlight
+                styled_df = (
+                    formatted_df
+                    .style
+                    .apply(highlight_last_row_factory(data_tong_hop), axis=1)
                 )
-            st.markdown("<h5 style='text-align: center;'>Hiệu suất sử dụng các thiết bị toàn viện (%)</h5>", unsafe_allow_html=True)
-            phan_tram_df = tinh_phan_tram_su_dung(data_output5, headers)
-            for header in headers:
-                    phan_tram_df[header] = phan_tram_df[header].apply(
-                        lambda x: f"{round(float(x),2)}" if pd.notna(x) and x != "" else ""
-                    )
-            st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True)
-                        # Sau khi đã có phan_tram_df và headers
-            # Lấy dòng trung bình (dòng cuối cùng)
-            avg_row = phan_tram_df.iloc[-1]
-            # Loại bỏ cột "Ngày báo cáo"
-            avg_row = avg_row.drop("Ngày báo cáo")
-            # Chuyển giá trị về float (nếu đang là string có ký tự %)
-            avg_row_float = avg_row.apply(lambda x: float(str(x).replace("%", "")) if x != "" else 0)
-            fig = px.bar(
-                x=headers,
-                y=[avg_row_float[header] for header in headers],
-                labels={'x': '', 'y': 'Hiệu suất sử dụng (%)'},
-                text=[avg_row_float[header] for header in headers],
-                color_discrete_sequence=["#1f77b4"],
-            )
-            fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
-            fig.update_layout(yaxis_tickformat='.2f')
+
+                st.dataframe(styled_df, use_container_width=True, hide_index=True)
+                # Tính Hiệu suất sử dụng (%)
+                st.markdown("<h5 style='text-align: center;'>Hiệu suất sử dụng các thiết bị toàn viện (%)</h5>", unsafe_allow_html=True)
+                phan_tram_df = tinh_phan_tram_su_dung(data_output5, headers)
+                for header in headers:
+                        phan_tram_df[header] = phan_tram_df[header].apply(
+                            lambda x: f"{round(float(x),2)}" if pd.notna(x) and x != "" else ""
+                        )
+                st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True)
+                            # Sau khi đã có phan_tram_df và headers
+                # Lấy dòng trung bình (dòng cuối cùng)
+                avg_row = phan_tram_df.iloc[-1]
+                # Loại bỏ cột "Ngày báo cáo"
+                avg_row = avg_row.drop("Ngày báo cáo")
+                # Chuyển giá trị về float (nếu đang là string có ký tự %)
+                avg_row_float = avg_row.apply(lambda x: float(str(x).replace("%", "")) if x != "" else 0)
+                fig = px.bar(
+                    x=headers,
+                    y=[avg_row_float[header] for header in headers],
+                    labels={'x': '', 'y': 'Hiệu suất sử dụng (%)'},
+                    text=[avg_row_float[header] for header in headers],
+                    color_discrete_sequence=["#1f77b4"],
+                )
+                fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
+                fig.update_layout(yaxis_tickformat='.2f')
+                st.markdown("<h5 style='text-align: center;'>Biểu đồ hiệu suất sử dụng các thiết bị toàn viện</h5>", unsafe_allow_html=True)
+                st.plotly_chart(fig, use_container_width=True)
+
+
+        
 
                 
