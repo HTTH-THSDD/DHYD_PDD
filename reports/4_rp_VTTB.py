@@ -184,9 +184,13 @@ def tinh_phan_tram_su_dung(data, headers):
     # Tính phần trăm
     phan_tram_df = tong_su_dung.copy()
     for header in headers:
-        tong_su_dung[header] = pd.to_numeric(tong_su_dung[header], errors="coerce")
         co_so_df[header] = pd.to_numeric(co_so_df[header], errors="coerce")
-        phan_tram_df[header] = (tong_su_dung[header] / co_so_df[header].replace(0, pd.NA) * 100).round(2)
+        tong_su_dung[header] = pd.to_numeric(tong_su_dung[header], errors="coerce")
+
+# Tính toán phần trăm và làm tròn
+        phan_tram_df[header] = (
+            tong_su_dung[header] / co_so_df[header].replace(0, pd.NA)
+            ).round(2)
     # Dòng trung bình
     avg_row = pd.DataFrame(phan_tram_df[headers].mean(axis=0)).T
     avg_row.insert(0, "Ngày báo cáo", "Trung bình")
