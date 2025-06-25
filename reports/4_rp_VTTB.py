@@ -281,6 +281,7 @@ html_code = f'<p class="demuc"><i>Nhân viên: {st.session_state.username}</i></
 st.html(html_code)
 sheeti5 = st.secrets["sheet_name"]["input_5"]
 data = load_data(sheeti5)
+dict_khoa_lienhe = dict(zip(data["Khoa"], data["Liên hệ"]))
 khoa = data["Khoa"].unique()
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
 md = date(2025, 1, 1)
@@ -315,7 +316,6 @@ with tab1:
                     filtered["Timestamp"] = pd.to_datetime(filtered["Timestamp"], errors="coerce")
                     filtered_sorted = filtered.sort_values(["Khoa báo cáo", "Timestamp"], ascending=[True, False])
                     filtered_unique = filtered_sorted.drop_duplicates(subset=["Khoa báo cáo"], keep="first").reset_index(drop=True)
-                   ###########
                     st.divider()
                     ds_khoa_da_bao_cao = filtered_unique["Khoa báo cáo"].tolist()
                     ds_khoa_chua_bao_cao = list(set(khoa) - set(ds_khoa_da_bao_cao))
@@ -345,7 +345,8 @@ with tab1:
                         filtered_unique = filtered_unique.rename(columns={
                             "Khoa báo cáo": "Khoa",
                             "Số lượng trống": "Số lượng trống"
-                        })
+                                })
+                        filtered_unique["Liên hệ"] = filtered_unique["Khoa"].map(dict_khoa_lienhe)
                         st.dataframe(filtered_unique, use_container_width=True, hide_index=True)
 with tab2:
     with st.form("Thời gian"):

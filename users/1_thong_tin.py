@@ -158,7 +158,7 @@ def xuli(data,a,ten_ma,sd,ed):
                 with st.expander("Thông tin chi tiết:"):
                     st.dataframe(data, hide_index=True)
             else:
-                html_code = f'<p class="ttcn"><i>Thông tin được đánh giá thực hiện quy trình:</i></p>'
+                html_code = f'<p class="ttcn"><i>Thông tin được giám sát thực hiện quy trình:</i></p>'
                 st.html(html_code)
                 st.markdown(f"Nhân viên {ten_ma} **đã được giám sát {len(data)} lần** trong khoảng thời gian được chọn.")
                 with st.expander("Thông tin chi tiết:"):

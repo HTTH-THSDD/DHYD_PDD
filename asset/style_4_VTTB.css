@@ -389,10 +389,6 @@ div[role="dialog"] {
     background-color: #00515b;
 } 
 
-[data-testid="stHorizontalBlock"] {
-    gap:5px;
-}
-
 [data-testid="stHeadingWithActionElements"] h6 {
     color: #005259;
     padding-top:39px;
@@ -432,4 +428,7 @@ div[data-testid="stExpander"] details summary span div p {
     font-size: 18px !important;
     font-family: "Source Sans Pro", sans-serif;
 }
+
+
+
 

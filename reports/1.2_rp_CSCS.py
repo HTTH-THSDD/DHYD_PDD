@@ -87,11 +87,8 @@ def load_data(x,sd,ed,khoa_select):
 def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
     #Lấy những cột cần cho hiển thị lên trang báo cáo
-#<<<<<<< HEAD
-    bo_cot = df[['STT','Timestamp','Khoa', 'Tên chỉ số chăm sóc', 'Tỉ lệ tuân thủ','Tên người giám sát', 'Tên người thực hiện']]
-#=======
-    bo_cot = df[['STT','Timestamp','Khoa', 'Tên chỉ số chăm sóc', 'Tỉ lệ tuân thủ','Tên người giám sát', 'Tên người thực hiện']]
-#>>>>>>> 125067bc691932de10fca9932c003cfc0cf83af4
+    bo_cot = df[['STT','Timestamp','Khoa', 'Tên chỉ số chăm sóc', 'Tỉ lệ tuân thủ','Tên người đánh giá', 'Tên người thực hiện']]
+    bo_cot = df[['STT','Timestamp','Khoa', 'Tên chỉ số chăm sóc', 'Tỉ lệ tuân thủ','Tên người đánh giá', 'Tên người thực hiện']]
     #Chuyển những cột tuân thủ thành dạng số nhờ đổi dấu "," thành "."
     bo_cot['Tỉ lệ tuân thủ'] = bo_cot['Tỉ lệ tuân thủ'].str.replace(',', '.')
     #Chuyển dạng số chính thức
@@ -109,7 +106,7 @@ def tao_thong_ke(x,y):
         return bo_cot
     else:
         # Xóa các cột không cần thiết
-        bo_cot = bo_cot.drop(["Timestamp", "Tên người giám sát", "Tên người thực hiện"], axis=1)
+        bo_cot = bo_cot.drop(["Timestamp", "Tên người đánh giá", "Tên người thực hiện"], axis=1)
         # Nhóm lại bảng đó theo khoa và tên quy trình
         ket_qua = bo_cot.groupby(["Khoa", "Tên chỉ số chăm sóc"]).agg({
             "Tên chỉ số chăm sóc": "count",
@@ -132,7 +129,7 @@ def chon_cscs(ten_cscs):
     placeholder1 = st.empty()
     if st.checkbox("Chọn tất cả chỉ số"):
         placeholder1.empty()
-        cscs_select = "Chọn tất cả chỉ số"
+        cscs_select = "All"
     else:
         with placeholder1:
             cscs_select = st.multiselect(label="Chọn tên chỉ số chăm sóc",
@@ -244,31 +241,27 @@ if submit_thoigian:
     if ed < sd:
         st.error("Lỗi ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
     else:
-        loc_ten_cscs = get_key_from_value(ten_cscs, cscs_select)
         sheeto7 = st.secrets["sheet_name"]["output_7"]
         data = load_data(sheeto7,sd,ed,khoa_select)
         if data.empty:
             st.toast("Không có dữ liệu theo yêu cầu")
         else:
-            if loc_ten_cscs != "All":
-                data = data[(data["Tên chỉ số chăm sóc"] == loc_ten_cscs)]
-            if data.empty:
-                st.warning("Không có dữ liệu theo yêu cầu")
-            else:
-                with st.expander("Thống kê tổng quát"):
-                    thongke = tao_thong_ke(data,"Tổng quát")
-                    st.dataframe(thongke, 
-                                hide_index=True, 
-                                column_config = {
-                                    "Tỉ lệ tuân thủ": st.column_config.NumberColumn(format="%.2f %%")
-                                    })
-                with st.expander("Thống kê chi tiết"):
-                    thongkechitiet = tao_thong_ke(data,"Chi tiết")
-                    st.dataframe(thongkechitiet,
-                                hide_index=True, 
-                                column_config = {
-                                    "Tỉ lệ tuân thủ": st.column_config.NumberColumn(format="%.2f %%")
-                                    })
+            if cscs_select != "All":
+               data = data[data["Tên chỉ số chăm sóc"].isin(cscs_select)]
+            with st.expander("Thống kê tổng quát"):
+                thongke = tao_thong_ke(data,"Tổng quát")
+                st.dataframe(thongke, 
+                            hide_index=True, 
+                            column_config = {
+                                "Tỉ lệ tuân thủ": st.column_config.NumberColumn(format="%.2f %%")
+                                })
+            with st.expander("Thống kê chi tiết"):
+                thongkechitiet = tao_thong_ke(data,"Chi tiết")
+                st.dataframe(thongkechitiet,
+                            hide_index=True, 
+                            column_config = {
+                                "Tỉ lệ tuân thủ": st.column_config.NumberColumn(format="%.2f %%")
+                                })
 powerbi_url = "https://app.powerbi.com/groups/fbea42ac-f40a-4ada-bdbe-95cd1dc34b62/reports/e4d93ac2-150f-4e45-9932-e93fc32666e8/ReportSection?experience=power-bi"
 st.markdown(f"[📊 Xem báo cáo chi tiết tại Power BI]({powerbi_url})", unsafe_allow_html=True)
 

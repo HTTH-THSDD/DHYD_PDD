@@ -10,6 +10,7 @@ from google.oauth2.service_account import Credentials
 import smtplib
 from email.mime.text import MIMEText
 import time
+from bs4 import BeautifulSoup
 # FS
 
 @st.cache_data(ttl=3600)
@@ -148,7 +149,42 @@ def gui_email_qtkt(receiver_email,data):
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
     timestamp = now_vn.strftime('%H:%M %d-%m-%Y')
     subject = f"KẾT QUẢ GIÁM SÁT QUY TRÌNH KỸ THUẬT - {timestamp}"
+
     html_table = data.to_html(index=False, border=1, justify='left')
+    soup = BeautifulSoup(html_table, "html.parser")
+
+    # Tỉ lệ cột: 1:5:3:3 (tổng 12 phần => 8.33%, 41.67%, 25%, 25%)
+    widths = ["8.33%", "41.67%", "25%", "25%"]
+
+    # Tô màu dòng tiêu đề
+    for i, th in enumerate(soup.find_all("th")):
+        th["style"] = (
+            f"padding:8px 12px;"
+            f"border:1px solid #cfcfcf;"
+            f"text-align:left;"
+            f"font-family:Arial,sans-serif;"
+            f"font-size:14px;"
+            f"width:{widths[i]};"
+            f"background-color:#2c25b3;"
+            f"color:#fff;"
+        )
+
+    # Style cho từng ô dữ liệu
+    for row in soup.find_all("tr"):
+        for i, td in enumerate(row.find_all("td")):
+            td["style"] = (
+                f"padding:8px 12px;"
+                f"border:1px solid #cfcfcf;"
+                f"text-align:left;"
+                f"font-family:Arial,sans-serif;"
+                f"font-size:14px;"
+                f"width:{widths[i]};"
+            )
+
+    html_table = str(soup)
+    # Khi gửi email hoặc hiển thị trên Streamlit:
+    st.markdown(html_table, unsafe_allow_html=True)
+    
     tltt = float(st.session_state.tltt)*100
     # Tạo nội dung email dạng HTML, bạn có thể tùy chỉnh style thêm nếu muốn
     body = f"""

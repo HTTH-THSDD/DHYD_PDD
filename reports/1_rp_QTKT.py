@@ -87,21 +87,18 @@ def load_data(x,sd,ed,khoa_select):
 def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
     #Lấy những cột cần cho hiển thị lên trang báo cáo
-#<<<<<<< HEAD
     bo_cot = df[['STT','Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tỉ lệ nhận dạng NB','Tên người đánh giá', 'Tên người thực hiện']]
-#=======
     bo_cot = df[['STT','Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tỉ lệ nhận dạng NB','Tên người đánh giá', 'Tên người thực hiện']]
-#>>>>>>> 125067bc691932de10fca9932c003cfc0cf83af4
     #Chuyển những cột tuân thủ thành dạng số nhờ đổi dấu "," thành "."
     bo_cot['Tỉ lệ tuân thủ'] = bo_cot['Tỉ lệ tuân thủ'].str.replace(',', '.')
     #Chuyển dạng số chính thức
     bo_cot['Tỉ lệ tuân thủ'] = pd.to_numeric(bo_cot["Tỉ lệ tuân thủ"], errors='coerce')
     #Nhấn 100 thành tỉ lệ phần trăm
     bo_cot['Tỉ lệ tuân thủ'] = bo_cot['Tỉ lệ tuân thủ'] * 100
-    #Tương tự với tỉ lệ an toàn
+    #Tương tự với tỉ lệ an toàn, không nhân cho 100 là vì có những giá trị là NaN, nếu nhân cho 100 thì sẽ thành NaN * 100 = NaN
     bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].str.replace(',', '.')
     bo_cot['Tỉ lệ an toàn'] = pd.to_numeric(bo_cot["Tỉ lệ an toàn"], errors='coerce')
-    #Tỉ lệ nhận dạng NB
+    #Tỉ lệ nhận dạng NB, không nhân cho 100 là vì có những giá trị là NaN, nếu nhân cho 100 thì sẽ thành NaN * 100 = NaN
     bo_cot['Tỉ lệ nhận dạng NB'] = bo_cot['Tỉ lệ nhận dạng NB'].str.replace(',', '.')
     bo_cot['Tỉ lệ nhận dạng NB'] = pd.to_numeric(bo_cot["Tỉ lệ nhận dạng NB"], errors='coerce')
 
@@ -113,37 +110,48 @@ def tao_thong_ke(x,y):
         return bo_cot
     else:
         bo_cot = bo_cot.drop(["Timestamp","Tên người đánh giá", "Tên người thực hiện"], axis=1)
-        # Lọc ra 1 bảng chứa những dòng có giá trị an toàn là số
-        bang_co_tlan = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ an toàn"])]
-        bang_co_tlnd = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ nhận dạng NB"])]
-        # Nhóm lại bảng đó theo khoa và tên quy trình, tạo thêm 3 cột, là tỉ lệ an toàn bàng trung bình, tỉ lệ tuân thủ bằng trung bình, và cột số lượt là bằng count số lần của tên quy trình
-        ket_qua1 = bang_co_tlan.groupby(["Khoa","Tên quy trình"]).agg({
+        # Lọc ra 1 bảng chứa những dòng có giá trị an toàn là số và giá trị nhận dạng NB là số
+        bang_co_tlan_tlnd_SS = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ an toàn"])]
+        bang_co_tlan_tlnd_SS = bang_co_tlan_tlnd_SS.loc[pd.notna(bo_cot["Tỉ lệ nhận dạng NB"])]
+        # Nhóm lại bảng đó theo khoa và tên quy trình, tạo thêm 3 cột, là tỉ lệ an toàn bàng trung bình, tỉ lệ tuân thủ bằng trung bình, tỉ lệ nhận dạng là trung bình và cột số lượt là bằng count số lần của tên quy trình
+        ket_qua1 = bang_co_tlan_tlnd_SS.groupby(["Khoa","Tên quy trình"]).agg({
         "Tên quy trình": "count",
         "Tỉ lệ tuân thủ": "mean",
-        "Tỉ lệ an toàn": "mean"
-        }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
-        
-        ket_qua1_1 = bang_co_tlnd.groupby(["Khoa","Tên quy trình"]).agg({
-        "Tên quy trình": "count",
-        "Tỉ lệ tuân thủ": "mean",
+        "Tỉ lệ an toàn": "mean",
         "Tỉ lệ nhận dạng NB": "mean",
         }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
-        # Làm tương tự với bảng chứa các giá trị an toàn là NaN, riêng cột giá trị an toàn không dùng hàm mean nữa mà mình sẽ lấy giá trị đầu tiên cũng chính là NaN
-        bang_khong_tlan = bo_cot.loc[pd.isna(bo_cot["Tỉ lệ an toàn"])]
-        bang_khong_tlnd = bo_cot.loc[pd.isna(bo_cot["Tỉ lệ nhận dạng NB"])]
-        ket_qua2 = bang_khong_tlan.groupby(["Khoa","Tên quy trình"]).agg({
+        
+        # Lọc ra bảng không có giá trị an toàn và nhận dạng NB là NaN
+        bang_khong_tlan_tlnd_NN = bo_cot.loc[pd.isna(bo_cot["Tỉ lệ an toàn"])]
+        bang_khong_tlan_tlnd_NN = bang_khong_tlan_tlnd_NN.loc[pd.isna(bo_cot["Tỉ lệ nhận dạng NB"])]
+        ket_qua2 = bang_khong_tlan_tlnd_NN.groupby(["Khoa","Tên quy trình"]).agg({
         "Tên quy trình": "count",
         "Tỉ lệ tuân thủ": "mean",
-        "Tỉ lệ an toàn": "first"
-        }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
-
-        ket_qua2_1 = bang_khong_tlnd.groupby(["Khoa","Tên quy trình"]).agg({
-        "Tên quy trình": "count",
-        "Tỉ lệ tuân thủ": "mean",
+        "Tỉ lệ an toàn": "first",
         "Tỉ lệ nhận dạng NB": "first",
         }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
-        # Gép 2 bảng lại
-        ket_qua = pd.concat([ket_qua1, ket_qua1_1, ket_qua2, ket_qua2_1], ignore_index=True)
+
+        #Lọc ra những dòng có giá trị an toàn là số và nhận dạng NB là NaN
+        bang_co_tlan_tlnd_SN = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ an toàn"])]
+        bang_co_tlan_tlnd_SN = bang_co_tlan_tlnd_SN.loc[pd.isna(bo_cot["Tỉ lệ nhận dạng NB"])]
+        ket_qua3 = bang_co_tlan_tlnd_SN.groupby(["Khoa","Tên quy trình"]).agg({
+        "Tên quy trình": "count",
+        "Tỉ lệ tuân thủ": "mean",
+        "Tỉ lệ an toàn": "mean",
+        "Tỉ lệ nhận dạng NB": "first",
+        }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
+
+        #Lọc ra những dòng có giá trị an toàn là NaN và nhận dạng NB là số
+        bang_khong_tlan_tlnd_NS = bo_cot.loc[pd.isna(bo_cot["Tỉ lệ an toàn"])]
+        bang_khong_tlan_tlnd_NS = bang_khong_tlan_tlnd_NS.loc[pd.notna(bo_cot["Tỉ lệ nhận dạng NB"])]
+        ket_qua4 = bang_khong_tlan_tlnd_NS.groupby(["Khoa","Tên quy trình"]).agg({
+        "Tên quy trình": "count",
+        "Tỉ lệ tuân thủ": "mean",
+        "Tỉ lệ an toàn": "first",
+        "Tỉ lệ nhận dạng NB": "mean",
+        }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
+        
+        ket_qua = pd.concat([ket_qua1, ket_qua2, ket_qua3, ket_qua4], ignore_index=True)
         # Forrmat lại với điều kiện nếu giá trị trong cột an toàn không là NaN (if pd.notna(x)) thì giá trị đó được * 100 để chuyển sang dạng %, còn ngược lại (else thì sẽ giữ nguyên giá trị là NaN)
         ket_qua['Tỉ lệ an toàn'] = ket_qua['Tỉ lệ an toàn'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
         ket_qua['Tỉ lệ nhận dạng NB'] = ket_qua['Tỉ lệ nhận dạng NB'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)

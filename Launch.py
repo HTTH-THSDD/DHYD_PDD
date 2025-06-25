@@ -76,7 +76,7 @@ def gui_email_quen_mat_khau(receiver_email):
 def cap_lai_mat_khau():
     sheeti1 = st.secrets["sheet_name"]["input_1"]
     data_nv = load_data(sheeti1)
-    chon_khoa = st.selectbox("Chọn Khoa/Đơn nguyên ",
+    chon_khoa = st.selectbox("Chọn Khoa/Đơn vị ",
                             options=data_nv["Khoa"].unique(),
                             index=None,
                             placeholder=""
@@ -205,7 +205,7 @@ VTTB = st.Page("pages/4_VTTB.py",
                 icon="🦽"
 )
 
-BC_QTKT = st.Page("reports/1_rp_QTKT.py", title="TK Giám sát quy trình",  icon="🔹")
+BC_QTKT = st.Page("reports/1_rp_QTKT.py", title="TK Giám sát quy trình kỹ thuật",  icon="🔹")
 BC_CSCS = st.Page("reports/1.2_rp_CSCS.py", title="TK Chỉ số chăm sóc ", icon="🔹")
 BC_PRIME = st.Page("reports/1.1_rp_PRIME.py", title="TK PRIME ", icon="🔹")
 BC_HSBA = st.Page("reports/2_rp_HSBA.py", title="TK Hồ sơ bệnh án", icon="🔹")
