@@ -254,7 +254,7 @@ if "username" in st.session_state:
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                 "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK,VTTB],
-                "Báo cáo": [BC_QTKT,BC_CSCS, BC_PRIME, BC_HSBA,BC_GDSK],
+                "Báo cáo": [BC_QTKT,BC_CSCS, BC_PRIME, BC_HSBA,BC_GDSK,BC_VTTB],
             },
         expanded=False,
         )
