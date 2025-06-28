@@ -39,8 +39,11 @@ def load_css(file_path):
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 def logout():
-    for key in st.session_state.keys(): 
-        del st.session_state[key]
+    keep = {"dmk", "dmk_time"}          
+    for key in list(st.session_state.keys()):
+        if key not in keep:
+            del st.session_state[key]
+
     st.rerun()
 
 @st.cache_data(ttl=3600)
