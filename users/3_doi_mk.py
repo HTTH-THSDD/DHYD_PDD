@@ -4,6 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 import pathlib
 import base64
+import time
 
 @st.cache_data(ttl=3600)
 def load_credentials():
@@ -100,6 +101,8 @@ if "nhap_sai" not in st.session_state:
     st.session_state.nhap_sai = 0
 else:
     if st.session_state.nhap_sai >= 2:
+        st.session_state.dmk = True
+        st.session_state.dmk_time = time.time()
         logout()
 with st.form("Xác minh lại thông tin"):
     mkc = st.text_input("Mật khẩu cũ",type="password")

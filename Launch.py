@@ -101,6 +101,12 @@ def login():
         else:
             del st.session_state["sendemail"]
             del st.session_state["sendemail_time"]
+    if st.session_state.get("dmk", False):
+        if time.time() - st.session_state.get("dmk_time", 0) < 5:
+            st.toast("Bạn đã nhập sai mật khẩu 3 lần",icon="🚫")
+        else:
+            del st.session_state["dmk"]
+            del st.session_state["dmk_time"]
     found = 0
     st.markdown(f"""
     <div class="login-header">
