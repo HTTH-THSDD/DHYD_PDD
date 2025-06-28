@@ -74,6 +74,10 @@ def kiem_tra():
             f"trong_{i}" not in st.session_state or st.session_state[f"trong_{i}"] is None
         ) or (
             f"hu_{i}" not in st.session_state or st.session_state[f"hu_{i}"] is None
+        ) or (
+            f"muon_{i}" not in st.session_state or st.session_state[f"muon_{i}"] is None
+        ) or ( 
+            f"cho_muon_{i}" not in st.session_state or st.session_state[f"cho_muon_{i}"] is None
         ):
             so_thiet_bi_thieu.append(f"{st.session_state.thiet_bi['Tên thiết bị'].iloc[i]}")
     return so_thiet_bi_thieu
@@ -99,28 +103,33 @@ def upload_data_VTTB():
         dang_su_dung = str(st.session_state[f"dang_su_dung_{i}"])
         trong = str(st.session_state[f"trong_{i}"]) 
         hu = str(st.session_state[f"hu_{i}"])
-        column_tb_thong_thuong += ten + "|" + co_so + "|" + dang_su_dung + "|" + trong + "|" + hu + "#"
+        muon = str(st.session_state[f"muon_{i}"])
+        cho_muon = str(st.session_state[f"cho_muon_{i}"])
+        column_tb_thong_thuong += ten + "|" + co_so + "|" + dang_su_dung + "|" + trong + "|" + hu + "|" + muon + "|"+ cho_muon + "#"
     column_SCD_bo_sung = ""
     SCD_so_bn = str(st.session_state[f"chua_thuc_hien_{i}"])
     SCD_nguyen_nhan = str(st.session_state[f"nguyen_nhan_{i}"])
     if SCD_so_bn != 0 and SCD_nguyen_nhan != "":
         column_SCD_bo_sung += SCD_so_bn + "|" + SCD_nguyen_nhan
+
     columnn_SCD_muon_khoa_khac =""
     for idx in st.session_state.additional_columns:
         SCD_muon_khoa_khac = st.session_state[f"muon_tu_khoa_khac_{idx}"]
         SCD_so_luong_muon = str(st.session_state[f"so_luong_muon_{idx}"])
         if SCD_muon_khoa_khac != "--Chọn khoa--" and SCD_so_luong_muon != 0:
-                columnn_SCD_muon_khoa_khac += SCD_muon_khoa_khac + ":" + SCD_so_luong_muon + " + "
+                columnn_SCD_muon_khoa_khac += SCD_muon_khoa_khac + ":" + SCD_so_luong_muon + "+"
     if columnn_SCD_muon_khoa_khac != "":
-        columnn_SCD_muon_khoa_khac = columnn_SCD_muon_khoa_khac.rstrip(" + ")
+        columnn_SCD_muon_khoa_khac = columnn_SCD_muon_khoa_khac.rstrip("+")
+
     columnn_SCD_cho_khoa_khac_muon =""
     for idx in st.session_state.additional_columns_2:
         SCD_cho_khoa_khac = st.session_state[f"cho_khoa_khac_muon{idx}"]
         SCD_so_luong_cho_muon = str(st.session_state[f"so_luong_cho_muon_{idx}"])
         if SCD_cho_khoa_khac != "--Chọn khoa--" and SCD_so_luong_cho_muon != 0:
-                columnn_SCD_cho_khoa_khac_muon += SCD_cho_khoa_khac + ":" + SCD_so_luong_cho_muon + " + "
+                columnn_SCD_cho_khoa_khac_muon += SCD_cho_khoa_khac + ":" + SCD_so_luong_cho_muon + "+"
     if columnn_SCD_cho_khoa_khac_muon != "":
-        columnn_SCD_muon_khoa_khac = columnn_SCD_muon_khoa_khac.rstrip(" + ")
+        columnn_SCD_cho_khoa_khac_muon = columnn_SCD_cho_khoa_khac_muon.rstrip("+")
+
     sheet.append_row([column_timestamp, column_ngay_bao_cao, column_khoa_bao_cao, column_nguoi_bao_cao, column_tb_thong_thuong, column_SCD_bo_sung, columnn_SCD_muon_khoa_khac, columnn_SCD_cho_khoa_khac_muon])
     st.toast("Báo cáo đã được gửi thành công")
 # Main Section ####################################################################################
@@ -186,7 +195,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
             </style>
             ''', unsafe_allow_html=True)
         ma_thiet_bi = thiet_bi['Mã thiết bị'].iloc[i]
-        col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+        col1, col2, col3, col4, col5, col6 = st.columns([1, 1, 1, 1, 1, 1])
         with col1:
             SL = int(thiet_bi['2025'].iloc[i])
             st.number_input(
@@ -202,7 +211,6 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 value=SL,  # Chuyển đổi giá trị thành số nguyên
                 step=1,
                 key=f"dang_su_dung_{i}",
-                max_value=SL,
                 min_value=0,
             )
         with col3:
@@ -211,7 +219,6 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 step=1,
                 key=f"trong_{i}",
                 value=None,
-                max_value=SL,
                 min_value=0,
                 )
         with col4:
@@ -220,100 +227,108 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 step=1,
                 key=f"hu_{i}",
                 value=None,
-                max_value=SL,
                 min_value=0,
                 )
+        with col5:
+            st.number_input(
+                label="Mượn",
+                step=1,
+                key=f"muon_{i}",
+                value=None,
+                min_value=0,
+                )
+        with col6:
+            st.number_input(
+                label="Cho mượn",
+                step=1,
+                key=f"cho_muon_{i}",
+                value=None,
+                min_value=0,
+                )                   
         st.markdown(f'''</div class="divider">''', unsafe_allow_html=True)
         if ma_thiet_bi[0] != "A":
             with st.expander(f"Thông tin bổ sung thiết bị {ten}", expanded=False):
-                col1, col2 = st.columns([2, 2])
-                with col1:
-                    st.number_input(
+                st.number_input(
                         label="Số người bệnh có chỉ định sử dụng máy SCD nhưng chưa thực hiện",
                         min_value=0,
                         step=1,
                         key=f"chua_thuc_hien_{i}",
                     )
-                with col2:
-                    st.selectbox(
+                st.selectbox(
                         label="Nguyên nhân người bệnh chưa được sử dụng máy SCD",
                         options=["", "Không có máy", "Không có vớ", "Nguyên nhân khác"],
                         key=f"nguyen_nhan_{i}",
                     )
 
                 # Hai cột: mượn từ khoa khác | cho khoa khác mượn
-                col_left, col_right = st.columns(2)
-                with col_left:
-                    st.markdown(f'''
-                    <p style="font-size: 15px; 
-                        color: #005259; 
-                        font-family: 'Source Sans Pro', sans-serif; 
-                        font-weight: bold;">
-                        {ten} mượn từ khoa khác
-                    </p>
-                    ''', unsafe_allow_html=True)
-                    if "additional_columns" not in st.session_state:
-                        st.session_state.additional_columns = [1]
-                    for idx in st.session_state.additional_columns:
-                        c1, c2 = st.columns([7, 3])
-                        with c1:
-                            st.selectbox(
-                                label="-",
-                                options=["--Chọn khoa--"] + list(data_vttb["Khoa"].unique()),
-                                key=f"muon_tu_khoa_khac_{idx}",
-                            )
-                        with c2:
-                            st.number_input(
-                                label="-",
-                                step=1,
-                                key=f"so_luong_muon_{idx}",
-                            )
-                    c_add, c_remove = st.columns([1, 1])
-                    with c_add:
-                        if st.button("Thêm lựa chọn", key=f"them_lua_chon"):
-                            st.session_state.additional_columns.append(len(st.session_state.additional_columns) + 1)
+                st.markdown(f'''
+                <p style="font-size: 15px; 
+                    color: #005259; 
+                    font-family: 'Source Sans Pro', sans-serif; 
+                    font-weight: bold;">
+                    {ten} mượn từ khoa khác
+                </p>
+                ''', unsafe_allow_html=True)
+                if "additional_columns" not in st.session_state:
+                    st.session_state.additional_columns = [1]
+                for idx in st.session_state.additional_columns:
+                    c1, c2 = st.columns([7, 3])
+                    with c1:
+                        st.selectbox(
+                            label="-",
+                            options=["--Chọn khoa--"] + list(data_vttb["Khoa"].unique()),
+                            key=f"muon_tu_khoa_khac_{idx}",
+                        )
+                    with c2:
+                        st.number_input(
+                            label="-",
+                            step=1,
+                            key=f"so_luong_muon_{idx}",
+                        )
+                c_add, c_remove = st.columns([1, 1])
+                with c_add:
+                    if st.button("Thêm lựa chọn", key=f"them_lua_chon"):
+                        st.session_state.additional_columns.append(len(st.session_state.additional_columns) + 1)
+                        st.rerun()
+                with c_remove:
+                    if st.button("Xóa lựa chọn", key=f"xoa_lua_chon"):
+                        if len(st.session_state.additional_columns) > 1:
+                            st.session_state.additional_columns.pop()
                             st.rerun()
-                    with c_remove:
-                        if st.button("Xóa lựa chọn", key=f"xoa_lua_chon"):
-                            if len(st.session_state.additional_columns) > 1:
-                                st.session_state.additional_columns.pop()
-                                st.rerun()
-
-                with col_right:
-                    st.markdown(f'''
-                    <p style="font-size: 15px; 
-                        color: #005259; 
-                        font-family: 'Source Sans Pro', sans-serif; 
-                        font-weight: bold;">
-                        {ten} cho khoa khác mượn
-                    </p>
-                    ''', unsafe_allow_html=True)
-                    if "additional_columns_2" not in st.session_state:
-                        st.session_state.additional_columns_2 = [1]
-                    for idx in st.session_state.additional_columns_2:
-                        c1, c2 = st.columns([7, 3])
-                        with c1:
-                            st.selectbox(
-                                label="-",
-                                options=["--Chọn khoa--"] + list(data_vttb["Khoa"].unique()),
-                                key=f"cho_khoa_khac_muon{idx}",
-                            )
-                        with c2:
-                            st.number_input(
-                                label="-",
-                                step=1,
-                                key=f"so_luong_cho_muon_{idx}",
-                            )
-                    c_add, c_remove = st.columns([1, 1])
-                    with c_add:
-                        if st.button("Thêm lựa chọn", key=f"them_lua_chon_2"):
-                            st.session_state.additional_columns_2.append(len(st.session_state.additional_columns_2) + 1)
+                st.markdown(f'''
+                <p style="font-size: 15px; 
+                    color: #005259; 
+                    font-family: 'Source Sans Pro', sans-serif; 
+                    font-weight: bold;">
+                    {ten} cho khoa khác mượn
+                </p>
+                ''', unsafe_allow_html=True)
+                if "additional_columns_2" not in st.session_state:
+                    st.session_state.additional_columns_2 = [1]
+                for idx in st.session_state.additional_columns_2:
+                    c1, c2 = st.columns([7, 3])
+                    with c1:
+                        st.selectbox(
+                            label="-",
+                            options=["--Chọn khoa--"] + list(data_vttb["Khoa"].unique()),
+                            key=f"cho_khoa_khac_muon{idx}",
+                        )
+                    with c2:
+                        st.number_input(
+                            label="-",
+                            step=1,
+                            key=f"so_luong_cho_muon_{idx}",
+                        )
+                c_add, c_remove = st.columns([1, 1])
+                with c_add:
+                    if st.button("Thêm lựa chọn", key=f"them_lua_chon_2"):
+                        st.session_state.additional_columns_2.append(len(st.session_state.additional_columns_2) + 1)
+                        st.rerun()
+                with c_remove:
+                    if st.button("Xóa lựa chọn", key=f"xoa_lua_chon_2"):
+                        if len(st.session_state.additional_columns_2) > 1:
+                            st.session_state.additional_columns_2.pop()
                             st.rerun()
-                    with c_remove:
-                        if st.button("Xóa lựa chọn", key=f"xoa_lua_chon_2"):
-                            if len(st.session_state.additional_columns_2) > 1:
-                                st.session_state.additional_columns_2.pop()
-                                st.rerun()
 
         # Nút gửi
     submitbutton = st.button("Gửi báo cáo", key="bao_caocao")

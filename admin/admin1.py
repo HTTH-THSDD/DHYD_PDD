@@ -81,13 +81,14 @@ def load_data_GSheet(name):
         df = pd.DataFrame(df).sort_values("Timestamp", ascending=False)
     return df
 
-def change_GS(stt,tt1,kq1):
+def change_GS(stt,tt1,kq1,li_do):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
     sheeto4 = st.secrets["sheet_name"]["output_4"]
     sheet = gc.open(sheeto4).sheet1
     sheet.update_cell(stt+1, 8, tt1)
     sheet.update_cell(stt+1, 9, kq1)
+    sheet.update_cell(stt+1, 10, li_do)
     st.toast("Đã cập nhật thay đổi")
 
 def xoa_dong(stt_xx,sheetb):
@@ -156,7 +157,7 @@ if inp and inp != "---":
         except:
             st.write("Chọn bảng input")
 output_data = {
-              "output_1":"Data giám sát quy trình kỹ thuậtthuật",
+              "output_1":"Data giám sát quy trình kỹ thuật",
               "output_2":"Data hồ sơ bệnh án",
               "output_3":"Data giáo dục sức khỏe",
               "output_4":"Các yêu cầu bổ sung/phân quyền",
@@ -210,7 +211,7 @@ if outp and outp != "---":
                     if outp == "Các yêu cầu bổ sung/phân quyền":
                         st.write("Thông tin muốn chỉnh sửa")
                         with st.form("Thay đổi tình trạng"):
-                            col = st.columns([2,3,3])
+                            col = st.columns([3,3,3,3])
                             with col[0]:
                                 stt = st.number_input(label="STT yêu cầu", 
                                                     min_value=1, 
@@ -228,6 +229,9 @@ if outp and outp != "---":
                                                 options=["Trống","Hoàn thành","Từ chối"],
                                                 key="kq",
                                                 )
+                            with col[3]:
+                                li_do = st.text_input("Lý do từ chối")
+
                             submit_tt = st.form_submit_button("Lưu")
                         if submit_tt:
                             if (tt == "Chưa xem" and kq == "Từ chối") or (tt == "Chưa xem" and kq == "Hoàn thành"):
@@ -245,7 +249,7 @@ if outp and outp != "---":
                                     kq1 = "1"
                                 else:
                                     kq1 = "0"
-                                change_GS(stt,tt1,kq1)
+                                change_GS(stt,tt1,kq1,li_do)
                                 data_out = load_data_GSheet(sheetb)
                                 placeholder.dataframe(data_out, hide_index=True)
                     else:

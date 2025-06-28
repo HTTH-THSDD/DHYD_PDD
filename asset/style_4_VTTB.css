@@ -287,6 +287,26 @@ label[for^="text_input_"] div p {
     width: 200px;
     
 }
+@media screen and (max-width: 700px) {
+[data-testid="stHorizontalBlock"] {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;   
+    display: flex !important;
+}
+[data-testid="stHorizontalBlock"] > div {
+    flex: 0 0 72px !important;
+    max-width: 100px !important;
+    min-width: 50px !important;
+    overflow: hidden;
+    flex-shrink: 0 !important;
+}
+[data-testid="stExpander"] [data-testid="stHorizontalBlock"] >div {
+    flex: 1 !important;             
+    min-width: 0 !important;          
+    max-width: 100% !important;     
+}
+} 
+
 [class*="st-key-co_so_"] label {
     display: flex;
     align-items: center;
@@ -319,6 +339,16 @@ label[for^="text_input_"] div p {
     justify-content: center;
 }
 [class*="st-key-hu_"] label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+[class*="st-key-muon_"] label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+[class*="st-key-cho_muon_"] label {
     display: flex;
     align-items: center;
     justify-content: center;

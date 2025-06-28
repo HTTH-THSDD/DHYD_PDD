@@ -200,7 +200,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:green">THỐNG KÊ CÁC CHỈ SỐ CHĂM SÓC ĐIỀU DƯỠNG</p>
+        <p style="color:green">THỐNG KÊ CHỈ SỐ CHĂM SÓC ĐIỀU DƯỠNG</p>
         </div>
     </div>
     <div class="header-underline"></div>

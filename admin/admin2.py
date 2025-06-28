@@ -110,10 +110,10 @@ if st.button("Tải lại"):
     st.rerun()
 col = st.columns([5,5])
 with col[0]:
-    with st.form("Đổi mặt khẩu"):
+    with st.form("Đổi mật khẩu"):
         st.write("Đổi mật khẩu")
         manv = st.text_input("Mã nhân viên")
-        mk = st.text_input("Mặt khẩu mới:")
+        mk = st.text_input("Mật khẩu mới:")
         manv = manv.upper()
         submit1 = st.form_submit_button("Đổi mật khẩu")
     if submit1:

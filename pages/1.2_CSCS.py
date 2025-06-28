@@ -183,7 +183,7 @@ def gui_email_cscs(receiver_email,data):
     body = f"""
     <html>
         <body>
-            <h4 style="color:DodgerBlue;">Kính gửi Điều dưỡng: {st.session_state.nv_thuchien_GSQT}</h4>
+            <h4 style="color:DodgerBlue;">Kính gửi Điều dưỡng: {st.session_state.nv_thuchien_GSQT} - {st.session_state.khoa_GSQT}</h4>
 
             <p>
               Căn cứ theo kế hoạch giám sát thường quy/ đột xuất của Phòng Điều dưỡng và các Khoa/Đơn vị lâm sàng,
@@ -191,8 +191,7 @@ def gui_email_cscs(receiver_email,data):
             </p>
 
             <div class="highlight">
-            <p><strong>Tên chỉ số chăm sóc:</strong>{st.session_state.ten_quy_trinh}</p>
-            <p><strong>Khoa/Đơn vị:</strong> {st.session_state.khoa_GSQT}</p>
+            <p><strong>Tên chỉ số chăm sóc:</strong> {st.session_state.ten_quy_trinh}</p>
             <p><strong>Nhân viên giám sát:</strong> {st.session_state.username}</p>
             <p><strong>Thời gian giám sát:</strong> {timestamp}</p>
             <p><strong>Tỉ lệ tuân thủ:</strong> {tltt}%</p>
@@ -203,7 +202,8 @@ def gui_email_cscs(receiver_email,data):
             <br><br><br><br><br>
             <p class="footer">
             Trân trọng./.<br />
-            <h4 style="color:DodgerBlue;">Phòng Điều dưỡng - BVĐHYD TPHCM</h4>
+            <h5 style="color:DodgerBlue;">Phòng Điều dưỡng
+            <br>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH</h5>
             </p>
         </body>
     </html>
@@ -246,7 +246,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p>GIÁM SÁT CÁC CHỈ SỐ CHĂM SÓC ĐIỀU DƯỠNG</p>
+        <p>GIÁM SÁT CHỈ SỐ CHĂM SÓC ĐIỀU DƯỠNG</p>
         </div>
     </div>
     <div class="header-underline"></div>

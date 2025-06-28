@@ -212,7 +212,7 @@
 
 @media screen and (max-width: 780px) {
 .fixed-header {
-        padding-left: 22px;
+        padding-left: 10px;
         left: 15px;
 }
 .header-underline {
@@ -236,9 +236,11 @@
     left: -15px;
 }
 .header-subtext p {
-    padding-left: 100px;
+    padding-left: 50px;
 }
 }
+
+    
 
 .header-subtext p {
     font-size: 1.4rem;

@@ -250,13 +250,23 @@ def extract_device_string(s, chon_thiet_bi):
         return s[start:].strip()  # Nếu không có # thì lấy đến hết chuỗi
     return s[start:end].strip()
 
-def lay_gia_tri_giua_3_4(s):
+def lay_gia_tri_giua_x_y(x,y,s):
     if not isinstance(s, str):
         return ""
     parts = s.split("|")
-    if len(parts) >= 4:
-        return parts[3].strip()  # phần tử giữa | thứ 2 và thứ 3
+    if len(parts) >= y:
+        return parts[x].strip()  # phần tử giữa | thứ 2 và thứ 3
     return ""
+
+def get_number_after_colon(col_series: pd.Series) -> pd.Series:
+    return (
+        col_series
+        .astype(str)                           # bảo đảm kiểu chuỗi
+        .str.extract(r':\s*([\d.]+)', expand=False)  # lấy phần số
+        .astype(float)                         # ép kiểu số
+    )
+
+
 
 ##################################### Main Section ###############################################
 css_path = pathlib.Path("asset/style.css")
@@ -283,6 +293,7 @@ sheeti5 = st.secrets["sheet_name"]["input_5"]
 data = load_data(sheeti5)
 dict_khoa_lienhe = dict(zip(data["Khoa"], data["Liên hệ"]))
 khoa = data["Khoa"].unique()
+st.session_state.ds_thietbi = data["Tên thiết bị"].unique().tolist()
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
 md = date(2025, 1, 1)
 sheeto5 = st.secrets["sheet_name"]["output_5"]
@@ -336,7 +347,7 @@ with tab1:
                     st.divider()
                     day1 = day.strftime("%d/%m/%Y")
                     st.markdown(f"#### Thống kê số {chon_thiet_bi} trống trong ngày {day1}")
-                    filtered_unique["Số lượng trống"] = filtered_unique["Chuỗi thiết bị"].apply(lambda x: lay_gia_tri_giua_3_4(x))
+                    filtered_unique["Số lượng trống"] = filtered_unique["Chuỗi thiết bị"].apply(lambda x: lay_gia_tri_giua_x_y(3,4,x))
                     filtered_unique = filtered_unique[filtered_unique["Số lượng trống"].astype(float) > 0]
                     if filtered_unique.empty:
                         st.warning(f"Không có khoa nào hiện có trống {chon_thiet_bi} trong ngày báo cáo này")
@@ -406,7 +417,6 @@ with tab2:
                             lambda x: f"{round(float(x),2)}" if pd.notna(x) and x != "" else ""
                         )
                 st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True)
-                            # Sau khi đã có phan_tram_df và headers
                 # Lấy dòng trung bình (dòng cuối cùng)
                 avg_row = phan_tram_df.iloc[-1]
                 # Loại bỏ cột "Ngày báo cáo"
@@ -424,6 +434,41 @@ with tab2:
                 fig.update_layout(yaxis_tickformat='.2f')
                 st.markdown("<h5 style='text-align: center;'>Biểu đồ hiệu suất sử dụng các thiết bị toàn viện</h5>", unsafe_allow_html=True)
                 st.plotly_chart(fig, use_container_width=True)
+                #Thống kê số thiết bị cho mượn và mượn của toàn viện
+                st.markdown("<h5 style='text-align: center;'>Thống kê số lượng thiết bị mượn và cho mượn toàn viện</h5>", unsafe_allow_html=True)
+                rows = []
+                for big_str in data_output5["Thiết bị thông thường"]:
+                    # Mỗi thiết bị ngăn cách bởi kí hiệu #
+                    for device_str in filter(None, big_str.strip("#").split("#")):
+                        rows.append({
+                            "Thiết bị"   : device_str.split("|")[0],
+                            "Số lượng mượn" : lay_gia_tri_giua_x_y(5, 6, device_str), 
+                            "Số lượng cho mượn" : lay_gia_tri_giua_x_y(6, 7, device_str)   
+                        })
+                cols_num = ["Số lượng mượn", "Số lượng cho mượn"]
+                ket_qua = pd.DataFrame(rows)
+                ket_qua[cols_num] = ket_qua[cols_num].apply(
+                    pd.to_numeric, errors="coerce"
+                ).fillna(0)
+                ket_qua_grouped = (
+                    ket_qua
+                    .groupby("Thiết bị", as_index=False,sort=False)[cols_num]
+                    .sum()
+                )
+                tong_values = ket_qua_grouped[cols_num].sum()
+                row_total = pd.DataFrame({
+                    "Thiết bị": ["Tổng"],         
+                    **tong_values.to_dict()     
+                })
+                ket_qua_grouped = pd.concat(
+                    [ket_qua_grouped, row_total],
+                    ignore_index=True
+                )
+                st.dataframe(ket_qua_grouped.style.apply(
+                    lambda row: highlight_total_row_generic(row, len(ket_qua_grouped) - 1), axis=1
+                    ), use_container_width=True, hide_index=True,height=422)
+                # 12 dòng x 35px (chiều cao 1 dòng) + 2px (chiều cao lề bảng) = 422px là ra chiều cao của bảng#
+
 
 
         

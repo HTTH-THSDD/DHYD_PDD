@@ -6,6 +6,8 @@ from datetime import datetime, date
 from zoneinfo import ZoneInfo
 import pathlib
 import base64
+from email.mime.text import MIMEText
+import smtplib
 
 @st.cache_data(ttl=3600)
 def load_credentials():
@@ -63,11 +65,13 @@ def load_data_GSheet(name):
         ngay_yc = []
         loai_yc = []
         nd_yc = []
+        li_do_yc = []
         tt = []
         for i in range (0,len(df)):
             ngay_yc.append(df.iloc[i,1])
             loai_yc.append(df.iloc[i,5])
-            nd_yc.append(df.iloc[i,6]) 
+            nd_yc.append(df.iloc[i,6])
+            li_do_yc.append(df.iloc[i,9])
             # nd_yc.append(df.iloc[i,5][:40]+"...") #40 kí tự chữ đầu
             if df.iloc[i,7] == "" or df.iloc[i,7] == None:
                 tt.append("Đang chờ")
@@ -82,6 +86,7 @@ def load_data_GSheet(name):
                 "Tình trạng": pd.Series(tt),
                 "Loại yêu cầu": pd.Series(loai_yc),
                 "Nội dung": pd.Series(nd_yc),
+                "Ghi chú lí do":pd.Series(li_do_yc),
                 }
         df_yc = pd.DataFrame(k)
         df_yc = pd.DataFrame(df_yc).sort_values("Ngày gửi yêu cầu", ascending=False)
@@ -101,6 +106,36 @@ def highlight_status(val):
     else:
         color = "black"
     return f"color: {color}"
+
+def gui_email_yc():
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+    timestamp = now_vn.strftime('%H:%M %d-%m-%Y')
+    subject = f"YÊU CẦU TỪ PHẦN MỀM GSCTCMĐD"
+    body = f"""
+    <html>
+        <body>
+            <h4 style="color:DodgerBlue;">{timestamp}</h4>
+            <p> Bạn có 01 yêu cầu <strong>{st.session_state.lyc}</strong> từ nhân viên <strong>{st.session_state.username} - {st.session_state.khoa_YC}</strong><br></p>
+            <p> <strong>Nội dung yêu cầu:</strong> {st.session_state.ndyc}<br>
+                <strong>Thông tin liên hệ:</strong> {st.session_state.ttlh}<br>
+            </p>
+        </body>
+    </html>
+    """
+    # Thiết lập thông tin email
+    sender_email = st.secrets["email_info"]["sender_email"]
+    sender_password = st.secrets["email_info"]["sender_password"]
+    receiver_emails = ["hang.htt1@umc.edu.vn", "nhung.vtc@umc.edu.vn"]
+
+    msg = MIMEText(body, "html", "utf-8")
+    msg["Subject"] = subject
+    msg["From"] = sender_email
+    msg["To"] = ", ".join(receiver_emails)
+
+    # Gửi email
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, receiver_emails, msg.as_string())
 
 def upload_data_yc():
     credentials = load_credentials()
@@ -122,6 +157,7 @@ def upload_data_yc():
                         column_loaiyc,
                         column_ndyc,
                      ])
+    gui_email_yc()
     st.toast("Yêu cầu đã được gửi!")
 
 # Main Section ####################################################################################
@@ -163,7 +199,7 @@ with tab1:
                             key="lyc")
             
         st.session_state.ndyc = st.text_area("Nội dung yêu cầu:")
-        st.session_state.ttlh = st.text_input("Thông tin liên hệ", placeholder="email/sđt liên hệ",key="yc_ttlh")
+        st.session_state.ttlh = st.text_input("Thông tin liên hệ", placeholder="Email/SĐT liên hệ",key="yc_ttlh")
         submitbt=st.form_submit_button("Gửi yêu cầu")
     if submitbt:
         if "lyc" in st.session_state and st.session_state["lyc"] and "ndyc" in st.session_state and st.session_state["ndyc"]:
