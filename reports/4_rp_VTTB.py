@@ -167,6 +167,7 @@ def tinh_phan_tram_su_dung(data, headers):
     Trả về DataFrame phần trăm sử dụng theo ngày và thiết bị.
     """
     # Lấy danh sách ngày báo cáo
+    data["Ngày báo cáo"] = pd.to_datetime(data["Ngày báo cáo"]).dt.strftime("%d/%m/%Y")
     ngay_bao_cao = data["Ngày báo cáo"].unique()
     # Tạo bảng tổng số lượng đang sử dụng
     tong_su_dung = tinh_tong_dang_su_dung(data, headers)
@@ -430,6 +431,7 @@ else:
                         phan_tram_df[header] = phan_tram_df[header].apply(
                             lambda x: f"{round(float(x),2)}" if pd.notna(x) and x != "" else ""
                         )
+                
                 st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True)
                 # Lấy dòng trung bình (dòng cuối cùng)
                 avg_row = phan_tram_df.iloc[-1]
