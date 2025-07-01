@@ -435,17 +435,18 @@ with tab2:
                 st.markdown("<h5 style='text-align: center;'>Biểu đồ hiệu suất sử dụng các thiết bị toàn viện</h5>", unsafe_allow_html=True)
                 st.plotly_chart(fig, use_container_width=True)
                 #Thống kê số thiết bị cho mượn và mượn của toàn viện
-                st.markdown("<h5 style='text-align: center;'>Thống kê số lượng thiết bị mượn và cho mượn toàn viện</h5>", unsafe_allow_html=True)
+                st.markdown("<h5 style='text-align: center;'>Thống kê số lượng thiết bị đang sử dụng toàn viện</h5>", unsafe_allow_html=True)
                 rows = []
                 for big_str in data_output5["Thiết bị thông thường"]:
                     # Mỗi thiết bị ngăn cách bởi kí hiệu #
                     for device_str in filter(None, big_str.strip("#").split("#")):
                         rows.append({
                             "Thiết bị"   : device_str.split("|")[0],
-                            "Số lượng mượn" : lay_gia_tri_giua_x_y(5, 6, device_str), 
-                            "Số lượng cho mượn" : lay_gia_tri_giua_x_y(6, 7, device_str)   
+                            "Số lượng đang sử dụng" : lay_gia_tri_giua_x_y(2, 3, device_str), 
+                            "Số lượng trống" : lay_gia_tri_giua_x_y(3, 4, device_str),
+                            "Số lượng hư" : lay_gia_tri_giua_x_y(4, 5, device_str)
                         })
-                cols_num = ["Số lượng mượn", "Số lượng cho mượn"]
+                cols_num = ["Số lượng đang sử dụng", "Số lượng trống","Số lượng hư"]
                 ket_qua = pd.DataFrame(rows)
                 ket_qua[cols_num] = ket_qua[cols_num].apply(
                     pd.to_numeric, errors="coerce"

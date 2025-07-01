@@ -90,7 +90,7 @@ def cap_lai_mat_khau():
                                 "Mã nhân viên": MNV,
                                 "Khoa": chon_khoa,
                                 "Email": Email}
-        receiver_email = st.secrets["email_info"]["receiver_email"]
+        receiver_email = st.secrets["email_info"]["receiver_1"]
         gui_email_quen_mat_khau(receiver_email)
         st.rerun()
 

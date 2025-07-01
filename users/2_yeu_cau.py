@@ -125,7 +125,8 @@ def gui_email_yc():
     # Thiết lập thông tin email
     sender_email = st.secrets["email_info"]["sender_email"]
     sender_password = st.secrets["email_info"]["sender_password"]
-    receiver_emails = ["hang.htt1@umc.edu.vn", "nhung.vtc@umc.edu.vn"]
+    host = [st.secrets["email_info"]["receiver_1"],st.secrets["email_info"]["receiver_2"]]
+    receiver_emails = host
 
     msg = MIMEText(body, "html", "utf-8")
     msg["Subject"] = subject

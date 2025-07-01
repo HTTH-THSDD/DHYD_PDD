@@ -103,9 +103,7 @@ def upload_data_VTTB():
         dang_su_dung = str(st.session_state[f"dang_su_dung_{i}"])
         trong = str(st.session_state[f"trong_{i}"]) 
         hu = str(st.session_state[f"hu_{i}"])
-        muon = str(st.session_state[f"muon_{i}"])
-        cho_muon = str(st.session_state[f"cho_muon_{i}"])
-        column_tb_thong_thuong += ten + "|" + co_so + "|" + dang_su_dung + "|" + trong + "|" + hu + "|" + muon + "|"+ cho_muon + "#"
+        column_tb_thong_thuong += ten + "|" + co_so + "|" + dang_su_dung + "|" + trong + "|" + hu + "#"
     column_SCD_bo_sung = ""
     SCD_so_bn = str(st.session_state[f"chua_thuc_hien_{i}"])
     SCD_nguyen_nhan = str(st.session_state[f"nguyen_nhan_{i}"])
@@ -195,7 +193,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
             </style>
             ''', unsafe_allow_html=True)
         ma_thiet_bi = thiet_bi['Mã thiết bị'].iloc[i]
-        col1, col2, col3, col4, col5, col6 = st.columns([1, 1, 1, 1, 1, 1])
+        col1, col2, col3, col4  = st.columns([1, 1, 1, 1])
         with col1:
             thiet_bi['2025'] = pd.to_numeric(thiet_bi['2025'],errors='coerce')
             SL = int(thiet_bi['2025'].iloc[i]) if pd.notnull(thiet_bi['2025'].iloc[i]) else 0
@@ -219,7 +217,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 label="Trống",
                 step=1,
                 key=f"trong_{i}",
-                value=None,
+                value=0,
                 min_value=0,
                 )
         with col4:
@@ -227,25 +225,10 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 label="Hư",
                 step=1,
                 key=f"hu_{i}",
-                value=None,
+                value=0,
                 min_value=0,
                 )
-        with col5:
-            st.number_input(
-                label="Mượn",
-                step=1,
-                key=f"muon_{i}",
-                value=None,
-                min_value=0,
-                )
-        with col6:
-            st.number_input(
-                label="Cho mượn",
-                step=1,
-                key=f"cho_muon_{i}",
-                value=None,
-                min_value=0,
-                )                   
+                 
         st.markdown(f'''</div class="divider">''', unsafe_allow_html=True)
         if ma_thiet_bi[0] != "A":
             with st.expander(f"Thông tin bổ sung thiết bị {ten}", expanded=False):
