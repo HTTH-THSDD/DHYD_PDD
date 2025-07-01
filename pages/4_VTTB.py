@@ -197,7 +197,8 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
         ma_thiet_bi = thiet_bi['Mã thiết bị'].iloc[i]
         col1, col2, col3, col4, col5, col6 = st.columns([1, 1, 1, 1, 1, 1])
         with col1:
-            SL = int(thiet_bi['2025'].iloc[i])
+            thiet_bi['2025'] = pd.to_numeric(thiet_bi['2025'],errors='coerce')
+            SL = int(thiet_bi['2025'].iloc[i]) if pd.notnull(thiet_bi['2025'].iloc[i]) else 0
             st.number_input(
                 label="Cơ số",
                 value=SL,  # Chuyển đổi giá trị thành số nguyên
