@@ -297,8 +297,22 @@ st.session_state.ds_thietbi = data["Tên thiết bị"].unique().tolist()
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
 md = date(2025, 1, 1)
 sheeto5 = st.secrets["sheet_name"]["output_5"]
-tab1, tab2 = st.tabs(["Báo cáo thiết bị hằng ngày", "Thống kê toàn viện"])
-with tab1:
+if "tab_index" not in st.session_state:
+    st.session_state.tab_index = 0  # 0: tab1, 1: tab2
+TABS = ["📊 Báo cáo thiết bị hằng ngày", "📈 Thống kê toàn viện"]    
+if "tab_idx" not in st.session_state:
+    st.session_state.tab_idx = 0  
+tab_idx = st.radio(
+    label="",
+    options=range(len(TABS)),
+    format_func=lambda i: TABS[i],
+    index=st.session_state.tab_idx,
+    horizontal=True,            # hiển thị ngang giống tabs
+    key="tab_selector"
+)
+st.session_state.tab_idx = tab_idx
+
+if tab_idx == 0:
     with st.form("Báo cáo thiết bị hằng ngày"):
         day = st.date_input(
             label="Ngày báo cáo",
@@ -359,7 +373,7 @@ with tab1:
                                 })
                         filtered_unique["Liên hệ"] = filtered_unique["Khoa"].map(dict_khoa_lienhe)
                         st.dataframe(filtered_unique, use_container_width=True, hide_index=True)
-with tab2:
+else:
     with st.form("Thời gian"):
         cold = st.columns([5,5])
         with cold[0]:
