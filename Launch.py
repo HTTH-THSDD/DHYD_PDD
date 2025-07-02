@@ -130,7 +130,7 @@ def login():
                             placeholder="",)
         code = st.text_input("Mật khẩu", type="password",placeholder="",  key="matkhau_login",)
         submit_button = st.form_submit_button("Đăng nhập")
-        QuenMatKhau = st.form_submit_button("Quên mật khẩu",type="tertiary")
+        #QuenMatKhau = st.form_submit_button("Quên mật khẩu",type="tertiary")
     if submit_button:
         index = 0
         code=code.upper()
@@ -146,8 +146,8 @@ def login():
             st.session_state["username"] = name
             st.session_state["phan_quyen"] = quyen
             st.rerun()
-    if QuenMatKhau:
-        cap_lai_mat_khau()
+    # if QuenMatKhau:
+    #     cap_lai_mat_khau()
 
 def logout():
     for key in st.session_state.keys():
