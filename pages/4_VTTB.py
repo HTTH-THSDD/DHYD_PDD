@@ -74,10 +74,6 @@ def kiem_tra():
             f"trong_{i}" not in st.session_state or st.session_state[f"trong_{i}"] is None
         ) or (
             f"hu_{i}" not in st.session_state or st.session_state[f"hu_{i}"] is None
-        ) or (
-            f"muon_{i}" not in st.session_state or st.session_state[f"muon_{i}"] is None
-        ) or ( 
-            f"cho_muon_{i}" not in st.session_state or st.session_state[f"cho_muon_{i}"] is None
         ):
             so_thiet_bi_thieu.append(f"{st.session_state.thiet_bi['Tên thiết bị'].iloc[i]}")
     return so_thiet_bi_thieu
