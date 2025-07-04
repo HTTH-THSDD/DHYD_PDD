@@ -472,7 +472,7 @@ else:
                         phan_tram_df[header] = phan_tram_df[header].apply(
                             lambda x: f"{round(float(x),2)}" if pd.notna(x) and x != "" else ""
                         )
-                st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True)
+                st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True, height=90)
                 # Lấy dòng trung bình (dòng cuối cùng)
                 avg_row = phan_tram_df.iloc[-1]
                 # Loại bỏ cột "Ngày báo cáo"
@@ -523,7 +523,7 @@ else:
                 )
                 st.dataframe(ket_qua_grouped.style.apply(
                     lambda row: highlight_total_row_generic(row, len(ket_qua_grouped) - 1), axis=1
-                    ), use_container_width=True, hide_index=True,height=422)
+                    ), use_container_width=True, hide_index=True,height=457)
                 # 12 dòng x 35px (chiều cao 1 dòng) + 2px (chiều cao lề bảng) = 422px là ra chiều cao của bảng#
 
 

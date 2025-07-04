@@ -97,19 +97,16 @@ def xoa_dong(stt_xx,sheetb):
     sheet = gc.open(sheetb).sheet1
     sheet.delete_rows(stt_xx+1)
     stt_xx = [[i] for i in range(1, len(sheet.get_all_values()))]  # Danh sách số thứ tự
-
     # Xây vùng cần cập nhật (ví dụ A2:A101 nếu cột A là STT)
     start_row = 2  # Bỏ qua tiêu đề
     end_row = len(sheet.get_all_values())
     col_letter = chr(64 + 1)  # 1 -> A, 2 -> B, ...
     cell_range = f"{col_letter}{start_row}:{col_letter}{end_row}"
-
     # Dùng batch update
     cell_range_obj = sheet.range(cell_range)
     for i, cell in enumerate(cell_range_obj):
         cell.value = i + 1  # STT bắt đầu từ 1
-
-    sheet.update_cells(cell_range_obj)  # Gửi 1 lần duy nhất
+    sheet.update_cells(cell_range_obj)  
     st.toast("Đã xóa dòng theo yêu cầu")
 #########################################################################################################
 #Cài thời gian sẵn
