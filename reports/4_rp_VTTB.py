@@ -464,7 +464,7 @@ else:
                     .apply(highlight_last_row_factory(data_tong_hop), axis=1)
                 )
 
-                st.dataframe(styled_df, use_container_width=True, hide_index=True)
+                st.dataframe(styled_df, use_container_width=True, hide_index=True, height= 125)
                 # Tính Hiệu suất sử dụng (%)
                 st.markdown("<h5 style='text-align: center;'>Hiệu suất sử dụng các thiết bị toàn viện (%)</h5>", unsafe_allow_html=True)
                 phan_tram_df = tinh_phan_tram_su_dung(data_output5, headers)
@@ -472,7 +472,7 @@ else:
                         phan_tram_df[header] = phan_tram_df[header].apply(
                             lambda x: f"{round(float(x),2)}" if pd.notna(x) and x != "" else ""
                         )
-                st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True, height=90)
+                st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True, height= 125)
                 # Lấy dòng trung bình (dòng cuối cùng)
                 avg_row = phan_tram_df.iloc[-1]
                 # Loại bỏ cột "Ngày báo cáo"
