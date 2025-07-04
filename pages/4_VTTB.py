@@ -87,6 +87,7 @@ def upload_data_VTTB():
     gc = gspread.authorize(credentials)
     sheeto5 = st.secrets["sheet_name"]["output_5"]
     sheet = gc.open(sheeto5).sheet1
+    column_index = len(sheet.get_all_values())  
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_ngay_bao_cao = st.session_state.ngay_bao_cao.strftime('%Y-%m-%d')
@@ -124,7 +125,7 @@ def upload_data_VTTB():
     if columnn_SCD_cho_khoa_khac_muon != "":
         columnn_SCD_cho_khoa_khac_muon = columnn_SCD_cho_khoa_khac_muon.rstrip("+")
 
-    sheet.append_row([column_timestamp, column_ngay_bao_cao, column_khoa_bao_cao, column_nguoi_bao_cao, column_tb_thong_thuong, column_SCD_bo_sung, columnn_SCD_muon_khoa_khac, columnn_SCD_cho_khoa_khac_muon])
+    sheet.append_row([column_index,column_timestamp, column_ngay_bao_cao, column_khoa_bao_cao, column_nguoi_bao_cao, column_tb_thong_thuong, column_SCD_bo_sung, columnn_SCD_muon_khoa_khac, columnn_SCD_cho_khoa_khac_muon])
     st.toast("Báo cáo đã được gửi thành công")
 # Main Section ####################################################################################
 css_path = pathlib.Path("asset/style_4_VTTB.css")

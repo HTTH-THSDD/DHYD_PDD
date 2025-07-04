@@ -7,6 +7,7 @@ import pathlib
 import base64
 from google.oauth2.service_account import Credentials
 import plotly.express as px
+import numpy as np
 
 @st.cache_data(ttl=3600)
 def get_img_as_base64(file):
@@ -72,6 +73,7 @@ def load_data1(sheeto5,sd,ed,khoa_select):
     start_date = sd
     end_date = ed + timedelta(days=1)
     data_final = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] < pd.Timestamp(end_date))]
+    
     return data_final
 
 def chon_khoa(khoa):
@@ -162,7 +164,7 @@ def tach_gia_tri_co_so(column_data, header):
                 return 0
     return 0
 
-def tinh_phan_tram_su_dung(data, headers):
+# def tinh_phan_tram_su_dung(data, headers):
     """
     Trả về DataFrame phần trăm sử dụng theo ngày và thiết bị.
     """
@@ -197,6 +199,40 @@ def tinh_phan_tram_su_dung(data, headers):
     avg_row.insert(0, "Ngày báo cáo", "Trung bình")
     phan_tram_df = pd.concat([phan_tram_df.iloc[:-1], avg_row], ignore_index=True)
     return phan_tram_df
+
+def tinh_phan_tram_su_dung(data,headers):
+    credentials = load_credentials()
+    gc = gspread.authorize(credentials)
+    sheeti5 = st.secrets["sheet_name"]["input_5"]
+    sheet = gc.open(sheeti5).worksheet("Trang tính2")
+    datax = sheet.get_all_values()
+    header = datax[0]
+    values = datax[1:]
+    phan_phoi_df = pd.DataFrame(values, columns=header)
+    phan_phoi_dict = phan_phoi_df.set_index("Thiết bị")["SL điều phối được"].to_dict()
+    # Chuẩn hoá cột Ngày báo cáo thành dd/mm/YYYY (hoặc giữ nguyên datetime nếu bạn muốn)
+    data = data.copy()
+    data["Ngày báo cáo"] = pd.to_datetime(data["Ngày báo cáo"]).dt.strftime("%d/%m/%Y")
+    # Tính tổng số đang sử dụng cho mỗi ngày (hàm bạn đã có sẵn)
+    tong_su_dung = tinh_tong_dang_su_dung(data, headers)
+    # ----- TÍNH % SỬ DỤNG ---------------------------------------------------
+    phan_tram_df = tong_su_dung.copy()
+
+    for header in headers:
+        # Lấy mẫu số cố định; nếu thiếu thì gắn NaN để dễ kiểm tra lỗi
+        mau_so = phan_phoi_dict.get(header, np.nan)
+        mau_so = float(mau_so)
+        # Tính % (nhân 100 nếu muốn hiển thị dạng phần trăm)
+        phan_tram_df[header] = (tong_su_dung[header] / mau_so).round(2)
+        # Nếu cần nhân 100:
+        # phan_tram_df[header] = (tong_su_dung[header] / mau_so * 100).round(2)
+
+    # ----- THÊM DÒNG TRUNG BÌNH --------------------------------------------
+    avg_row = pd.DataFrame(phan_tram_df[headers].mean(axis=0)).T
+    avg_row.insert(0, "Ngày báo cáo", "Trung bình")
+    phan_tram_df = pd.concat([phan_tram_df.iloc[:-1], avg_row], ignore_index=True)
+    return phan_tram_df
+
 
 #### Hàm để định dạng bảng thứ 1
 def highlight_last_row_factory(data):
@@ -253,11 +289,11 @@ def extract_device_string(s, chon_thiet_bi):
 
 def lay_gia_tri_giua_x_y(x,y,s):
     if not isinstance(s, str):
-        return ""
+        return "0"
     parts = s.split("|")
     if len(parts) >= y:
         return parts[x].strip()  # phần tử giữa | thứ 2 và thứ 3
-    return ""
+    return "0"
 
 def get_number_after_colon(col_series: pd.Series) -> pd.Series:
     return (
@@ -333,6 +369,7 @@ if tab_idx == 0:
                 data_output5 = load_data(sheeti5)
                 data_output5["Ngày báo cáo"] = pd.to_datetime(data_output5["Ngày báo cáo"], errors="coerce").dt.date
                 filtered = data_output5.loc[data_output5["Ngày báo cáo"] == day]
+                filtered = filtered.loc[filtered.groupby('Khoa báo cáo')['Timestamp'].idxmax()]
                 if khoa_tab1 != "Chọn tất cả khoa":
                     filtered = filtered.loc[filtered["Khoa báo cáo"].isin(khoa_tab1)]
                 if data_output5.empty:
@@ -372,7 +409,10 @@ if tab_idx == 0:
                             "Khoa báo cáo": "Khoa",
                             "Số lượng trống": "Số lượng trống"
                                 })
+                        filtered_unique["Số lượng trống"] = pd.to_numeric(filtered_unique["Số lượng trống"], errors="coerce").fillna(0)
                         filtered_unique["Liên hệ"] = filtered_unique["Khoa"].map(dict_khoa_lienhe)
+                        SLT = filtered_unique["Số lượng trống"].sum()
+                        st.write(f"**Tổng số {chon_thiet_bi} trống:** {SLT}")
                         st.dataframe(filtered_unique, use_container_width=True, hide_index=True)
 else:
     with st.form("Thời gian"):
@@ -403,6 +443,7 @@ else:
                 data_input5 = load_data(sheeti5)
                 headers = data_input5["Tên thiết bị"].unique()
                 data_output5 = load_data1(sheeto5, sd, ed, khoa_select)
+                data_output5 = data_output5.loc[data_output5.groupby('Khoa báo cáo')['Timestamp'].idxmax()]
                 data_output5["Thiết bị thông thường"] = data_output5["Thiết bị thông thường"].fillna("").astype(str)
                 data_tong_hop = tinh_tong_dang_su_dung(data_output5, headers)
                 if data_output5.empty:
@@ -431,7 +472,6 @@ else:
                         phan_tram_df[header] = phan_tram_df[header].apply(
                             lambda x: f"{round(float(x),2)}" if pd.notna(x) and x != "" else ""
                         )
-                
                 st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True)
                 # Lấy dòng trung bình (dòng cuối cùng)
                 avg_row = phan_tram_df.iloc[-1]
@@ -457,13 +497,13 @@ else:
                     # Mỗi thiết bị ngăn cách bởi kí hiệu #
                     for device_str in filter(None, big_str.strip("#").split("#")):
                         rows.append({
-                            "Thiết bị"   : device_str.split("|")[0],
+                            "Thiết bị"   : device_str.split("|")[0] if "|" in device_str else "",
                             "Số lượng đang sử dụng" : lay_gia_tri_giua_x_y(2, 3, device_str), 
                             "Số lượng trống" : lay_gia_tri_giua_x_y(3, 4, device_str),
                             "Số lượng hư" : lay_gia_tri_giua_x_y(4, 5, device_str)
-                        })
+                        })                
+                ket_qua = pd.DataFrame(rows, columns=["Thiết bị", "Số lượng đang sử dụng", "Số lượng trống", "Số lượng hư"])
                 cols_num = ["Số lượng đang sử dụng", "Số lượng trống","Số lượng hư"]
-                ket_qua = pd.DataFrame(rows)
                 ket_qua[cols_num] = ket_qua[cols_num].apply(
                     pd.to_numeric, errors="coerce"
                 ).fillna(0)
