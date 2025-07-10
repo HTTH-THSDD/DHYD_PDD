@@ -1,0 +1,184 @@
+import streamlit as st
+import pandas as pd
+import gspread
+from datetime import datetime
+from zoneinfo import ZoneInfo
+import pathlib
+import base64
+from google.oauth2.service_account import Credentials
+# FS
+
+@st.cache_data(ttl=3600)
+def get_img_as_base64(file):
+    with open(file, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+def load_css(file_path):
+    with open(file_path) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+@st.cache_data(ttl=3600)
+def load_credentials():
+    creds_info = {
+    "type": st.secrets["google_service_account"]["type"],
+    "project_id": st.secrets["google_service_account"]["project_id"],
+    "private_key_id": st.secrets["google_service_account"]["private_key_id"],
+    "private_key": st.secrets["google_service_account"]["private_key"],
+    "client_email": st.secrets["google_service_account"]["client_email"],
+    "client_id": st.secrets["google_service_account"]["client_id"],
+    "auth_uri": st.secrets["google_service_account"]["auth_uri"],
+    "token_uri": st.secrets["google_service_account"]["token_uri"],
+    "auth_provider_x509_cert_url": st.secrets["google_service_account"]["auth_provider_x509_cert_url"],
+    "client_x509_cert_url": st.secrets["google_service_account"]["client_x509_cert_url"],
+    "universe_domain": st.secrets["google_service_account"]["universe_domain"],
+    }
+    # Dùng để kết nối Google APIs
+    credentials = Credentials.from_service_account_info(
+        creds_info,
+        scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    )
+    return credentials
+
+@st.cache_data(ttl=3600)
+def load_data(x):
+    credentials = load_credentials()
+    gc = gspread.authorize(credentials)
+    sheet = gc.open(x).sheet1
+    data = sheet.get_all_values()
+    header = data[0]
+    values = data[1:]
+    data_final = pd.DataFrame(values, columns=header)
+    return data_final
+
+def kiem_tra():
+    noi_dung_thieu=[]
+    if st.session_state.get("chon_khoa") is None:
+        noi_dung_thieu.append("Khoa báo cáo")
+    if st.session_state.get("chon_ca") is None:
+        noi_dung_thieu.append("Ca báo cáo")
+    if st.session_state.get("ngay_bao_cao") is None:
+        noi_dung_thieu.append("Ngày báo cáo")
+    if st.session_state.get("SL_NB_cap_1") is None:
+        noi_dung_thieu.append("Số người bệnh PCCS cấp I")
+    if st.session_state.get("SL_DD_cap_1") is None:
+        noi_dung_thieu.append("Số điều dưỡng PCCS cấp I")
+    return noi_dung_thieu
+
+
+@st.dialog("Thông báo")
+def warning(x):
+    if x == 1:
+        st.warning("Vui lòng nhập đầy đủ nội dung báo cáo")
+    if x == 2:
+        st.warning("Lỗi nhập kết quả không hợp lí: số Điều dưỡng chăm sóc bằng 0")
+    if x == 3:
+        st.success("Đã lưu thành công")
+
+def upload_data_PCCS():
+    credentials = load_credentials()
+    gc = gspread.authorize(credentials)
+    sheeto8 = st.secrets["sheet_name"]["output_8"]
+    sheet = gc.open(sheeto8).sheet1
+    column_index = len(sheet.get_all_values())  
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
+    column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
+    column_ngay_bao_cao = st.session_state.ngay_bao_cao.strftime('%Y-%m-%d')
+    column_khoa_bao_cao = str(st.session_state.chon_khoa)
+    column_nguoi_bao_cao = str(st.session_state.username)
+    column_ca_bao_cao = str(st.session_state.chon_ca)
+    column_SL_NB_cap_1 = st.session_state.SL_NB_cap_1
+    column_SL_DD_cap_1 = st.session_state.SL_DD_cap_1
+    SL_DD_cap_1 = st.session_state.get("SL_DD_cap_1", 0)
+    SL_NB_cap_1 = st.session_state.get("SL_NB_cap_1", 0)
+    if SL_DD_cap_1 == 0:
+        warning(2)
+        st.stop()
+    else:
+        ti_le = round(SL_NB_cap_1/SL_DD_cap_1,2)
+        st.session_state.ti_le = ti_le
+    sheet.append_row([column_index, column_timestamp, column_ngay_bao_cao,
+                      column_khoa_bao_cao, column_nguoi_bao_cao, column_ca_bao_cao,
+                      column_SL_NB_cap_1,column_SL_DD_cap_1,ti_le])
+    st.toast("Báo cáo đã được gửi thành công")
+
+def clear_form_state():
+    for key in ["chon_khoa", "chon_ca", "ngay_bao_cao", "SL_NB_cap_1", "SL_DD_cap_1"]:
+        if key in st.session_state:
+            del st.session_state[key]
+
+# Main Section ####################################################################################
+css_path = pathlib.Path("asset/style_4_VTTB.css")
+load_css(css_path)
+img = get_img_as_base64("pages/img/logo.png")
+st.markdown(f"""
+    <div class="fixed-header">
+        <div class="header-content">
+            <img src="data:image/png;base64,{img}" alt="logo">
+            <div class="header-text">
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&reg;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+            </div>
+        </div>
+        <div class="header-subtext">
+        <p>BÁO CÁO PHÂN CẤP CHĂM SÓC - CẤP I</p>
+        </div>
+    </div>
+    <div class="header-underline"></div>
+ """, unsafe_allow_html=True)
+html_code = f'<p class="demuc"><i>Nhân viên báo cáo: {st.session_state.username}</i></p>'
+st.html(html_code)
+
+chon_khoa = st.selectbox("Khoa/Đơn vị báo cáo",
+                             options=["Đơn vị Gây mê hồi sức Phẫu thuật tim mạch",
+                                      "Đơn vị Hồi sức Ngoại Thần kinh",
+                                      "Khoa Hô hấp",
+                                      "Khoa Hồi sức tích cực",
+                                      "Khoa Thần kinh",
+                                      "Khoa Nội Tim mạch",
+                                      "Khoa Phẫu thuật tim mạch",
+                                      "Khoa Tim mạch can thiệp"],
+                             index=None,
+                             placeholder="",
+                             key="chon_khoa",
+                             )
+chon_ca = st.selectbox("Ca báo cáo",
+                             options=["Ca sáng (7g00 - 14g00)",
+                                      "Ca chiều (14g00 - 21g00)",
+                                      "Ca đêm (21g00 - 7g00)"],
+                            index=None,
+                            placeholder="",
+                            key="chon_ca",
+                            )
+now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+st.date_input(
+    label="Ngày báo cáo",
+    value=now_vn.date(),
+    format="DD/MM/YYYY",
+    key="ngay_bao_cao",
+    max_value=now_vn.date(),
+)
+SL_NB_cap_1 = st.number_input(
+                label="Số người bệnh PCCS cấp I",
+                value=st.session_state.get("SL_NB_cap_1", None),
+                step=1,  # Chuyển đổi giá trị thành số nguyên
+                key=f"SL_NB_cap_1"
+            )
+SL_DD_cap_1 = st.number_input(
+                label="Số điều dưỡng PCCS cấp I",
+                value=st.session_state.get("SL_DD_cap_1", None),
+                step=1,  # Chuyển đổi giá trị thành số nguyên
+                key=f"SL_DD_cap_1"
+            )
+
+        # Nút gửi
+Gui= st.button("Gửi báo cáo",type='primary', key="bao_cao") 
+if Gui:
+    kiem_tra = kiem_tra()
+    if len(kiem_tra) == 0:    
+        upload_data_PCCS ()
+        warning(3)
+        clear_form_state()
+        st.rerun()
+    else:
+        warning(1)
+

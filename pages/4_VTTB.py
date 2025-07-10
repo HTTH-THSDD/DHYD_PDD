@@ -80,7 +80,7 @@ def kiem_tra():
 
 @st.dialog("Thông báo")
 def warning(a):
-    st.warning(f"Vui lòng điền đẩy đủ thông tin các thiết bị: {', '.join(a)}")
+    st.warning(f"Vui lòng điền đầy đủ thông tin thiết bị: {', '.join(a)}")
 
 def upload_data_VTTB():
     credentials = load_credentials()
@@ -312,7 +312,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                             st.rerun()
 
         # Nút gửi
-    submitbutton = st.button("Gửi báo cáo", key="bao_caocao")
+    submitbutton = st.button("Gửi báo cáo", key="bao_cao")
     if submitbutton:
         a = kiem_tra()
         if len(a) == 0:
