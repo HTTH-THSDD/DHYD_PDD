@@ -84,12 +84,13 @@ def to_mau_dong_cuoi(data):
             return ['background-color: #ffe599; color: #cf1c00'] * len(row)
         return [''] * len(row)
     return highlight
+
 def custom_format(cell, row_idx, is_last_row):
     if isinstance(cell, (int, float)):
         if is_last_row:
             return f"{cell:,.2f}"
         else:
-            return f"{int(cell):,}" if isinstance(cell, int) or cell == int(cell) else f"{cell:,.0f}"
+            return f"{int(cell):,.1f}" if isinstance(cell, int) or cell == int(cell) else f"{cell:,.0f}"
     return cell
 
 # Xử lý toàn bộ bảng: áp dụng định dạng theo từng dòng
