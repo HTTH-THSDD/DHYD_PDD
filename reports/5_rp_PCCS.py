@@ -255,7 +255,6 @@ if submit_thoigian:
             st.toast("Không có dữ liệu theo yêu cầu")
         else:
             st.markdown("<h5 style='text-align: center;'></h5>", unsafe_allow_html=True)
-            data = data.drop_duplicates(subset=["Khoa báo cáo"], keep="first").reset_index(drop=True)
             ds_khoa_da_bao_cao = data["Khoa báo cáo"].tolist()
             ds_khoa_chua_bao_cao = list(set(khoa) - set(ds_khoa_da_bao_cao))
             if ds_khoa_chua_bao_cao:
