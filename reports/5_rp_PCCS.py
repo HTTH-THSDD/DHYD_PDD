@@ -255,7 +255,7 @@ if submit_thoigian:
             st.toast("Không có dữ liệu theo yêu cầu")
         else:
             st.markdown("<h5 style='text-align: center;'></h5>", unsafe_allow_html=True)
-            ds_khoa_da_bao_cao = data["Khoa báo cáo"].tolist()
+            ds_khoa_da_bao_cao = data["Khoa báo cáo"].unique().tolist()
             ds_khoa_chua_bao_cao = list(set(khoa) - set(ds_khoa_da_bao_cao))
             if ds_khoa_chua_bao_cao:
                 st.markdown(f"<h4 style='text-align: center;'>❌ Danh sách các khoa chưa báo cáo ({len(ds_khoa_chua_bao_cao)})</h5>", unsafe_allow_html=True)
