@@ -269,6 +269,9 @@
     overflow: hidden;
     flex-shrink: 0 !important;
 }
+.stHorizontalBlock label, .stHorizontalBlock > div > label {
+    white-space: nowrap !important;
+}
 [data-testid="stExpander"] [data-testid="stHorizontalBlock"] >div {
     flex: 1 !important;             
     min-width: 0 !important;          
