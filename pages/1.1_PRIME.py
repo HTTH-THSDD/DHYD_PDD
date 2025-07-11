@@ -177,7 +177,7 @@ vitrigs()
 thong_tin_hanh_chinh()
 st.divider()
 st.markdown("<h4 style='text-align: center;'>Bảng kiểm PRIME</h4>", unsafe_allow_html=True)
-file_id = "1HdoVbeB8LkOD_PGZrGNmAF9j6YjUNa9M"
+file_id = "1A3XyPfJYP4UFKZtC6HHoSkxMsKurOTWn"
 download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
 st.markdown(
     f"""
