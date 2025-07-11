@@ -263,9 +263,9 @@
     font-size: 18px !important;
 }
 [data-testid="stHorizontalBlock"] > div {
-    flex: 0 0 110px !important;
-    max-width: 140px !important;
-    min-width: 90px !important;
+    flex: 1 1 0 !important;
+    max-width: 100% !important;
+    min-width: 70px !important;
     overflow: hidden;
     flex-shrink: 0 !important;
 }
