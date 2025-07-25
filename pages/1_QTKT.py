@@ -231,6 +231,9 @@ def gui_email_qtkt(receiver_email,data):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, receiver_email, msg.as_string())
+    if "nv2" in st.session_state and st.session_state.nv2:
+        msg["To"] = st.session_state.email2
+        server.sendmail(sender_email, st.session_state.email2, msg.as_string())
 
 
 def precheck_table():
@@ -383,6 +386,7 @@ if (
                                     index=None,
                                     placeholder="",
                                     key="nv2")
+        st.session_state.email2 = data_nv1.loc[data_nv1["Nhân viên"]==chon_nv2, "Email"].values[0]
     st.divider()
     for i in range (0,len(quy_trinh)):   
         st.radio(
