@@ -120,6 +120,7 @@ def bang_kiem_quy_trinh():
         st.session_state.quy_trinh = qtx
         st.session_state.ten_quy_trinh =  qtx["Tên quy trình"].iloc[0]
         ma_quy_trinh = qtx["Mã bước QT"].iloc[0]
+        st.session_state.sttqt = qtx["STT QT"].iloc[0]
         danh_sach_buoc_an_toan = []
         for i in range(0,len(qtx)):
             if qtx["Chỉ số an toàn"].iloc[i] == "x":
@@ -316,7 +317,10 @@ def upload_data_GS(data):
         tlnd = round(buoc_nhan_dang_dung_du/tong_nhan_dang_tru_nhan_dang_va_KAD,4)
     column_data=column_data.rstrip("#")
     column_mqt = st.session_state.ma_quy_trinh
-    sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan,tlnd])
+    column_ghichu = ""
+    if "nv2" in st.session_state and st.session_state.nv2:
+        column_ghichu = str(st.session_state.nv2)
+    sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan,tlnd,column_ghichu])
     warning(4,2)
     
 @st.dialog("Thông báo")
@@ -345,7 +349,7 @@ st.markdown(f"""
         <div class="header-content">
             <img src="data:image/png;base64,{img}" alt="logo">
             <div class="header-text">
-                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&reg;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&#174;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
             </div>
         </div>
         <div class="header-subtext">
@@ -369,8 +373,17 @@ if (
     and "vtgs_GSQT" in st.session_state and st.session_state["vtgs_GSQT"] is not None
     and "quy_trinh" in st.session_state and st.session_state["quy_trinh"] is not None
 ):
-    st.divider()
     quy_trinh = st.session_state.quy_trinh
+    if st.session_state.sttqt == "215" or st.session_state.sttqt == "216":
+        sheeti1 = st.secrets["sheet_name"]["input_1"]
+        data_nv = load_data(sheeti1)
+        data_nv1 = data_nv.loc[data_nv["Khoa"].str.contains("Khoa Gây mê hồi sức", case=False)]
+        chon_nv2 = st.selectbox(label="Nhân viên 2",
+                                    options=data_nv1["Nhân viên"],
+                                    index=None,
+                                    placeholder="",
+                                    key="nv2")
+    st.divider()
     for i in range (0,len(quy_trinh)):   
         st.radio(
         label=f"Bước {quy_trinh.iloc[i, 5]}: {quy_trinh.iloc[i, 7]}",

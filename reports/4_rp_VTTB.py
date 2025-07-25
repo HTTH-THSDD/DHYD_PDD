@@ -73,7 +73,6 @@ def load_data1(sheeto5,sd,ed,khoa_select):
     start_date = sd
     end_date = ed + timedelta(days=1)
     data_final = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] < pd.Timestamp(end_date))]
-    
     return data_final
 
 def chon_khoa(khoa):
@@ -314,7 +313,7 @@ st.markdown(f"""
         <div class="header-content">
             <img src="data:image/png;base64,{img}" alt="logo">
             <div class="header-text">
-                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&reg;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&#174;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
             </div>
         </div>
         <div class="header-subtext">
@@ -443,7 +442,7 @@ else:
                 data_input5 = load_data(sheeti5)
                 headers = data_input5["Tên thiết bị"].unique()
                 data_output5 = load_data1(sheeto5, sd, ed, khoa_select)
-                data_output5 = data_output5.loc[data_output5.groupby('Khoa báo cáo')['Timestamp'].idxmax()]
+                data_output5 = data_output5.loc[data_output5.groupby(['Khoa báo cáo', 'Ngày báo cáo'])['Timestamp'].idxmax()]
                 data_output5["Thiết bị thông thường"] = data_output5["Thiết bị thông thường"].fillna("").astype(str)
                 data_tong_hop = tinh_tong_dang_su_dung(data_output5, headers)
                 if data_output5.empty:
@@ -464,7 +463,7 @@ else:
                     .apply(highlight_last_row_factory(data_tong_hop), axis=1)
                 )
 
-                st.dataframe(styled_df, use_container_width=True, hide_index=True, height= 115)
+                st.dataframe(styled_df, use_container_width=True, hide_index=True)
                 # Tính Hiệu suất sử dụng (%)
                 st.markdown("<h5 style='text-align: center;'>Hiệu suất sử dụng các thiết bị toàn viện (%)</h5>", unsafe_allow_html=True)
                 phan_tram_df = tinh_phan_tram_su_dung(data_output5, headers)
@@ -472,7 +471,7 @@ else:
                         phan_tram_df[header] = phan_tram_df[header].apply(
                             lambda x: f"{round(float(x),2)}" if pd.notna(x) and x != "" else ""
                         )
-                st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True, height= 115)
+                st.dataframe(phan_tram_df.style.apply( lambda row: highlight_total_row_generic(row, len(phan_tram_df) - 1), axis=1), use_container_width=True, hide_index=True)
                 # Lấy dòng trung bình (dòng cuối cùng)
                 avg_row = phan_tram_df.iloc[-1]
                 # Loại bỏ cột "Ngày báo cáo"
@@ -523,7 +522,7 @@ else:
                 )
                 st.dataframe(ket_qua_grouped.style.apply(
                     lambda row: highlight_total_row_generic(row, len(ket_qua_grouped) - 1), axis=1
-                    ), use_container_width=True, hide_index=True,height=457)
+                    ), use_container_width=True, hide_index=True,height=422)
                 # 12 dòng x 35px (chiều cao 1 dòng) + 2px (chiều cao lề bảng) = 422px là ra chiều cao của bảng#
 
 

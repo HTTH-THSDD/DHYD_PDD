@@ -130,7 +130,7 @@ def upload_data_GS(data):
     column_data=""
     so_buoc_dat = 0
     tong_so_buoc = len(data)
-  
+    column_thoigiandanhgia = str(st.session_state.thoi_diem_danh_gia)
     for i in range (0, len(data)):
         tieu_chi = str(data.iloc[i]["Tiêu chí"])  
         ketqua = str(data.iloc[i]["Kết quả"])  
@@ -143,7 +143,7 @@ def upload_data_GS(data):
             column_data += tieu_chi + "|" + ketqua + "|" + tondong + "#"
     tltt = round(so_buoc_dat/tong_so_buoc,4)
 
-    sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,tltt])
+    sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,tltt,column_thoigiandanhgia])
     warning(3,3)
 
 @st.dialog("Thông báo")
@@ -161,7 +161,7 @@ st.markdown(f"""
         <div class="header-content">
             <img src="data:image/png;base64,{img}" alt="logo">
             <div class="header-text">
-                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&reg;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&#174;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
             </div>
         </div>
         <div class="header-subtext">
@@ -175,6 +175,7 @@ html_code = f'<p class="demuc"><i>Nhân viên đang đánh giá: {st.session_sta
 st.html(html_code)
 vitrigs()
 thong_tin_hanh_chinh()
+st.radio(label="Thời điểm đánh giá", key="thoi_diem_danh_gia",options=["Trước tập huấn", "Sau tập huấn","Duy trì"], index=2, horizontal=True)
 st.divider()
 st.markdown("<h4 style='text-align: center;'>Bảng kiểm PRIME</h4>", unsafe_allow_html=True)
 file_id = "1A3XyPfJYP4UFKZtC6HHoSkxMsKurOTWn"

@@ -87,8 +87,7 @@ def load_data(x,sd,ed,khoa_select):
 def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
     #Lấy những cột cần cho hiển thị lên trang báo cáo
-    bo_cot = df[['STT','Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tỉ lệ nhận dạng NB','Tên người đánh giá', 'Tên người thực hiện']]
-    bo_cot = df[['STT','Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tỉ lệ nhận dạng NB','Tên người đánh giá', 'Tên người thực hiện']]
+    bo_cot = df[['STT','Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tỉ lệ nhận dạng NB','Tên người đánh giá', 'Tên người thực hiện','Ghi chú']]
     #Chuyển những cột tuân thủ thành dạng số nhờ đổi dấu "," thành "."
     bo_cot['Tỉ lệ tuân thủ'] = bo_cot['Tỉ lệ tuân thủ'].str.replace(',', '.')
     #Chuyển dạng số chính thức
@@ -109,10 +108,14 @@ def tao_thong_ke(x,y):
             bo_cot = bo_cot.drop("Khoa",axis=1)
         return bo_cot
     else:
-        bo_cot = bo_cot.drop(["Timestamp","Tên người đánh giá", "Tên người thực hiện"], axis=1)
+        bo_cot = bo_cot.drop(["Timestamp","Tên người đánh giá", "Tên người thực hiện","Ghi chú"], axis=1)
         # Lọc ra 1 bảng chứa những dòng có giá trị an toàn là số và giá trị nhận dạng NB là số
         bang_co_tlan_tlnd_SS = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ an toàn"])]
         bang_co_tlan_tlnd_SS = bang_co_tlan_tlnd_SS.loc[pd.notna(bo_cot["Tỉ lệ nhận dạng NB"])]
+        sum_antoan1 = bang_co_tlan_tlnd_SS["Tỉ lệ an toàn"].sum()
+        so_luot_an_toan1 = bang_co_tlan_tlnd_SS["Tỉ lệ an toàn"].count()
+        sum_nhan_dang1 = bang_co_tlan_tlnd_SS["Tỉ lệ nhận dạng NB"].sum()
+        so_luot_nhan_dang1 = bang_co_tlan_tlnd_SS["Tỉ lệ nhận dạng NB"].count()
         # Nhóm lại bảng đó theo khoa và tên quy trình, tạo thêm 3 cột, là tỉ lệ an toàn bàng trung bình, tỉ lệ tuân thủ bằng trung bình, tỉ lệ nhận dạng là trung bình và cột số lượt là bằng count số lần của tên quy trình
         ket_qua1 = bang_co_tlan_tlnd_SS.groupby(["Khoa","Tên quy trình"]).agg({
         "Tên quy trình": "count",
@@ -134,6 +137,8 @@ def tao_thong_ke(x,y):
         #Lọc ra những dòng có giá trị an toàn là số và nhận dạng NB là NaN
         bang_co_tlan_tlnd_SN = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ an toàn"])]
         bang_co_tlan_tlnd_SN = bang_co_tlan_tlnd_SN.loc[pd.isna(bo_cot["Tỉ lệ nhận dạng NB"])]
+        sum_antoan2 = bang_co_tlan_tlnd_SN["Tỉ lệ an toàn"].sum()
+        so_luot_an_toan2 = bang_co_tlan_tlnd_SN["Tỉ lệ an toàn"].count()
         ket_qua3 = bang_co_tlan_tlnd_SN.groupby(["Khoa","Tên quy trình"]).agg({
         "Tên quy trình": "count",
         "Tỉ lệ tuân thủ": "mean",
@@ -144,6 +149,8 @@ def tao_thong_ke(x,y):
         #Lọc ra những dòng có giá trị an toàn là NaN và nhận dạng NB là số
         bang_khong_tlan_tlnd_NS = bo_cot.loc[pd.isna(bo_cot["Tỉ lệ an toàn"])]
         bang_khong_tlan_tlnd_NS = bang_khong_tlan_tlnd_NS.loc[pd.notna(bo_cot["Tỉ lệ nhận dạng NB"])]
+        sum_nhan_dang2 = bang_khong_tlan_tlnd_NS["Tỉ lệ nhận dạng NB"].sum()
+        so_luot_nhan_dang2 = bang_khong_tlan_tlnd_NS["Tỉ lệ nhận dạng NB"].count()
         ket_qua4 = bang_khong_tlan_tlnd_NS.groupby(["Khoa","Tên quy trình"]).agg({
         "Tên quy trình": "count",
         "Tỉ lệ tuân thủ": "mean",
@@ -159,6 +166,24 @@ def tao_thong_ke(x,y):
         ket_qua = pd.DataFrame(ket_qua).sort_values("Khoa")
         # Gắn thêm cột số thứ tự cho i chạy từ 1 đến số dòng của bảng mới gộp
         ket_qua.insert(0, 'STT', range(1, len(ket_qua) + 1))
+        # Thêm cột trung bình
+
+        tong_so_luot = ket_qua["Số lượt"].sum()
+        mean_tuan_thu = ket_qua["Tỉ lệ tuân thủ"].mean()
+        mean_antoan = (sum_antoan1 + sum_antoan2)/(so_luot_an_toan1 + so_luot_an_toan2) * 100
+        mean_nhan_dang = (sum_nhan_dang1 + sum_nhan_dang2)/(so_luot_nhan_dang1 + so_luot_nhan_dang2) * 100
+        row_mean = pd.DataFrame({
+        "STT": [""],
+        "Khoa":["Tổng kết"],
+        "Tên quy trình": [""],
+        "Số lượt": [tong_so_luot],
+        "Tỉ lệ tuân thủ": [mean_tuan_thu],
+        "Tỉ lệ an toàn": [mean_antoan],
+        "Tỉ lệ nhận dạng NB": [mean_nhan_dang]})
+        # Ghép dòng trung bình vào cuối bảng
+        cols = ket_qua.columns
+        row_mean = row_mean[[c for c in cols if c in row_mean.columns]]  # Đảm bảo đúng thứ tự cột
+        ket_qua = pd.concat([ket_qua, row_mean], ignore_index=True)
         if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
             ket_qua=ket_qua.drop("Khoa",axis=1)
         return ket_qua
@@ -223,7 +248,7 @@ st.markdown(f"""
         <div class="header-content">
             <img src="data:image/png;base64,{img}" alt="logo">
             <div class="header-text">
-                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&reg;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&#174;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
             </div>
         </div>
         <div class="header-subtext">
@@ -249,7 +274,7 @@ with st.form("Thời gian"):
     with cold[0]:
         sd = st.date_input(
         label="Ngày bắt đầu",
-        value=md,
+        value=now_vn.date(),
         min_value=md,
         max_value=now_vn.date(), 
         format="DD/MM/YYYY",

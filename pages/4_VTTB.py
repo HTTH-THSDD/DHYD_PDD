@@ -136,7 +136,7 @@ st.markdown(f"""
         <div class="header-content">
             <img src="data:image/png;base64,{img}" alt="logo">
             <div class="header-text">
-                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&reg;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&#174;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
             </div>
         </div>
         <div class="header-subtext">
@@ -272,7 +272,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                         st.session_state.additional_columns.append(len(st.session_state.additional_columns) + 1)
                         st.rerun()
                 with c_remove:
-                    if st.button("Xóa lựa chọn", key=f"xoa_lua_chon"):
+                    if st.button("🗑️", key=f"xoa_lua_chon"):
                         if len(st.session_state.additional_columns) > 1:
                             st.session_state.additional_columns.pop()
                             st.rerun()
@@ -306,7 +306,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                         st.session_state.additional_columns_2.append(len(st.session_state.additional_columns_2) + 1)
                         st.rerun()
                 with c_remove:
-                    if st.button("Xóa lựa chọn", key=f"xoa_lua_chon_2"):
+                    if st.button("🗑️", key=f"xoa_lua_chon_2"):
                         if len(st.session_state.additional_columns_2) > 1:
                             st.session_state.additional_columns_2.pop()
                             st.rerun()

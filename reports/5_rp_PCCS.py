@@ -72,7 +72,7 @@ def load_data(x,sd,ed,khoa_select):
     end_date = ed + timedelta(days=1)
     data_final = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] < pd.Timestamp(end_date))]
     idx = data_final.groupby(
-            ["Khoa báo cáo", "Ngày báo cáo", "Ca báo cáo"]
+            ["Khoa báo cáo", "Ngày báo cáo"]
         )["Timestamp"].idxmax()
 
     # Lọc ra các dòng tương ứng
@@ -85,7 +85,9 @@ def to_mau_dong_cuoi(data):
         return [''] * len(row)
     return highlight
 
-def custom_format(cell, row_idx, is_last_row):
+def custom_format(cell, row_idx, is_last_row, col_name=None):
+    if col_name == "Tỉ lệ NB/DD" and isinstance(cell, (int, float)):
+        return f"{cell:,.2f}"
     if isinstance(cell, (int, float)):
         if is_last_row:
             return f"{cell:,.2f}"
@@ -99,12 +101,12 @@ def format_per_row(df):
     formatted = df.copy()
     for r in df.index:
         for c in df.columns:
-            formatted.at[r, c] = custom_format(df.at[r, c], r, r == last_idx)
+            formatted.at[r, c] = custom_format(df.at[r, c], r, r == last_idx, c)
     return formatted
 
 def tao_thong_ke(x):
     df = pd.DataFrame(x)
-    df = df.drop(["STT", "Timestamp"], axis=1)
+    df = df.drop(["STT", "Timestamp","Data"], axis=1)
     df = df.sort_values("Khoa báo cáo")
     # Gắn thêm cột số thứ tự
     df.insert(0, 'STT', range(1, len(df) + 1))
@@ -114,13 +116,16 @@ def tao_thong_ke(x):
         st.secrets["user_special"]["u3"]
     ]:
         df = df.drop("Khoa báo cáo", axis=1)
-    df['Tỉ lệ NB/DD'] = df['Tỉ lệ NB/DD'].str.replace(',', '.')
-    df['Tỉ lệ NB/DD'] = pd.to_numeric(df['Tỉ lệ NB/DD'], errors='coerce')
-    df['Số người bệnh cấp I'] = pd.to_numeric(df['Số người bệnh cấp I'], errors='coerce')
-    df['Số điều dưỡng chăm sóc cấp I'] = pd.to_numeric(df['Số điều dưỡng chăm sóc cấp I'], errors='coerce')
-    mean_nb = df["Số người bệnh cấp I"].mean()
-    mean_dd = df["Số điều dưỡng chăm sóc cấp I"].mean()
-    mean_tl = df["Tỉ lệ NB/DD"].mean()
+    df['Tỉ lệ NB/ĐD sáng'] = df['Tỉ lệ NB/ĐD sáng'].str.replace(',', '.')
+    df['Tỉ lệ NB/ĐD sáng'] = pd.to_numeric(df['Tỉ lệ NB/ĐD sáng'], errors='coerce')
+    df['Tỉ lệ NB/ĐD chiều'] = df['Tỉ lệ NB/ĐD chiều'].str.replace(',', '.')
+    df['Tỉ lệ NB/ĐD chiều'] = pd.to_numeric(df['Tỉ lệ NB/ĐD chiều'], errors='coerce')
+    df['Tỉ lệ NB/ĐD tối'] = df['Tỉ lệ NB/ĐD tối'].str.replace(',', '.')
+    df['Tỉ lệ NB/ĐD tối'] = pd.to_numeric(df['Tỉ lệ NB/ĐD tối'], errors='coerce')
+    
+    mean_sang = df["Tỉ lệ NB/ĐD sáng"].mean()
+    mean_chieu = df["Tỉ lệ NB/ĐD chiều"].mean()
+    mean_toi = df["Tỉ lệ NB/ĐD tối"].mean()
 
     # Tạo dòng trung bình
     row_mean = pd.DataFrame({
@@ -128,20 +133,16 @@ def tao_thong_ke(x):
         "Ngày báo cáo": ["Trung bình"],
         "Khoa báo cáo": [""],
         "Người báo cáo": [""],
-        "Ca báo cáo": [""],
-        "Số người bệnh cấp I": [mean_nb],
-        "Số điều dưỡng chăm sóc cấp I": [mean_dd],
-        "Tỉ lệ NB/DD": [mean_tl]
+        "Tỉ lệ NB/ĐD sáng": [mean_sang],
+        "Tỉ lệ NB/ĐD chiều": [mean_chieu],
+        "Tỉ lệ NB/ĐD tối": [mean_toi]
     })
     # Ghép dòng trung bình vào cuối bảng
     cols = df.columns
     row_mean = row_mean[[c for c in cols if c in row_mean.columns]]  # Đảm bảo đúng thứ tự cột
     df = pd.concat([df, row_mean], ignore_index=True)
-    df = df.dropna(subset=['Tỉ lệ NB/DD'])
     df = format_per_row(df.copy())
-    styled_df = (df.style.apply(to_mau_dong_cuoi(df), axis=1)
-                )
-
+    styled_df = (df.style.apply(to_mau_dong_cuoi(df), axis=1))
     st.dataframe(styled_df, use_container_width=True, hide_index=True)
 
 def chon_khoa(khoa):
@@ -204,7 +205,7 @@ st.markdown(f"""
         <div class="header-content">
             <img src="data:image/png;base64,{img}" alt="logo">
             <div class="header-text">
-                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&reg;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&#174;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
             </div>
         </div>
         <div class="header-subtext">
@@ -276,6 +277,5 @@ if submit_thoigian:
             st.markdown("<h4 style='text-align: center;'>Thống kê báo cáo phân cấp chăm sóc</h5>", unsafe_allow_html=True)
             tao_thong_ke(data)
             
-
 
 

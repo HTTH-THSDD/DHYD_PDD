@@ -112,7 +112,7 @@ def login():
     <div class="login-header">
             <img src="data:image/png;base64,{img}" alt="logo" class="logo-img">
             <div class="login-header-text">
-                <h4>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&reg;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h4>
+                <h4>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&#174;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h4>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -232,7 +232,7 @@ khoa = ["Đơn vị Gây mê hồi sức Phẫu thuật tim mạch",
         "Khoa Tim mạch can thiệp"]
 
 if "username" in st.session_state:
-    if st.session_state.phan_quyen in ["1"]:
+    if st.session_state.phan_quyen in ["1"]: #Hằng
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
@@ -242,7 +242,7 @@ if "username" in st.session_state:
             },
         expanded=False,
         )
-    elif st.session_state.phan_quyen in ["2"]:
+    elif st.session_state.phan_quyen in ["2"]: #Cẩm Nhung
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
@@ -252,7 +252,7 @@ if "username" in st.session_state:
             },
         expanded=False,
         )
-    elif st.session_state.phan_quyen in ["3"]:
+    elif st.session_state.phan_quyen in ["3"]: #Nhóm lâm sàng PDD
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
@@ -261,7 +261,14 @@ if "username" in st.session_state:
             },
         expanded=False,
         )
-    elif st.session_state.phan_quyen in ["4"]:
+    elif st.session_state.phan_quyen in ["3a"]: #Nhân viên PDD không phải nhóm lâm sàng
+        pg = st.navigation(
+            {
+                "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+            },
+        expanded=False,
+        )
+    elif st.session_state.phan_quyen in ["4"]: #Điều dưỡng trưởng và cán bộ nguồn
         if st.session_state.khoa in khoa:
             pg = st.navigation(
             {
@@ -280,13 +287,13 @@ if "username" in st.session_state:
                 },
             expanded=False,
             )
-    else:
+    else: #Điều dưỡng viên
         if st.session_state.khoa in khoa:
            pg = st.navigation(
                 {
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                     "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
-                    "Báo cáo":[BC_PCCS]
+                    "Báo cáo":[BC_VTTB, BC_PCCS]
                 },
         expanded=False,
         )
