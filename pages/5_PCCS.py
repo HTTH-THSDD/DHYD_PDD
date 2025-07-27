@@ -175,7 +175,7 @@ st.date_input(
 )
 if st.session_state.get("dmk", False):
         if time.time() - st.session_state.get("dmk_time", 0) < 5:
-            st.toast("Báo cáo đã được gửi thành công", icon="💯")
+            st.toast("Báo cáo đã được gửi thành công")
         else:
             del st.session_state["dmk"]
             del st.session_state["dmk_time"]

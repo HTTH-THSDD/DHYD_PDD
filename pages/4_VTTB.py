@@ -306,13 +306,13 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                         st.session_state.additional_columns_2.append(len(st.session_state.additional_columns_2) + 1)
                         st.rerun()
                 with c_remove:
-                    if st.button("🗑️", key=f"xoa_lua_chon_2"):
+                    if st.button("Xóa", key=f"xoa_lua_chon_2"):
                         if len(st.session_state.additional_columns_2) > 1:
                             st.session_state.additional_columns_2.pop()
                             st.rerun()
 
         # Nút gửi
-    submitbutton = st.button("Gửi báo cáo", key="bao_cao")
+    submitbutton = st.button("Gửi báo cáo",type='primary',key="bao_cao")
     if submitbutton:
         a = kiem_tra()
         if len(a) == 0:

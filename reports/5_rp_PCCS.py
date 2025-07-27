@@ -86,7 +86,7 @@ def to_mau_dong_cuoi(data):
     return highlight
 
 def custom_format(cell, row_idx, is_last_row, col_name=None):
-    if col_name == "Tỉ lệ NB/DD" and isinstance(cell, (int, float)):
+    if col_name in ["Tỉ lệ NB/ĐD sáng", "Tỉ lệ NB/ĐD chiều", "Tỉ lệ NB/ĐD tối"] and isinstance(cell, (int, float)):
         return f"{cell:,.2f}"
     if isinstance(cell, (int, float)):
         if is_last_row:
@@ -116,16 +116,16 @@ def tao_thong_ke(x):
         st.secrets["user_special"]["u3"]
     ]:
         df = df.drop("Khoa báo cáo", axis=1)
-    df['Tỉ lệ NB/ĐD sáng'] = df['Tỉ lệ NB/ĐD sáng'].str.replace(',', '.')
+    df['Tỉ lệ NB/ĐD sáng'] = df['Tỉ lệ NB/ĐD sáng'].str.replace(',', '.').round(2)
     df['Tỉ lệ NB/ĐD sáng'] = pd.to_numeric(df['Tỉ lệ NB/ĐD sáng'], errors='coerce')
     df['Tỉ lệ NB/ĐD chiều'] = df['Tỉ lệ NB/ĐD chiều'].str.replace(',', '.')
     df['Tỉ lệ NB/ĐD chiều'] = pd.to_numeric(df['Tỉ lệ NB/ĐD chiều'], errors='coerce')
     df['Tỉ lệ NB/ĐD tối'] = df['Tỉ lệ NB/ĐD tối'].str.replace(',', '.')
     df['Tỉ lệ NB/ĐD tối'] = pd.to_numeric(df['Tỉ lệ NB/ĐD tối'], errors='coerce')
     
-    mean_sang = df["Tỉ lệ NB/ĐD sáng"].mean()
-    mean_chieu = df["Tỉ lệ NB/ĐD chiều"].mean()
-    mean_toi = df["Tỉ lệ NB/ĐD tối"].mean()
+    mean_sang = df["Tỉ lệ NB/ĐD sáng"].mean().round(2)
+    mean_chieu = df["Tỉ lệ NB/ĐD chiều"].mean().round(2)
+    mean_toi = df["Tỉ lệ NB/ĐD tối"].mean().round(2)
 
     # Tạo dòng trung bình
     row_mean = pd.DataFrame({

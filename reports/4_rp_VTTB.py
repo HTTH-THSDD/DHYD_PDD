@@ -208,6 +208,8 @@ def tinh_phan_tram_su_dung(data,headers):
     header = datax[0]
     values = datax[1:]
     phan_phoi_df = pd.DataFrame(values, columns=header)
+    # Chuyển đổi cột "SL điều phối được" sang kiểu số  
+    phan_phoi_df["SL điều phối được"] = pd.to_numeric(phan_phoi_df["SL điều phối được"], errors='coerce')
     phan_phoi_dict = phan_phoi_df.set_index("Thiết bị")["SL điều phối được"].to_dict()
     # Chuẩn hoá cột Ngày báo cáo thành dd/mm/YYYY (hoặc giữ nguyên datetime nếu bạn muốn)
     data = data.copy()
@@ -218,11 +220,22 @@ def tinh_phan_tram_su_dung(data,headers):
     phan_tram_df = tong_su_dung.copy()
 
     for header in headers:
+        # Đảm bảo dữ liệu là số
+        tong_su_dung[header] = pd.to_numeric(tong_su_dung[header], errors='coerce')
+        mau_so = pd.to_numeric(phan_phoi_dict.get(header, np.nan), errors='coerce')
+        
+        # Tính tỉ lệ, tránh chia cho 0
+        if pd.notna(mau_so) and mau_so != 0:
+            phan_tram_df[header] = (tong_su_dung[header] / mau_so).round(2)
+        else:
+            phan_tram_df[header] = np.nan
+
+    ##for header in headers:
         # Lấy mẫu số cố định; nếu thiếu thì gắn NaN để dễ kiểm tra lỗi
-        mau_so = phan_phoi_dict.get(header, np.nan)
-        mau_so = float(mau_so)
+        ##mau_so = phan_phoi_dict.get(header, np.nan)
+        ##mau_so = float(mau_so)
         # Tính % (nhân 100 nếu muốn hiển thị dạng phần trăm)
-        phan_tram_df[header] = (tong_su_dung[header] / mau_so).round(2)
+        ##phan_tram_df[header] = (tong_su_dung[header] / mau_so).round(2)
         # Nếu cần nhân 100:
         # phan_tram_df[header] = (tong_su_dung[header] / mau_so * 100).round(2)
 
