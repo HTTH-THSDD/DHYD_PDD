@@ -223,10 +223,20 @@ if (
         if buoc_chua_dien_str == "":
             prechecktable = precheck_table()         
             st.dataframe(prechecktable, hide_index=True)
-            if st.button("Gửi"):
+        else:
+            warning(1,buoc_chua_dien_str)
+    if st.button("Lưu",type="primary"):
+        buoc_chua_dien = []
+        for j in range (0,len(quy_trinh)):
+            if f"radio_{j}" not in st.session_state or not st.session_state[f"radio_{j}"]:
+                buoc_chua_dien.append(f"{quy_trinh.iloc[j,6]}")
+        buoc_chua_dien_str = ", ".join(buoc_chua_dien)
+        if buoc_chua_dien_str == "":
+                prechecktable = precheck_table()         
                 upload_data_GS(prechecktable)
         else:
             warning(1,buoc_chua_dien_str)
+
 else:
     st.warning("Vui lòng chọn đầy đủ các mục")
 
