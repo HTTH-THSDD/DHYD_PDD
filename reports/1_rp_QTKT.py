@@ -108,7 +108,7 @@ def tao_thong_ke(x,y):
             bo_cot = bo_cot.drop("Khoa",axis=1)
         return bo_cot
     else:
-        bo_cot = bo_cot.drop(["Timestamp","Tên người đánh giá", "Tên người thực hiện","Ghi chú"], axis=1)
+        bo_cot = bo_cot.drop(["Timestamp","Tên người đánh giá", "Tên người thực hiện","Ghi chú 1","Ghi chú 2"], axis=1)
         # Lọc ra 1 bảng chứa những dòng có giá trị an toàn là số và giá trị nhận dạng NB là số
         bang_co_tlan_tlnd_SS = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ an toàn"])]
         bang_co_tlan_tlnd_SS = bang_co_tlan_tlnd_SS.loc[pd.notna(bo_cot["Tỉ lệ nhận dạng NB"])]
