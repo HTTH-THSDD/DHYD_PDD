@@ -167,7 +167,7 @@ st.date_input(
     key="ngay_bao_cao",
     max_value= default_date,
 )
-st.markdown("❗:red[***Lưu ý: Ngày báo cáo đang được mặc định là ngày hôm qua.***]")
+st.markdown(":red[***❗Lưu ý: Ngày báo cáo tự động hiển thị giá trị mặc định trước ngày hiện tại.***]")
 if st.session_state.get("dmk", False):
         if time.time() - st.session_state.get("dmk_time", 0) < 5:
             st.toast("Báo cáo đã được gửi thành công")

@@ -325,6 +325,7 @@ def upload_data_GS(data):
     column_ghichu1 = ""
     if "nv2" in st.session_state and st.session_state.nv2:
         column_ghichu1 = str(st.session_state.nv2)
+    column_ghichu2 = ""
     if "nv3" in st.session_state and st.session_state.nv3:
         column_ghichu2 = str(st.session_state.nv3)
     sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan,tlnd,column_ghichu1,column_ghichu2,])
