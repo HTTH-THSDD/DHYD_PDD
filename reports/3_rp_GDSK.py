@@ -201,7 +201,7 @@ with st.form("Thời gian"):
     with cold[0]:
         sd = st.date_input(
         label="Ngày bắt đầu",
-        value= md,
+        value= now_vn.date(),
         min_value= md,
         max_value= now_vn.date(), 
         format="DD/MM/YYYY",

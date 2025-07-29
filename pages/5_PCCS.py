@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import gspread
-from datetime import datetime
+from datetime import datetime, timedelta    
 from zoneinfo import ZoneInfo
 import pathlib
 import base64
@@ -137,7 +137,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p>BÁO CÁO PHÂN CẤP CHĂM SÓC - CẤP I</p>
+        <p>NGƯỜI BỆNH PCCS CẤP I/ ĐIỀU DƯỠNG</p>
         </div>
     </div>
     <div class="header-underline"></div>
@@ -157,22 +157,17 @@ chon_khoa = st.selectbox("Khoa/Đơn vị báo cáo",
                              placeholder="",
                              key="chon_khoa",
                              )
-# chon_ca = st.selectbox("Ca báo cáo",
-#                              options=["Ca sáng (7g00 - 14g00)",
-#                                       "Ca chiều (14g00 - 21g00)",
-#                                       "Ca đêm (21g00 - 7g00)"],
-#                             index=None,
-#                             placeholder="",
-#                             key="chon_ca",
-#                             )
+
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+default_date = now_vn.date() - timedelta(days=1)
 st.date_input(
     label="Ngày báo cáo",
-    value=now_vn.date(),
+    value = default_date,
     format="DD/MM/YYYY",
     key="ngay_bao_cao",
-    max_value=now_vn.date(),
+    max_value= default_date,
 )
+st.markdown("❗:red[***Lưu ý: Ngày báo cáo đang được mặc định là ngày hôm qua.***]")
 if st.session_state.get("dmk", False):
         if time.time() - st.session_state.get("dmk_time", 0) < 5:
             st.toast("Báo cáo đã được gửi thành công")

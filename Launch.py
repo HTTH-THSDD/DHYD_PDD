@@ -211,7 +211,7 @@ VTTB = st.Page("pages/4_VTTB.py",
                 icon="🦽"
 )
 PCCS = st.Page("pages/5_PCCS.py",
-                title="Phân cấp chăm sóc - Cấp I",
+                title="Người bệnh PCCS cấp I/ ĐD",
                 icon="🥇"
 )
 BC_QTKT = st.Page("reports/1_rp_QTKT.py", title="TK Giám sát quy trình kỹ thuật",  icon="🔹")
@@ -220,7 +220,7 @@ BC_PRIME = st.Page("reports/1.1_rp_PRIME.py", title="TK PRIME ", icon="🔹")
 BC_HSBA = st.Page("reports/2_rp_HSBA.py", title="TK Hồ sơ bệnh án", icon="🔹")
 BC_GDSK = st.Page("reports/3_rp_GDSK.py", title="TK Giáo dục sức khỏe", icon="🔹")
 BC_VTTB = st.Page("reports/4_rp_VTTB.py", title="TK Báo cáo thiết bị", icon="🔹")
-BC_PCCS = st.Page("reports/5_rp_PCCS.py", title="TK Báo cáo PCCS - Cấp I", icon="🔹")
+BC_PCCS = st.Page("reports/5_rp_PCCS.py", title="TK NB PCCS Cấp I/ ĐD", icon="🔹")
 
 khoa = ["Đơn vị Gây mê hồi sức Phẫu thuật tim mạch",
         "Đơn vị Hồi sức Ngoại Thần kinh",
@@ -232,7 +232,7 @@ khoa = ["Đơn vị Gây mê hồi sức Phẫu thuật tim mạch",
         "Khoa Tim mạch can thiệp"]
 
 if "username" in st.session_state:
-    if st.session_state.phan_quyen in ["1"]: #Hằng
+    if st.session_state.phan_quyen in ["1"]: 
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
@@ -242,8 +242,8 @@ if "username" in st.session_state:
             },
         expanded=False,
         )
-    elif st.session_state.phan_quyen in ["2"]: #Cẩm Nhung
-        pg = st.navigation(
+    elif st.session_state.phan_quyen in ["2"]: 
+        pg = st.navigation(    
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                 "Nhập kết quả": [QTKT,CSCS,PRIME, HSBA, GDSK,VTTB, PCCS],
@@ -252,7 +252,7 @@ if "username" in st.session_state:
             },
         expanded=False,
         )
-    elif st.session_state.phan_quyen in ["3"]: #Nhóm lâm sàng PDD
+    elif st.session_state.phan_quyen in ["3"]: 
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
@@ -261,14 +261,14 @@ if "username" in st.session_state:
             },
         expanded=False,
         )
-    elif st.session_state.phan_quyen in ["3a"]: #Nhân viên PDD không phải nhóm lâm sàng
+    elif st.session_state.phan_quyen in ["3a"]: 
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
             },
         expanded=False,
         )
-    elif st.session_state.phan_quyen in ["4"]: #Điều dưỡng trưởng và cán bộ nguồn
+    elif st.session_state.phan_quyen in ["4"]:
         if st.session_state.khoa in khoa:
             pg = st.navigation(
             {
@@ -287,7 +287,7 @@ if "username" in st.session_state:
                 },
             expanded=False,
             )
-    else: #Điều dưỡng viên
+    else: 
         if st.session_state.khoa in khoa:
            pg = st.navigation(
                 {

@@ -116,7 +116,7 @@ def tao_thong_ke(x):
         st.secrets["user_special"]["u3"]
     ]:
         df = df.drop("Khoa báo cáo", axis=1)
-    df['Tỉ lệ NB/ĐD sáng'] = df['Tỉ lệ NB/ĐD sáng'].str.replace(',', '.').round(2)
+    df['Tỉ lệ NB/ĐD sáng'] = df['Tỉ lệ NB/ĐD sáng'].str.replace(',', '.')
     df['Tỉ lệ NB/ĐD sáng'] = pd.to_numeric(df['Tỉ lệ NB/ĐD sáng'], errors='coerce')
     df['Tỉ lệ NB/ĐD chiều'] = df['Tỉ lệ NB/ĐD chiều'].str.replace(',', '.')
     df['Tỉ lệ NB/ĐD chiều'] = pd.to_numeric(df['Tỉ lệ NB/ĐD chiều'], errors='coerce')
@@ -209,7 +209,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:green">THỐNG KÊ PCCS - CẤP I</p>
+        <p style="color:green">THỐNG KÊ NB PCCS CẤP I/ ĐD</p>
         </div>
     </div>
     <div class="header-underline"></div>
@@ -274,7 +274,7 @@ if submit_thoigian:
             else:
                 st.markdown("<p style='text-align: center;'>Tất cả các khoa đã báo cáo</p>", unsafe_allow_html=True)
             st.divider()
-            st.markdown("<h4 style='text-align: center;'>Thống kê báo cáo phân cấp chăm sóc</h5>", unsafe_allow_html=True)
+            st.markdown("<h4 style='text-align: center;'>Thống kê Người bệnh PCCS cấp I/ Điều dưỡng</h5>", unsafe_allow_html=True)
             tao_thong_ke(data)
             
 
