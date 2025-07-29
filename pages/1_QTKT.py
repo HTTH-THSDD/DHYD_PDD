@@ -234,7 +234,9 @@ def gui_email_qtkt(receiver_email,data):
     if "email2" in st.session_state and st.session_state.email2:
         msg["To"] = st.session_state.email2
         server.sendmail(sender_email, st.session_state.email2, msg.as_string())
-
+    if "email3" in st.session_state and st.session_state.email3:
+        msg["To"] = st.session_state.email3
+        server.sendmail(sender_email, st.session_state.email3, msg.as_string())
 
 def precheck_table():
     buoc = []
@@ -320,10 +322,12 @@ def upload_data_GS(data):
         tlnd = round(buoc_nhan_dang_dung_du/tong_nhan_dang_tru_nhan_dang_va_KAD,4)
     column_data=column_data.rstrip("#")
     column_mqt = st.session_state.ma_quy_trinh
-    column_ghichu = ""
+    column_ghichu1 = ""
     if "nv2" in st.session_state and st.session_state.nv2:
-        column_ghichu = str(st.session_state.nv2)
-    sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan,tlnd,column_ghichu])
+        column_ghichu1 = str(st.session_state.nv2)
+    if "nv3" in st.session_state and st.session_state.nv3:
+        column_ghichu2 = str(st.session_state.nv3)
+    sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan,tlnd,column_ghichu1,column_ghichu2,])
     warning(4,2)
     
 @st.dialog("Thông báo")
@@ -392,6 +396,22 @@ if (
                 st.session_state.email2 = email_matches.values[0]
             else:
                 st.warning("Không tìm thấy email của nhân viên này")
+    if st.session_state.sttqt == "216":
+        sheeti1 = st.secrets["sheet_name"]["input_1"]
+        data_nv = load_data(sheeti1)
+        data_nv1 = data_nv.loc[data_nv["Khoa"].str.contains("Khoa Gây mê hồi sức", case=False)]
+        chon_nv3 = st.selectbox(label="Nhân viên thực hiện quy trình 3",
+                                    options=data_nv1["Nhân viên"],
+                                    index=None,
+                                    placeholder="",
+                                    key="nv3")
+        if chon_nv3 is not None:
+            email_matches = data_nv1.loc[data_nv1["Nhân viên"]==chon_nv3, "Email"]
+            if not email_matches.empty:
+                st.session_state.email3 = email_matches.values[0]
+            else:
+                st.warning("Không tìm thấy email của nhân viên này")
+
     st.divider()
     for i in range (0,len(quy_trinh)):   
         st.radio(
