@@ -510,12 +510,13 @@ else:
                     for device_str in filter(None, big_str.strip("#").split("#")):
                         rows.append({
                             "Thiết bị"   : device_str.split("|")[0] if "|" in device_str else "",
+                            "Tổng cơ số" : lay_gia_tri_giua_x_y(1, 2, device_str),
                             "Số lượng đang sử dụng" : lay_gia_tri_giua_x_y(2, 3, device_str), 
                             "Số lượng trống" : lay_gia_tri_giua_x_y(3, 4, device_str),
                             "Số lượng hư" : lay_gia_tri_giua_x_y(4, 5, device_str)
                         })                
-                ket_qua = pd.DataFrame(rows, columns=["Thiết bị", "Số lượng đang sử dụng", "Số lượng trống", "Số lượng hư"])
-                cols_num = ["Số lượng đang sử dụng", "Số lượng trống","Số lượng hư"]
+                ket_qua = pd.DataFrame(rows, columns=["Thiết bị", "Tổng cơ số", "Số lượng đang sử dụng", "Số lượng trống", "Số lượng hư"])
+                cols_num = ["Tổng cơ số", "Số lượng đang sử dụng", "Số lượng trống","Số lượng hư"]
                 ket_qua[cols_num] = ket_qua[cols_num].apply(
                     pd.to_numeric, errors="coerce"
                 ).fillna(0)

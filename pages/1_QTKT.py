@@ -190,11 +190,37 @@ def gui_email_qtkt(receiver_email,data):
     # Tạo nội dung email dạng HTML, bạn có thể tùy chỉnh style thêm nếu muốn
     body = f"""
     <html>
+        <head>
+            <style>
+                .hospital-info {{
+                    display: flex;
+                    grid-template-columns: min-content 1fr;
+                    gap:30px;
+                    align-items:left;
+                }}
+                .hospital-info img {{
+                    height: 30px;
+                    width: 30px;
+                    align-items:left;
+                    padding-right:5px;
+                    object-fit: contain;
+                }}
+                .hospital-text {{
+                    flex: 1;
+                }}
+                .hospital-text h5 {{
+                    margin: 0;
+                    color: DodgerBlue;
+                    font-size: 12.5px;
+                    line-height: 1.25;
+                }}
+            </style>
+        </head>
         <body>
-            <h4 style="color:DodgerBlue;">Kính gửi Điều dưỡng: {st.session_state.nv_thuchien_GSQT} - {st.session_state.khoa_GSQT}</h4>
+            <h4 style="color:DodgerBlue;">&nbsp;&nbsp;&nbsp; Kính gửi Điều dưỡng: {st.session_state.nv_thuchien_GSQT} - {st.session_state.khoa_GSQT}</h4>
             <p>
-              Căn cứ theo kế hoạch giám sát thường quy/ đột xuất của Phòng Điều dưỡng và các Khoa/Đơn vị lâm sàng,
-            Phòng Điều dưỡng xin gửi kết quả giám sát quy trình kỹ thuật vừa thực hiện của Quý Anh/Chị như sau:
+            &nbsp;&nbsp;&nbsp; Căn cứ theo kế hoạch giám sát thường quy/ đột xuất của Phòng Điều dưỡng và các Khoa/Đơn vị lâm sàng,
+            Phòng Điều dưỡng kính gửi kết quả giám sát quy trình kỹ thuật vừa thực hiện của Quý Anh/Chị như sau:
             </p>
 
             <div class="highlight">
@@ -206,12 +232,18 @@ def gui_email_qtkt(receiver_email,data):
 
             <p><strong>Bảng chi tiết kết quả giám sát:</strong></p>
             {html_table}
-            <br><br><br><br><br>
+            <br><br>
             <p class="footer">
-            Trân trọng./.<br />
+            <b><i>&nbsp;&nbsp;&nbsp;Trân trọng./.</i></b>
+            <br><br><br />
             
-            <h5 style="color:DodgerBlue;">Phòng Điều dưỡng
-            <br>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH</h5>
+             <div class="hospital-info">
+                <img src="data:image/png;base64,{img}" alt="logo">
+                <div class="hospital-text">
+                    <h5>PHÒNG ĐIỀU DƯỠNG<br>
+                    BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH &#174;</h5>
+                </div>
+            </div>
             </p>
         </body>
     </html>
@@ -357,7 +389,9 @@ st.markdown(f"""
         <div class="header-content">
             <img src="data:image/png;base64,{img}" alt="logo">
             <div class="header-text">
-                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&#174;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&#174;</span>
+                <br>
+                <span style="color:#c15088">Phòng Điều dưỡng</span></h1>
             </div>
         </div>
         <div class="header-subtext">

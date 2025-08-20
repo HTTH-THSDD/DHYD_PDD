@@ -88,18 +88,27 @@ def tao_thong_ke(x,y):
     df = pd.DataFrame(x)
     #Lấy những cột cần cho hiển thị lên trang báo cáo
     bo_cot = df[['STT','Timestamp','Khoa', 'Tên quy trình', 'Tỉ lệ tuân thủ','Tỉ lệ an toàn','Tỉ lệ nhận dạng NB','Tên người đánh giá', 'Tên người thực hiện','Ghi chú 1','Ghi chú 2']]
-    #Chuyển những cột tuân thủ thành dạng số nhờ đổi dấu "," thành "."
-    bo_cot['Tỉ lệ tuân thủ'] = bo_cot['Tỉ lệ tuân thủ'].str.replace(',', '.')
-    #Chuyển dạng số chính thức
-    bo_cot['Tỉ lệ tuân thủ'] = pd.to_numeric(bo_cot["Tỉ lệ tuân thủ"], errors='coerce')
-    #Nhấn 100 thành tỉ lệ phần trăm
-    bo_cot['Tỉ lệ tuân thủ'] = bo_cot['Tỉ lệ tuân thủ'] * 100
-    #Tương tự với tỉ lệ an toàn, không nhân cho 100 là vì có những giá trị là NaN, nếu nhân cho 100 thì sẽ thành NaN * 100 = NaN
-    bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].str.replace(',', '.')
-    bo_cot['Tỉ lệ an toàn'] = pd.to_numeric(bo_cot["Tỉ lệ an toàn"], errors='coerce')
-    #Tỉ lệ nhận dạng NB, không nhân cho 100 là vì có những giá trị là NaN, nếu nhân cho 100 thì sẽ thành NaN * 100 = NaN
-    bo_cot['Tỉ lệ nhận dạng NB'] = bo_cot['Tỉ lệ nhận dạng NB'].str.replace(',', '.')
-    bo_cot['Tỉ lệ nhận dạng NB'] = pd.to_numeric(bo_cot["Tỉ lệ nhận dạng NB"], errors='coerce')
+    
+    #Xử lý các cột tỉ lệ
+    for col in ['Tỉ lệ tuân thủ', 'Tỉ lệ an toàn', 'Tỉ lệ nhận dạng NB']:
+        bo_cot[col] = bo_cot[col].astype(str).str.replace(',', '.')
+        bo_cot[col] = pd.to_numeric(bo_cot[col], errors='coerce')
+    
+    #Chuyển đổi sang tỉ lệ phần trăm (chia 100)
+    bo_cot['Tỉ lệ tuân thủ'] = (bo_cot['Tỉ lệ tuân thủ']*100).round(1)
+    bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].round(4)
+    bo_cot['Tỉ lệ nhận dạng NB'] = bo_cot['Tỉ lệ nhận dạng NB'].round(4)
+  
+    # #Chuyển dạng số chính thức
+    # bo_cot['Tỉ lệ tuân thủ'] = pd.to_numeric(bo_cot["Tỉ lệ tuân thủ"], errors='coerce'.round(4))
+    # #Nhấn 100 thành tỉ lệ phần trăm
+    # bo_cot['Tỉ lệ tuân thủ'] = bo_cot['Tỉ lệ tuân thủ'] * 100
+    # #Tương tự với tỉ lệ an toàn, không nhân cho 100 là vì có những giá trị là NaN, nếu nhân cho 100 thì sẽ thành NaN * 100 = NaN
+    # bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].astype(str).str.replace(',', '.')
+    # bo_cot['Tỉ lệ an toàn'] = pd.to_numeric(bo_cot["Tỉ lệ an toàn"], errors='coerce'.round(4))
+    # #Tỉ lệ nhận dạng NB, không nhân cho 100 là vì có những giá trị là NaN, nếu nhân cho 100 thì sẽ thành NaN * 100 = NaN
+    # bo_cot['Tỉ lệ nhận dạng NB'] = bo_cot['Tỉ lệ nhận dạng NB'].astype(str).str.replace(',', '.')
+    # bo_cot['Tỉ lệ nhận dạng NB'] = pd.to_numeric(bo_cot["Tỉ lệ nhận dạng NB"], errors='coerce'.round(4))
 
     if y == "Chi tiết":
         bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
@@ -314,9 +323,9 @@ if submit_thoigian:
                     st.dataframe(thongke, 
                                 hide_index=True, 
                                 column_config = {
-                                    "Tỉ lệ tuân thủ": st.column_config.NumberColumn(format="%.2f %%"),
-                                    "Tỉ lệ an toàn": st.column_config.NumberColumn(format="%.2f %%"),
-                                    "Tỉ lệ nhận dạng NB": st.column_config.NumberColumn(format="%.2f %%")
+                                    "Tỉ lệ tuân thủ": st.column_config.NumberColumn(format="%.4f"),
+                                    "Tỉ lệ an toàn": st.column_config.NumberColumn(format="%.4f"),
+                                    "Tỉ lệ nhận dạng NB": st.column_config.NumberColumn(format="%.4f")
                                     })
                 with st.expander("Thống kê chi tiết"):
                     thongkechitiet = tao_thong_ke(data,"Chi tiết")

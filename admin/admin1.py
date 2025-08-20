@@ -76,7 +76,7 @@ def load_data_GSheet(name):
             df["Data"] = df["Data"].str.replace("#", "\n")
             df["Data"] = df["Data"].str.replace("|", "  ")
     if name == st.secrets["sheet_name"]["output_1"]:
-        df = df.drop(["Mã quy trình","Tỉ lệ tuân thủ","Tỉ lệ an toàn"], axis=1)
+        df = df.drop(["Mã quy trình"], axis=1)
     if name == st.secrets["sheet_name"]["output_4"]:
         df = pd.DataFrame(df).sort_values("Timestamp", ascending=False)
     return df
@@ -175,7 +175,7 @@ if outp and outp != "---":
                 with cold[0]:
                     sd = st.date_input(
                     label="Ngày bắt đầu",
-                    value=md,
+                    value= now_vn.date(),
                     min_value=md,
                     max_value=now_vn.date(), 
                     format="DD/MM/YYYY",
