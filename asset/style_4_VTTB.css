@@ -316,6 +316,7 @@
 
 [data-testid="stBaseButton-header"] div span {
     visibility: hidden;
+    right: 0px;
 }
 
 [data-testid="stBaseButton-secondary"] {
@@ -561,7 +562,7 @@ div[role="dialog"] {
     [data-testid="stBaseButton-headerNoPadding"] {
         position: absolute;
         top: 8px;
-        left: -15px;
+        left: 0px;
     }
     
     .header-subtext p {

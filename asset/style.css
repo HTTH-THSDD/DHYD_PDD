@@ -292,7 +292,7 @@
     [data-testid="stBaseButton-headerNoPadding"] {
         position: absolute;
         top: 8px;
-        left: -15px;
+        left: 0px;
         background-color: rgba(0, 0, 0, 0.1) !important;  /* Thêm màu nền mờ */
         border: 4px solid rgba(0, 0, 0, 0.2) !important;  /* Thêm viền */
         border-radius: 4px !important;  /* Bo góc */
@@ -561,7 +561,7 @@ div[role="dialog"] {
 }
 [data-testid="stBaseButton-header"] div span {
     visibility: hidden;
-    justify-items: right;
+    right:0px;
 }
 
 [data-testid="stMainBlockContainer"] {
