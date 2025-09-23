@@ -19,8 +19,13 @@ def get_img_as_base64(file):
     return base64.b64encode(data).decode()
 
 def load_css(file_path):
-    with open(file_path) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except UnicodeDecodeError:
+        # Fallback to different encoding if UTF-8 fails
+        with open(file_path, 'r', encoding='latin-1') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=3600)
 def load_credentials():
@@ -296,7 +301,7 @@ if (
             st.dataframe(prechecktable, hide_index=True)
         else:
             warning(1,buoc_chua_dien_str)
-    if st.button("Lưu"):
+    if st.button("Lưu kết quả",type='primary',key="luu"):
         buoc_chua_dien = []
         for j in range (0,len(quy_trinh)):
             if f"radio_{j}" not in st.session_state or not st.session_state[f"radio_{j}"]:

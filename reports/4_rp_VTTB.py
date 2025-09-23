@@ -17,8 +17,13 @@ def get_img_as_base64(file):
     return base64.b64encode(data).decode()
 
 def load_css(file_path):
-    with open(file_path) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except UnicodeDecodeError:
+        # Fallback to different encoding if UTF-8 fails
+        with open(file_path, 'r', encoding='latin-1') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
 @st.cache_data(ttl=10)
@@ -348,7 +353,7 @@ md = date(2025, 1, 1)
 sheeto5 = st.secrets["sheet_name"]["output_5"]
 if "tab_index" not in st.session_state:
     st.session_state.tab_index = 0  # 0: tab1, 1: tab2
-TABS = ["📊 Báo cáo thiết bị hằng ngày", "📈 Thống kê toàn viện"]    
+TABS = ["📊 Báo cáo thiết bị hằng ngày","📈 Thống kê toàn viện","🔎 Truy vấn báo cáo chi tiết"]    
 if "tab_idx" not in st.session_state:
     st.session_state.tab_idx = 0  
 tab_idx = st.radio(
@@ -381,7 +386,7 @@ if tab_idx == 0:
                 data_output5 = load_data(sheeti5)
                 data_output5["Ngày báo cáo"] = pd.to_datetime(data_output5["Ngày báo cáo"], errors="coerce").dt.date
                 filtered = data_output5.loc[data_output5["Ngày báo cáo"] == day]
-                filtered = filtered.loc[filtered.groupby('Khoa báo cáo')['Timestamp'].idxmax()]
+                filtered = filtered.loc[filtered.groupby(['Khoa báo cáo', 'Ngày báo cáo'])['Timestamp'].idxmax()]
                 if khoa_tab1 != "Chọn tất cả khoa":
                     filtered = filtered.loc[filtered["Khoa báo cáo"].isin(khoa_tab1)]
                 if data_output5.empty:
@@ -426,7 +431,7 @@ if tab_idx == 0:
                         SLT = filtered_unique["Số lượng trống"].sum()
                         st.write(f"**Tổng số {chon_thiet_bi} trống:** {SLT}")
                         st.dataframe(filtered_unique, use_container_width=True, hide_index=True)
-else:
+elif tab_idx == 1:
     with st.form("Thời gian"):
         cold = st.columns([5,5])
         with cold[0]:
@@ -538,9 +543,227 @@ else:
                     lambda row: highlight_total_row_generic(row, len(ket_qua_grouped) - 1), axis=1
                     ), use_container_width=True, hide_index=True,height=422)
                 # 12 dòng x 35px (chiều cao 1 dòng) + 2px (chiều cao lề bảng) = 422px là ra chiều cao của bảng#
-
-
-
+else:  # Tab 3
+    with st.form("Thời gian"):
+        cold = st.columns([5,5])
+        with cold[0]:
+            sd = st.date_input(
+                label="Ngày bắt đầu",
+                value=now_vn.date(),
+                min_value=md,
+                max_value=now_vn.date(), 
+                format="DD/MM/YYYY",
+            )
+        with cold[1]:
+            ed = st.date_input(
+                label="Ngày kết thúc",
+                value=now_vn.date(),
+                min_value=md,
+                max_value=now_vn.date(), 
+                format="DD/MM/YYYY",
+            )
+        khoa_select = chon_khoa(khoa)
         
-
+        # Lấy danh sách thiết bị từ sheeti5
+        sheeti5 = st.secrets["sheet_name"]["input_5"]
+        data_input5 = load_data(sheeti5)
+        list_thiet_bi = data_input5["Tên thiết bị"].unique()
+        
+        # Trường chọn thiết bị
+        chon_thiet_bi = st.selectbox(
+            label="Chọn thiết bị",
+            options=list_thiet_bi
+        )
+        
+        submit_thoigian = st.form_submit_button("OK")
+        
+        if submit_thoigian:
+            if ed < sd:
+                st.error("Lỗi ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
+            else:      
+                # Tải dữ liệu từ sheeto5
+                data_output5 = load_data1(sheeto5, sd, ed, khoa_select)
                 
+                if data_output5.empty:
+                    st.warning("Không có dữ liệu theo yêu cầu")
+                else:
+                    # Lọc để chỉ lấy báo cáo cuối cùng của mỗi khoa trong từng ngày
+                    data_output5['Timestamp'] = pd.to_datetime(data_output5['Timestamp'])
+                    data_output5['Ngày báo cáo'] = data_output5['Timestamp'].dt.date
+                    
+                    # Lấy chỉ số của timestamp cuối cùng cho mỗi khoa trong mỗi ngày
+                    data_filtered = data_output5.loc[
+                        data_output5.groupby(['Khoa báo cáo', 'Ngày báo cáo'])['Timestamp'].idxmax()
+                    ].reset_index(drop=True)
+                    
+                    # Tạo danh sách để chứa các dòng dữ liệu
+                    rows_list = []
+                    
+                    # Duyệt qua từng dòng trong data_filtered
+                    for index, row in data_filtered.iterrows():
+                        # Lấy thông tin cơ bản
+                        timestamp = row['Timestamp']
+                        khoa_bao_cao = row['Khoa báo cáo']
+                        nguoi_bao_cao = row['Người báo cáo']
+                        thiet_bi_thong_thuong = row['Thiết bị thông thường']
+                        
+                        # Xử lý cột "Thiết bị thông thường" để lấy thông tin thiết bị đã chọn
+                        co_so = ""
+                        dang_dung = ""
+                        trong = ""
+                        hu = ""
+                        
+                        if pd.notna(thiet_bi_thong_thuong) and isinstance(thiet_bi_thong_thuong, str):
+                            # Tìm vị trí của thiết bị đã chọn trong chuỗi
+                            device_start = thiet_bi_thong_thuong.find(chon_thiet_bi)
+                            if device_start != -1:
+                                # Lấy từ tên thiết bị đến cuối chuỗi hoặc dấu # tiếp theo
+                                device_part = thiet_bi_thong_thuong[device_start:]
+                                
+                                # Tìm dấu # để kết thúc phần thiết bị (nếu có thiết bị khác phía sau)
+                                hash_pos = device_part.find("#")
+                                if hash_pos != -1:
+                                    device_part = device_part[:hash_pos]
+                                
+                                # Tách theo dấu "|"
+                                device_components = device_part.split("|")
+                                if len(device_components) >= 5:
+                                    co_so = device_components[1].strip()         # Cơ số
+                                    dang_dung = device_components[2].strip()     # Đang dùng
+                                    trong = device_components[3].strip()         # Trống
+                                    hu = device_components[4].strip()            # Hư
+                                elif len(device_components) >= 2:
+                                    # Nếu không đủ thông tin, lấy những gì có thể
+                                    if len(device_components) > 1:
+                                        co_so = device_components[1].strip()
+                                    if len(device_components) > 2:
+                                        dang_dung = device_components[2].strip()
+                                    if len(device_components) > 3:
+                                        trong = device_components[3].strip()
+                                    if len(device_components) > 4:
+                                        hu = device_components[4].strip()
+                        
+                        # Tạo dictionary cơ bản cho dòng dữ liệu
+                        row_data = {
+                            'Timestamp': timestamp,
+                            'Khoa báo cáo': khoa_bao_cao,
+                            'Người báo cáo': nguoi_bao_cao,
+                            'Cơ số': co_so,
+                            'Đang dùng': dang_dung,
+                            'Trống': trong,
+                            'Hư': hu
+                        }
+                        
+                        # Nếu là Máy SCD, thêm 2 cột đặc biệt với format xuống dòng
+                        if chon_thiet_bi == "Máy SCD":
+                            scd_muon_tu_khoa_khac = row['SCD mượn từ khoa khác']
+                            scd_cho_khoa_khac_muon = row['SCD cho khoa khác mượn']
+                            
+                            # Format xuống dòng cho SCD mượn từ khoa khác
+                            if pd.notna(scd_muon_tu_khoa_khac) and scd_muon_tu_khoa_khac:
+                                scd_muon_formatted = scd_muon_tu_khoa_khac.replace('+', '\n')
+                            else:
+                                scd_muon_formatted = ""
+                            
+                            # Format xuống dòng cho SCD cho khoa khác mượn  
+                            if pd.notna(scd_cho_khoa_khac_muon) and scd_cho_khoa_khac_muon:
+                                scd_cho_formatted = scd_cho_khoa_khac_muon.replace('+', '\n')
+                            else:
+                                scd_cho_formatted = ""
+                                
+                            row_data['SCD mượn từ khoa khác'] = scd_muon_formatted
+                            row_data['SCD cho khoa khác mượn'] = scd_cho_formatted
+                        
+                        # Chỉ thêm dòng nếu có thông tin thiết bị (có ít nhất 1 trong 4 giá trị số)
+                        if any([co_so, dang_dung, trong, hu]):
+                            rows_list.append(row_data)
+                    
+                    # Tạo DataFrame từ danh sách
+                    result_df = pd.DataFrame(rows_list)
+                    
+                    if result_df.empty:
+                        st.warning(f"Không có dữ liệu về {chon_thiet_bi} trong khoảng thời gian đã chọn")
+                    else:
+                        # Chuyển đổi các cột số về kiểu số để tính tổng
+                        numeric_cols = ['Cơ số', 'Đang dùng', 'Trống', 'Hư']
+                        for col in numeric_cols:
+                            result_df[col] = pd.to_numeric(result_df[col], errors='coerce').fillna(0)
+                        
+                        # Tạo dictionary cho dòng tổng
+                        total_row = {
+                            'Timestamp': 'Tổng',
+                            'Khoa báo cáo': '',
+                            'Người báo cáo': '',
+                            'Cơ số': result_df['Cơ số'].sum(),
+                            'Đang dùng': result_df['Đang dùng'].sum(),
+                            'Trống': result_df['Trống'].sum(),
+                            'Hư': result_df['Hư'].sum()
+                        }
+                        
+                        # Nếu là Máy SCD, thêm cột trống cho dòng tổng
+                        if chon_thiet_bi == "Máy SCD":
+                            total_row['SCD mượn từ khoa khác'] = ''
+                            total_row['SCD cho khoa khác mượn'] = ''
+                        
+                        # Thêm dòng tổng vào DataFrame
+                        result_df = pd.concat([result_df, pd.DataFrame([total_row])], ignore_index=True)
+                        
+                        # Định dạng lại cột Timestamp (trừ dòng tổng)
+                        for i in range(len(result_df) - 1):  # Bỏ qua dòng cuối (dòng tổng)
+                            if pd.notna(result_df.iloc[i]['Timestamp']) and result_df.iloc[i]['Timestamp'] != 'Tổng':
+                                result_df.iloc[i, result_df.columns.get_loc('Timestamp')] = pd.to_datetime(result_df.iloc[i]['Timestamp']).strftime('%d/%m/%Y %H:%M:%S')
+                        
+                        # Hiển thị tiêu đề động theo thiết bị đã chọn
+                        st.markdown(f"<h5 style='text-align: center;'>Truy vấn báo cáo <span style='color: brown;'>{chon_thiet_bi}</h5>", unsafe_allow_html=True)
+                        
+                        # Hiển thị thông tin tổng quan
+                        col1, col2, col3, col4, col5 = st.columns(5)
+                        
+                        # Lấy dữ liệu từ dòng tổng (dòng cuối)
+                        total_data = result_df.iloc[-1]
+                        data_without_total = result_df[result_df['Timestamp'] != 'Tổng']
+                        
+                        with col1:
+                            unique_khoa = data_without_total['Khoa báo cáo'].nunique()
+                            st.metric("Số khoa báo cáo", unique_khoa)
+                        with col2:
+                            st.metric("Tổng cơ số", int(total_data['Cơ số']))
+                        with col3:
+                            st.metric("Tổng đang dùng", int(total_data['Đang dùng']))
+                        with col4:
+                            st.metric("Tổng máy trống", int(total_data['Trống']))
+                        with col5:
+                            st.metric("Tổng máy hư", int(total_data['Hư']))
+                        
+                        st.divider()
+                        
+                        # Hiển thị bảng kết quả với highlight dòng tổng
+                        def highlight_total_row(row):
+                            if row['Timestamp'] == 'Tổng':
+                                return ['background-color: #ffe599; color: #cf1c00; font-weight: bold'] * len(row)
+                            return [''] * len(row)
+                        
+                        styled_df = result_df.style.apply(highlight_total_row, axis=1)
+                        
+                        # Tạo column_config động
+                        column_config = {
+                            'Timestamp': st.column_config.TextColumn('Thời gian báo cáo'),
+                            'Khoa báo cáo': st.column_config.TextColumn('Khoa báo cáo'),
+                            'Người báo cáo': st.column_config.TextColumn('Người báo cáo'),
+                            'Cơ số': st.column_config.NumberColumn('Cơ số', format="%.0f"),
+                            'Đang dùng': st.column_config.NumberColumn('Đang dùng', format="%.0f"),
+                            'Trống': st.column_config.NumberColumn('Trống', format="%.0f"),
+                            'Hư': st.column_config.NumberColumn('Hư', format="%.0f")
+                        }
+                        
+                        # Nếu là Máy SCD, thêm config cho 2 cột đặc biệt
+                        if chon_thiet_bi == "Máy SCD":
+                            column_config['SCD mượn từ khoa khác'] = st.column_config.TextColumn('SCD mượn từ khoa khác')
+                            column_config['SCD cho khoa khác mượn'] = st.column_config.TextColumn('SCD cho khoa khác mượn')
+                        
+                        st.dataframe(
+                            styled_df,
+                            use_container_width=True,
+                            hide_index=True,
+                            column_config=column_config
+                        )

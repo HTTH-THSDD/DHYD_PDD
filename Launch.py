@@ -9,8 +9,13 @@ from email.mime.text import MIMEText
 import time
 
 def load_css(file_path):
-    with open(file_path) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    try:
+        with open(css_path, 'r', encoding='utf-8') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except UnicodeDecodeError:
+        # Fallback to different encoding if UTF-8 fails
+        with open(css_path, 'r', encoding='latin-1') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=3600)
 def get_img_as_base64(file):
@@ -236,8 +241,8 @@ if "username" in st.session_state:
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK,VTTB, PCCS],
-                "Thống kê báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA,BC_GDSK,BC_VTTB, BC_PCCS],
+                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
+                "Thống kê báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS],
                 "Quản trị viên": [AD1, AD2, AD3],
             },
         expanded=False,
@@ -247,7 +252,7 @@ if "username" in st.session_state:
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                 "Nhập kết quả": [QTKT,CSCS,PRIME, HSBA, GDSK,VTTB, PCCS],
-                "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA,BC_GDSK,BC_VTTB, BC_PCCS],
+                "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS],
                 "Quản trị viên": [AD1],
             },
         expanded=False,
@@ -256,8 +261,8 @@ if "username" in st.session_state:
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK,VTTB,PCCS],
-                "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA,BC_GDSK,BC_VTTB,BC_PCCS],
+                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
+                "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK,BC_VTTB, BC_PCCS],
             },
         expanded=False,
         )
@@ -273,8 +278,8 @@ if "username" in st.session_state:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK,VTTB],
-                "Báo cáo": [BC_QTKT,BC_CSCS, BC_PRIME, BC_HSBA,BC_GDSK,BC_VTTB],
+                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, TTB, PCCS],
+                "Báo cáo": [BC_QTKT,BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS],
             },
         expanded=False,
         )
@@ -282,8 +287,8 @@ if "username" in st.session_state:
             pg = st.navigation(
                 {
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                    "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK,VTTB],
-                    "Báo cáo": [BC_QTKT,BC_CSCS, BC_PRIME, BC_HSBA,BC_GDSK,BC_VTTB],
+                    "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
+                    "Báo cáo": [BC_QTKT,BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS],
                 },
             expanded=False,
             )
@@ -301,7 +306,7 @@ if "username" in st.session_state:
             pg = st.navigation(
                     {
                         "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                        "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB],
+                        "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                     },
             expanded=False,
             )

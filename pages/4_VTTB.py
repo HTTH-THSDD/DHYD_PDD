@@ -15,8 +15,13 @@ def get_img_as_base64(file):
     return base64.b64encode(data).decode()
 
 def load_css(file_path):
-    with open(file_path) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except UnicodeDecodeError:
+        # Fallback to different encoding if UTF-8 fails
+        with open(file_path, 'r', encoding='latin-1') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=3600)
 def load_credentials():
@@ -158,7 +163,21 @@ st.date_input(
     format="DD/MM/YYYY",
     key="ngay_bao_cao",
     max_value=now_vn.date(),
-)  
+) 
+
+st.markdown("""
+    <hr style="border: 1.325px solid #195e83; margin: 15px 0;">
+    <p style="font-size: 13.5px; color: #333;"> 📌
+        <i><span style="color: #f7270b; font-weight: bold;">Lưu ý:</span>
+            Báo cáo số máy <span style="color: #042f66; font-weight: bold;">ĐANG DÙNG</span> = 
+            số máy <span style="color: #042f66; font-weight: bold;">CỦA KHOA ĐANG DÙNG</span> + 
+            số máy <span style="color: #042f66; font-weight: bold;">MƯỢN</span> từ khoa khác <span style="color: #042f66; font-weight: bold;">ĐANG DÙNG</span>
+        <br><span style="color: #042f66; font-weight: bold;">(không tính số máy đang cho khoa khác mượn)</span>
+        <br><br>
+        </i>
+    </p>
+""", unsafe_allow_html=True)
+
 if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None:
     thiet_bi = st.session_state.thiet_bi
     
@@ -174,21 +193,22 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 </p>
                 ''', unsafe_allow_html=True
                 )
-        st.markdown(f'''<div class="divider">''', unsafe_allow_html=True)
-        st.markdown('''
-            <style>
-            .divider .stHorizontalBlock {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 10px !important;
-            }
-            .divider .stHorizontalBlock > div {
-                width: 100px !important;
-                min-width: 100px !important;
-                max-width: 100px !important;
-            }
-            </style>
-            ''', unsafe_allow_html=True)
+        # st.markdown(f'''<div class="divider">''', unsafe_allow_html=True)
+        # st.markdown('''
+        #     <style>
+        #     .divider .stHorizontalBlock {
+        #         display: flex;
+        #         flex-wrap: wrap;
+        #         gap: 10px !important;
+        #     }
+        #     .divider .stHorizontalBlock > div {
+        #         width: 100px !important;
+        #         min-width: 100px !important;
+        #         max-width: 100px !important;
+        #     }
+        #     </style>
+        #     ''', unsafe_allow_html=True)
+
         ma_thiet_bi = thiet_bi['Mã thiết bị'].iloc[i]
         col1, col2, col3, col4  = st.columns([1, 1, 1, 1])
         with col1:
@@ -199,8 +219,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 value=SL,  # Chuyển đổi giá trị thành số nguyên
                 disabled =True, # Chỉ cho phép đọc
                 key=f"co_so_{i}"
-            )
-            
+            )    
         with col2:
             st.number_input(
                 label="Đang dùng",
@@ -226,7 +245,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 min_value=0,
                 )
                  
-        st.markdown(f'''</div class="divider">''', unsafe_allow_html=True)
+        # st.markdown(f'''</div class="divider">''', unsafe_allow_html=True)
         if ma_thiet_bi[0] != "A":
             with st.expander(f"Thông tin bổ sung thiết bị {ten}", expanded=False):
                 st.number_input(
@@ -272,7 +291,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                         st.session_state.additional_columns.append(len(st.session_state.additional_columns) + 1)
                         st.rerun()
                 with c_remove:
-                    if st.button("🗑️", key=f"xoa_lua_chon"):
+                    if st.button("Xóa", key=f"xoa_lua_chon"):
                         if len(st.session_state.additional_columns) > 1:
                             st.session_state.additional_columns.pop()
                             st.rerun()
@@ -312,7 +331,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                             st.rerun()
 
         # Nút gửi
-    submitbutton = st.button("Gửi báo cáo",type='primary',key="bao_cao")
+    submitbutton = st.button("Lưu kết quả",type='primary',key="luu")
     if submitbutton:
         a = kiem_tra()
         if len(a) == 0:

@@ -1,43 +1,6 @@
-
-.st-key-green button {
-    background-color: green;
-}
-
-/* Animated button with pulse effect */
-.st-key-pulse button {
-    background-color: #4CAF50;
-    border-radius: 10px;
-    padding: 20px 60px;
-    animation: pulse 2s infinite;
-}
-
-.st-key-pulse button p {
-    font-size: 24px;
-    font-family: 'Futura', 'Trebuchet MS', Arial, sans-serif;
-}
-
-/* Hover effect for the button */
-.st-key-pulse button:hover {
-    background-color: #45a049; /* Darker green */
-    border: none;
-}
-
-.st-key-pulse button:hover p {
-    color: #FFD700; /* Gold color */
-}
-
-/* Override the focus states to prevent default red border */
-.st-key-pulse button:focus {
-    background-color: #45a049; /* Keep the same as hover */
-    border: none;
-}
-
-/* Apply the same text color during focus states */
-.st-key-pulse button:focus p {
-    color: #FFD700;
-}
-
-
+/* ========================================
+   1. ANIMATIONS & KEYFRAMES
+======================================== */
 @keyframes pulse {
     0% {
         box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
@@ -50,39 +13,9 @@
     }
 }
 
-/* Text input with custom font and color */
-.st-key-styledinput input {
-    border: 5px solid #3cff1e;
-    border-radius: 8px;
-}
-
-.st-key-styledinput input:focus {
-    border: none;
-}
-
-
-/* Text area with custom font */
-.st-key-styledtextarea textarea {
-    background-color: #e6e6fa;
-    border: 4px solid #9370DB;
-    border-radius: 8px;
-    font-family: 'Lucida Handwriting', cursive;
-    color: #4B0082;
-}
-
-
-/* Radio buttons with custom styles */
-.st-key-styleradio .stRadio p {
-    color: #3d2e8b;
-    font-family: "Source Sans Pro", sans-serif;
-    font-size: 24px;
-}
-/* Tự làm*/
-
-.st-key-yc form {
-    background-color: green;
-}
-
+/* ========================================
+   2. CUSTOM CLASSES
+======================================== */
 .tieude {
     text-align: center;
     font-family: "Source Sans Pro", sans-serif;
@@ -93,16 +26,15 @@
 .demuc {
     text-align: left;
     font-family: "Source Sans Pro", sans-serif;
-    color:#3a06f4;
+    color: #3a06f4;
     font-size: 20px;
     margin-bottom: 1px;
     margin-top: 10px;
-
 }
 
 .ttcn {
     text-align: left;
-    color:#00505b;
+    color: #00505b;
     font-size: 18px;
     margin-bottom: 1px;
     margin-top: 10px;
@@ -111,20 +43,30 @@
 .admin_1 {
     text-align: left;
     font-family: 'Calibri', cursive;
-    color:#19ba00;
+    color: #19ba00;
     font-size: 20px;
     margin-bottom: 0px;
 }
 
-
 .muc {
     text-align: left;
     font-family: "Source Sans Pro", sans-serif;
-    color:#000000;
+    color: #000000;
     font-size: 60px;
     margin-bottom: -10px;
 }
 
+.bangtt {
+    border: 2px solid #9F2B68; 
+    border-radius: 10px; 
+    padding: 20px; 
+    background-color: #f9f9f9;
+    margin-bottom: 10px;
+}
+
+/* ========================================
+   3. HEADER STYLES
+======================================== */
 .fixed-header {
     position: fixed;
     top: 0;
@@ -137,27 +79,11 @@
     display: flex;
     align-items: left;
 }
-.bangtt {
-    border: 2px solid #9F2B68; 
-    border-radius: 10px; 
-    padding: 20px; 
-    background-color: #f9f9f9;
-    margin-bottom: 10px;
-}
 
 .header-content {
     display: flex;
     align-items: center;
     padding-bottom: 0px;
-}
-
-.header-underline {
-    position: fixed;
-    border-bottom: 2px solid #00697d;
-    width: 55%;
-    display: flex;
-    z-index: 1001;
-    top: 4.5rem;
 }
 
 .header-content img {
@@ -172,6 +98,7 @@
     flex-direction: column;
     justify-content: center;
 }
+
 .header-text p {
     font-size: 25px;
     color: #ffffff;
@@ -184,58 +111,12 @@
     color: #2c25b3; 
     font-family: "Source Sans Pro", sans-serif;
     padding-bottom: 0%;
-    padding-top:0.2rem;
+    padding-top: 0.2rem;
 }
 
 .header-subtext {
     margin-top: 0px;
     text-align: left;
-}
-
-.login-header {
-    display: flex;            
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-.logo-img {
-    height: 60px;            
-    width: auto;              
-}
-.login-header-text h4 {
-    margin-top: 5px;               
-    line-height: 1.2;
-}
-
-
-
-@media screen and (max-width: 780px) {
-.fixed-header {
-        padding-left: 22px;
-        left: 15px;
-}
-.header-underline {
-        width: 90%;
-}
-.login-header-text h4 {
-    padding-bottom: 0px;
-    margin-top: 5px;
-    padding-top: 0px;          
-    line-height: 1.2;
-    font-size: 12px;
-}
-.logo-img {
-    height: 33px;
-    width: auto;
-}
-[data-testid="stBaseButton-headerNoPadding"] {
-    position: absolute;
-    top: 8px;
-    left: -15px;
-}
-.header-subtext p {
-    padding-left: 100px;
-}
 }
 
 .header-subtext p {
@@ -248,98 +129,102 @@
     border-bottom: #000000;
 }
 
-@media screen and (max-width: 480px) {
-.demuc {
-        text-align: left;
-        font-family: "Source Sans Pro", sans-serif;
-        color:#3a06f4;
-        font-size: 17px;
-        margin-bottom: 1px;
-        margin-top: 10px;
-    
-    }
-.header-subtext p {
-    padding-left: 0px;
-    font-size: 18px !important;
-}
-[data-testid="stHorizontalBlock"] > div {
-    flex: 1 1 0 !important;
-    max-width: 100% !important;
-    min-width: 70px !important;
-    overflow: hidden;
-    flex-shrink: 0 !important;
-}
-.stHorizontalBlock label, .stHorizontalBlock > div > label {
-    white-space: nowrap !important;
-}
-[data-testid="stExpander"] [data-testid="stHorizontalBlock"] >div {
-    flex: 1 !important;             
-    min-width: 0 !important;          
-    max-width: 100% !important;     
-}
+.header-underline {
+    position: fixed;
+    border-bottom: 2px solid #00697d;
+    width: 55%;
+    display: flex;
+    z-index: 1001;
+    top: 4.5rem;
 }
 
-[data-testid="stToolbar"] {
-    top: 0px;
-    right: 0px;
+.login-header {
+    display: flex;            
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
 }
 
-[data-testid="stRadio"] p {
-    font-size: 15px; 
-    color: #003b62; 
+.login-header-text h4 {
+    margin-top: 5px;               
+    line-height: 1.2;
+}
+
+.logo-img {
+    height: 60px;            
+    width: auto;              
+}
+
+/* ========================================
+   4. BUTTON STYLES (st-key prefixed)
+======================================== */
+.st-key-green button {
+    background-color: green;
+}
+
+.st-key-pulse button {
+    background-color: #4CAF50;
+    border-radius: 10px;
+    padding: 20px 60px;
+    animation: pulse 2s infinite;
+}
+
+.st-key-pulse button p {
+    font-size: 24px;
+    font-family: 'Futura', 'Trebuchet MS', Arial, sans-serif;
+}
+
+.st-key-pulse button:hover {
+    background-color: #45a049;
+    border: none;
+}
+
+.st-key-pulse button:hover p {
+    color: #FFD700;
+}
+
+.st-key-pulse button:focus {
+    background-color: #45a049;
+    border: none;
+}
+
+.st-key-pulse button:focus p {
+    color: #FFD700;
+}
+
+.st-key-yc form {
+    background-color: green;
+}
+
+/* ========================================
+   5. INPUT STYLES (st-key prefixed)
+======================================== */
+.st-key-styledinput input {
+    border: 5px solid #3cff1e;
+    border-radius: 8px;
+}
+
+.st-key-styledinput input:focus {
+    border: none;
+}
+
+.st-key-styledtextarea textarea {
+    background-color: #e6e6fa;
+    border: 4px solid #9370DB;
+    border-radius: 8px;
+    font-family: 'Lucida Handwriting', cursive;
+    color: #4B0082;
+}
+
+.st-key-styleradio .stRadio p {
+    color: #3d2e8b;
     font-family: "Source Sans Pro", sans-serif;
-}
-[data-testid="stVerticalBlock"] {
-    gap: 0.5rem;
-}
-[data-baseweb="base-input"] {
-    background-color: #e7f1f8; 
-    border-style:hidden;
-}
-label[for^="text_input_"] div p {
-    font-size:15px;
-    color: rgb(59, 112, 114);
-    padding-left:20px;
-    width: 200px;
-    
-}
-@media screen and (max-width: 700px) {
-[data-testid="stHorizontalBlock"] {
-    flex-wrap: nowrap !important;
-    overflow-x: auto;   
-    display: flex !important;
-}
-[data-testid="stHorizontalBlock"] > div {
-    flex: 1 0 74px !important;
-    max-width: 100px !important;
-    min-width: 50px !important;
-    overflow: hidden;
-    flex-shrink: 0 !important;
-}
-[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div:first-child {
-    flex:  11 0 0px !important;
-    min-width: 0 !important; 
-    max-width: 100% !important; 
-}
-[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div:nth-child(2) {
-    flex: 2 0 0px !important;
-    min-width: 0 !important; 
-    max-width: 100% !important;
-}
-} 
-
-[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div:first-child {
-    flex: 8 0 0px !important;
-    min-width: 0 !important; 
-    max-width: 100% !important; 
-}
-[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div:nth-child(2) {
-    flex: 4 0 0px !important;
-    min-width: 0 !important; 
-    max-width: 100% !important;
+    font-size: 24px;
 }
 
-
+/* ========================================
+   6. FORM ELEMENT STYLES (Device specific)
+======================================== */
 [class*="st-key-co_so_"] label {
     display: flex;
     align-items: center;
@@ -350,61 +235,87 @@ label[for^="text_input_"] div p {
     border-radius: 10px !important;
     background-color: #43f0d1;
 }
+
 [class*="st-key-co_so_"] input {
     font-weight: bold !important;
     background-color: #92d3de !important;
-    color:#000000 !important;
+    color: #000000 !important;
     text-align: center !important;
     border-color: rgb(2, 63, 65) !important;
     border-width: 2px !important;
     border-style: solid !important;
     border-radius: 10px !important;
 }
+
 [class*="st-key-dang_su_dung_"] label {
     display: flex;
     align-items: center;
     justify-content: center;
-    color:#0887c2;
+    color: #0887c2;
 }
+
 [class*="st-key-trong_"] label {
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
 [class*="st-key-hu_"] label {
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
 [class*="st-key-muon_"] label {
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
 [class*="st-key-cho_muon_"] label {
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
 [class*="st-key-muon_tu_khoa_khac_"] label {
     display: none !important;
 }
+
 [class*="st-key-so_luong_muon_"] label {
     display: none !important;
 }
+
 [class*="st-key-cho_khoa_khac_muon"] label {
     display: none !important;
 }
+
 [class*="st-key-so_luong_cho_muon_"] label {
     display: none !important;
 }
 
-div[role="dialog"] {
-    background-color: #ffffff;
-    border: 2px solid #0887c2;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+/* ========================================
+   7. STREAMLIT COMPONENT STYLES
+======================================== */
+[data-testid="stToolbar"] {
+    top: 0px;
+    right: 0px;
+}
+
+[data-testid="stHeader"] {
+    height: 0% !important;
+    background: #ffffff;
+}
+
+[data-testid="stMainBlockContainer"] {
+    padding-top: 3.7rem;
+    padding-left: 1rem;
+    padding-right: 2%;
+    padding-bottom: 2rem;
+}
+
+[data-testid="stBaseButton-header"] div span {
+    visibility: hidden;
 }
 
 [data-testid="stBaseButton-secondary"] {
@@ -412,8 +323,25 @@ div[role="dialog"] {
     color: black;
 }
 
+[data-testid="stToast"] {
+    top: 200px;
+    position: fixed;
+    display: flex;
+    background-color: #02b6b6;
+    color: #000000;
+}
+
+/* ========================================
+   8. FORM INPUTS & LABELS
+======================================== */
+[data-testid="stRadio"] p {
+    font-size: 15px; 
+    color: #003b62; 
+    font-family: "Source Sans Pro", sans-serif;
+}
+
 [data-testid="stDateInput"] p {
-    font-size:15px !important;
+    font-size: 15px !important;
     color: rgb(59, 112, 114) !important;
 }
 
@@ -421,27 +349,90 @@ div[role="dialog"] {
     font-size: 15px; 
     color: #005259; 
     font-family: "Source Sans Pro", sans-serif;
-    font-weight:bold;
+    font-weight: bold;
 }
-.stRadio label:hover {
-    background-color: #e0e8ee;  
-    cursor: pointer;
+
+[data-baseweb="base-input"] {
+    background-color: #e7f1f8; 
+    border-style: hidden;
 }
+
 [data-baseweb="select"] div div {
     background-color: #e7f1f8;
     align-content: flex-start !important;
 }
 
-[data-testid="stHeadingWithActionElements"] h3 {
-    color:#005259;
-    font-size:20px;
-    font-style: italic;
+.stRadio label:hover {
+    background-color: #e0e8ee;  
+    cursor: pointer;
 }
 
+label[for^="text_input_"] div p {
+    font-size: 15px;
+    color: rgb(59, 112, 114);
+    padding-left: 20px;
+    width: 200px;
+}
+
+/* ========================================
+   9. LAYOUT & SPACING
+======================================== */
+[data-testid="stVerticalBlock"] {
+    gap: 0.5rem;
+}
+
+[data-testid="stHorizontalBlock"] > div {
+    flex: 1 1 0 !important;
+    max-width: 100% !important;
+    min-width: 70px !important;
+    overflow: hidden;
+    flex-shrink: 0 !important;
+}
+
+.stHorizontalBlock label, 
+.stHorizontalBlock > div > label {
+    white-space: nowrap !important;
+}
+
+/* ========================================
+   10. EXPANDER STYLES
+======================================== */
+[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div:first-child {
+    flex: 8 0 0px !important;
+    min-width: 0 !important; 
+    max-width: 100% !important; 
+}
+
+[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div:nth-child(2) {
+    flex: 4 0 0px !important;
+    min-width: 0 !important; 
+    max-width: 100% !important;
+}
+
+[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div {
+    flex: 1 !important;             
+    min-width: 0 !important;          
+    max-width: 100% !important;     
+}
+
+div[data-testid="stExpander"] details summary span {
+    align-items: center;
+    justify-content: center;
+}
+
+div[data-testid="stExpander"] details summary span div p {
+    color: #006d8b;
+    font-weight: bold;
+    font-size: 18px !important;
+    font-family: "Source Sans Pro", sans-serif;
+}
+
+/* ========================================
+   11. TABS & NAVIGATION
+======================================== */
 [data-baseweb="tab-list"] {
     display: flex !important; 
     justify-content: space-around;
-
 }
 
 [data-baseweb="tab-border"] {
@@ -452,46 +443,128 @@ div[role="dialog"] {
     background-color: #00515b;
 } 
 
+/* ========================================
+   12. HEADINGS
+======================================== */
+[data-testid="stHeadingWithActionElements"] h3 {
+    color: #005259;
+    font-size: 20px;
+    font-style: italic;
+}
+
 [data-testid="stHeadingWithActionElements"] h6 {
     color: #005259;
-    padding-top:39px;
-    padding-bottom:0px;
-    font-weight:bold;
-}
-
-[data-testid="stToast"] {
-    top: 200px;
-    position: fixed;
-    display: flex;
-    background-color: #02b6b6;
-    color: #000000;
-}
-[data-testid="stHeader"] {
-    height: 0% !important;
-    background:#ffffff
-}
-[data-testid="stBaseButton-header"] div span {
-    visibility: hidden;
-}
-
-[data-testid="stMainBlockContainer"] {
-    padding-top: 3.7rem;
-    padding-left: 1rem;
-    padding-right: 2%;
-    padding-bottom: 2rem;
-}
-
-div[data-testid="stExpander"] details summary span {
-    align-items: center;
-    justify-content: center;
-}
-div[data-testid="stExpander"] details summary span div p {
-    color: #006d8b;
+    padding-top: 39px;
+    padding-bottom: 0px;
     font-weight: bold;
-    font-size: 18px !important;
-    font-family: "Source Sans Pro", sans-serif;
 }
 
+/* ========================================
+   13. DIALOG & MODAL
+======================================== */
+div[role="dialog"] {
+    background-color: #ffffff;
+    border: 2px solid #0887c2;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
 
+/* ========================================
+   14. RESPONSIVE DESIGN - MOBILE 480px
+======================================== */
+@media screen and (max-width: 480px) {
+    .demuc {
+        text-align: left;
+        font-family: "Source Sans Pro", sans-serif;
+        color: #3a06f4;
+        font-size: 17px;
+        margin-bottom: 1px;
+        margin-top: 10px;
+    }
+    
+    .header-subtext p {
+        padding-left: 0px;
+        font-size: 18px !important;
+    }
+    
+    [class*="st-key-chua_thuc_hien_"] p {
+        margin: 0px !important;
+        max-width: fit-content !important;
+        text-align: left !important;
+        font-size: 15px !important;
+        color: #005259;
+        font-family: "Source Sans Pro", sans-serif;
+        font-weight: bold;
+    }
 
+        
+}
 
+/* ========================================
+   15. RESPONSIVE DESIGN - TABLET 700px
+======================================== */
+@media screen and (max-width: 700px) {
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: nowrap !important;
+        overflow-x: auto;   
+        display: flex !important;
+    }
+    
+    [data-testid="stHorizontalBlock"] > div {
+        flex: 1 0 74px !important;
+        max-width: 100px !important;
+        min-width: 50px !important;
+        overflow: hidden;
+        flex-shrink: 0 !important;
+    }
+    
+    [data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div:first-child {
+        flex: 11 0 0px !important;
+        min-width: 0 !important; 
+        max-width: 100% !important; 
+    }
+    
+    [data-testid="stExpander"] [data-testid="stHorizontalBlock"] > div:nth-child(2) {
+        flex: 3 0 0px !important;
+        min-width: 0 !important; 
+        max-width: 100% !important;
+    }
+}
+
+/* ========================================
+   16. RESPONSIVE DESIGN - MOBILE 780px
+======================================== */
+@media screen and (max-width: 780px) {
+    .fixed-header {
+        padding-left: 22px;
+        left: 15px;
+    }
+    
+    .header-underline {
+        width: 90%;
+    }
+    
+    .login-header-text h4 {
+        padding-bottom: 0px;
+        margin-top: 5px;
+        padding-top: 0px;          
+        line-height: 1.2;
+        font-size: 12px;
+    }
+    
+    .logo-img {
+        height: 33px;
+        width: auto;
+    }
+    
+    [data-testid="stBaseButton-headerNoPadding"] {
+        position: absolute;
+        top: 8px;
+        left: -15px;
+    }
+    
+    .header-subtext p {
+        padding-left: 100px;
+    }
+}

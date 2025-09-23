@@ -16,8 +16,13 @@ def get_img_as_base64(file):
     return base64.b64encode(data).decode()
 
 def load_css(file_path):
-    with open(file_path) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except UnicodeDecodeError:
+        # Fallback to different encoding if UTF-8 fails
+        with open(file_path, 'r', encoding='latin-1') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=3600)
 def load_credentials():
@@ -125,7 +130,7 @@ def clear_form_state():
             del st.session_state[key]
 
 # Main Section ####################################################################################
-css_path = pathlib.Path("asset/style_4_VTTB.css")
+css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
 img = get_img_as_base64("pages/img/logo.png")
 st.markdown(f"""
@@ -167,7 +172,7 @@ st.date_input(
     key="ngay_bao_cao",
     max_value= default_date,
 )
-st.markdown(":red[***❗Lưu ý: Ngày báo cáo tự động hiển thị giá trị mặc định trước ngày hiện tại.***]")
+st.markdown(":red[***📌Lưu ý: Ngày báo cáo tự động hiển thị giá trị mặc định trước ngày hiện tại.***]")
 if st.session_state.get("dmk", False):
         if time.time() - st.session_state.get("dmk_time", 0) < 5:
             st.toast("Báo cáo đã được gửi thành công")
@@ -175,9 +180,14 @@ if st.session_state.get("dmk", False):
             del st.session_state["dmk"]
             del st.session_state["dmk_time"]
 # Báo cáo ca sáng
-col1s, col2s,col3s = st.columns(3)
-with col1s:
-    Ca_Sang = st.markdown("**Ca sáng (7g00 - 14g00)**")
+st.markdown('''
+    <p class="subtitle-pccs">
+        <span style="color: #0e0bf7; font-weight: bold;">
+            Ca sáng (7g00 - 14g00)
+        </span>
+    </p>
+''', unsafe_allow_html=True)
+col1s, col2s,col3s = st.columns([1,9,9])
 with col2s:    
     SL_NB_cap_1 = st.number_input(
                     label="Số người bệnh",
@@ -196,9 +206,14 @@ with col3s:
                 )
 
 # Báo cáo ca chiều
-col1c, col2c,col3c = st.columns(3)
-with col1c:
-    Ca_Chieu = st.markdown("**Ca chiều (14g00 - 21g00)**")
+st.markdown('''
+    <p class="subtitle-pccs">
+        <span style="color: #0e0bf7; font-weight: bold;">
+            Ca chiều (14g00 - 21g00)
+        </span>    
+    </p>
+''', unsafe_allow_html=True)
+col1c, col2c,col3c = st.columns([1,9,9])
 with col2c:    
     SL_NB_cap_1 = st.number_input(
                     label="Số người bệnh",
@@ -217,9 +232,14 @@ with col3c:
                 )
 
 # Báo cáo ca tối
-col1t, col2t,col3t = st.columns(3)
-with col1t:
-    Ca_Toi = st.markdown("**Ca tối (21g00 - 7g00)**")
+st.markdown('''
+    <p class="subtitle-pccs">
+        <span style="color: #0e0bf7; font-weight: bold;">    
+            Ca tối (21g00 - 7g00)
+        </span>    
+    </p>
+''', unsafe_allow_html=True)
+col1t, col2t,col3t = st.columns([1,9,9])
 with col2t:    
     SL_NB_cap_1 = st.number_input(
                     label="Số người bệnh",
@@ -242,18 +262,19 @@ st.markdown('''<br><br>''', unsafe_allow_html=True)
 
 # Kiểm tra nếu chưa hết thời gian thì hiển thị nút
 # if time.time() - st.session_state.show_gui_time < show_time:
-col_left, col_center, col_right = st.columns([1,2,1])
-with col_center:
-    Gui= st.button("Gửi báo cáo",type='primary', key="bao_cao") 
-    if Gui:
-        kiem_tra = kiem_tra()
-        if len(kiem_tra) == 0:    
-            upload_data_PCCS ()
-            warning(3)
-            clear_form_state()
-            st.session_state.dmk = True
-            st.session_state.dmk_time = time.time()
-            st.rerun()
-        else:
-            warning(1)
+# st.markdown('''<div class="button-container">''', unsafe_allow_html=True)
+
+
+Luu = st.button("Lưu kết quả", type='primary',key="luu")
+if Luu:
+    kiem_tra = kiem_tra()
+    if len(kiem_tra) == 0:    
+        upload_data_PCCS ()
+        warning(3)
+        clear_form_state()
+        st.session_state.dmk = True
+        st.session_state.dmk_time = time.time()
+        st.rerun()
+    else:
+        warning(1)
 

@@ -37,8 +37,13 @@ def get_img_as_base64(file):
     return base64.b64encode(data).decode()
 
 def load_css(file_path):
-    with open(file_path) as f:
-        st.html(f"<style>{f.read()}</style>")
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except UnicodeDecodeError:
+        # Fallback to different encoding if UTF-8 fails
+        with open(file_path, 'r', encoding='latin-1') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=3600)
 def load_data(x):
@@ -192,23 +197,26 @@ if "khoa_HSBA" in st.session_state and st.session_state["khoa_HSBA"] and "vtgs_H
                     placeholder="Ghi rõ tồn đọng",
                     key=f"hsbatext_{i}",
                 )
-        submitbutton = st.form_submit_button("Gửi")
-    if submitbutton:
-        if "svv_HSBA" in st.session_state and st.session_state.svv_HSBA and "yob_HSBA" in st.session_state and st.session_state.yob_HSBA:
-            if kiemtra_svv() != True:
-                warning(4,4)
-            else:
-                buoc_chua_dien = []
-                for j in range (0,len(data_hsba)):
-                    if f"hsbaradio_{j}" not in st.session_state or not st.session_state[f"hsbaradio_{j}"]:
-                        buoc_chua_dien.append(f"Bước {j+1}")
-                buoc_chua_dien_str = ", ".join(buoc_chua_dien)
-                if buoc_chua_dien_str == "":
-                    upload_data_HSBA(len(data_hsba))
+        col1, col2, col3 = st.columns([2,1,2])
+        with col2:      
+            submitbutton = st.form_submit_button("Lưu kết quả",type='primary',use_container_width=True )
+        
+        if submitbutton:
+            if "svv_HSBA" in st.session_state and st.session_state.svv_HSBA and "yob_HSBA" in st.session_state and st.session_state.yob_HSBA:
+                if kiemtra_svv() != True:
+                    warning(4,4)
                 else:
-                    warning(1,buoc_chua_dien_str)
-        else:
-            warning(2,2)
+                    buoc_chua_dien = []
+                    for j in range (0,len(data_hsba)):
+                        if f"hsbaradio_{j}" not in st.session_state or not st.session_state[f"hsbaradio_{j}"]:
+                            buoc_chua_dien.append(f"Bước {j+1}")
+                    buoc_chua_dien_str = ", ".join(buoc_chua_dien)
+                    if buoc_chua_dien_str == "":
+                        upload_data_HSBA(len(data_hsba))
+                    else:
+                        warning(1,buoc_chua_dien_str)
+            else:
+                warning(2,2)
 else:
     st.warning("Vui lòng chọn đầy đủ các mục")
         
