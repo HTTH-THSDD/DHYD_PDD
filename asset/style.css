@@ -192,11 +192,11 @@
     text-align: left;
 }
 .header-subtext p {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     color: #e60d0de9;
     font-family: "Source Sans Pro", sans-serif;
     font-weight: bold;
-    padding-left: 12%;
+    padding-left: 20px;
     margin-bottom: 2px;
     border-bottom: #000000;
 }
@@ -306,11 +306,11 @@
     }
 
     .header-subtext p {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
         color: #e60d0de9;
         font-family: "Source Sans Pro", sans-serif;
         font-weight: bold;
-        padding-left: 12%;
+        padding-left: 20px;
         margin-bottom: 2px;
         border-bottom: #000000;
     }
@@ -398,7 +398,7 @@
         }
     .header-subtext p {
         padding-left: 0px;
-        font-size: 18px !important;
+        font-size: 15px !important;
         font-weight:bold;
     }
 } */    
@@ -561,6 +561,7 @@ div[role="dialog"] {
 }
 [data-testid="stBaseButton-header"] div span {
     visibility: hidden;
+    justify-items: right;
 }
 
 [data-testid="stMainBlockContainer"] {

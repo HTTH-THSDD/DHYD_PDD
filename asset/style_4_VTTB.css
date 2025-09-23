@@ -124,7 +124,7 @@
     color: #e60d0de9;
     font-family: "Source Sans Pro", sans-serif;
     font-weight: bold;
-    padding-left: 12%;
+    padding-left: 0px;
     margin-bottom: 2px;
     border-bottom: #000000;
 }
@@ -485,7 +485,7 @@ div[role="dialog"] {
     
     .header-subtext p {
         padding-left: 0px;
-        font-size: 18px !important;
+        font-size: 15px !important;
     }
     
     [class*="st-key-chua_thuc_hien_"] p {
@@ -565,6 +565,6 @@ div[role="dialog"] {
     }
     
     .header-subtext p {
-        padding-left: 100px;
+        padding-left: 20px;
     }
 }
