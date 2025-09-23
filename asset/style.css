@@ -270,6 +270,10 @@
 
 
 @media screen and (max-width: 780px) {
+    [data-testid="stToolbar"] {
+    top: 0px;
+    right: 0px;
+    }
     .fixed-header {
             padding-left: 10px;
             left: 15px;
@@ -391,7 +395,7 @@
 
 
 
-/*@media screen and (max-width: 480px) {
+@media screen and (max-width: 480px) {
     .demuc {
             text-align: left;
             font-family: "Source Sans Pro", sans-serif;
@@ -406,7 +410,11 @@
         font-size: 15px !important;
         font-weight:bold;
     }
-} */    
+    [data-testid="stToolbar"] {
+    top: 0px;
+    right: 0px;
+    }
+}   
 
 [data-testid="stRadio"] p {
     font-size: 15px; 
@@ -502,7 +510,10 @@ div[role="dialog"] {
     font-size:15px !important;
     color: rgb(59, 112, 114) !important;
 }
-
+[data-testid="stToolbar"] {
+    top: 0px;
+    right: 0px;
+}
 [data-testid="stWidgetLabel"] p {
     font-size: 15px; 
     color: #005259; 
