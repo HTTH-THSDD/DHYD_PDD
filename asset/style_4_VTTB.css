@@ -297,7 +297,7 @@
 /* ========================================
    7. STREAMLIT COMPONENT STYLES
 ======================================== */
- [data-testid="stToolbar"] {
+[data-testid="stToolbar"] {
     top: -50px !important
 }
 
@@ -567,6 +567,10 @@ div[role="dialog"] {
         position: absolute;
         top: 8px;
         left: 0px;
+        background-color: rgba(0, 0, 0, 0.1) !important;  /* Thêm màu nền mờ */
+        border: 4px solid rgba(0, 0, 0, 0.2) !important;  /* Thêm viền */
+        border-radius: 4px !important;  /* Bo góc */
+        padding: 4px 8px !important;  /* Thêm padding */
     }
 
     [data-testid="stBaseButton-header"] {

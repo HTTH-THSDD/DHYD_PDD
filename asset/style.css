@@ -394,7 +394,7 @@
 
 
 
-@media screen and (max-width: 480px) {
+/* @media screen and (max-width: 480px) {
     .demuc {
             text-align: left;
             font-family: "Source Sans Pro", sans-serif;
@@ -412,7 +412,7 @@
     [data-testid="stToolbar"] {
         top: -50px !important
     }
-}   
+}    */
 
 [data-testid="stRadio"] p {
     font-size: 15px; 
