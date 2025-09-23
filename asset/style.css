@@ -192,7 +192,7 @@
     text-align: left;
 }
 .header-subtext p {
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: #e60d0de9;
     font-family: "Source Sans Pro", sans-serif;
     font-weight: bold;
@@ -296,7 +296,7 @@
     }   
 
     .header-subtext p {
-        font-size: 1.2rem;
+        font-size: 1rem;
         color: #e60d0de9;
         font-family: "Source Sans Pro", sans-serif;
         font-weight: bold;

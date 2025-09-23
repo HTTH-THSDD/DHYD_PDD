@@ -120,7 +120,7 @@
 }
 
 .header-subtext p {
-    font-size: 1.4rem;
+    font-size: 1rem;
     color: #e60d0de9;
     font-family: "Source Sans Pro", sans-serif;
     font-weight: bold;
@@ -483,16 +483,6 @@ div[role="dialog"] {
         padding-left: 0px;
         font-size: 15px !important;
     }
-    
-    [class*="st-key-chua_thuc_hien_"] p {
-        margin: 0px !important;
-        max-width: fit-content !important;
-        text-align: left !important;
-        font-size: 15px !important;
-        color: #005259;
-        font-family: "Source Sans Pro", sans-serif;
-        font-weight: bold;
-    }
 
         
 }
@@ -527,6 +517,7 @@ div[role="dialog"] {
         min-width: 0 !important; 
         max-width: 100% !important;
     }
+
 }
 
 /* ========================================
@@ -563,4 +554,5 @@ div[role="dialog"] {
     .header-subtext p {
         padding-left: 20px;
     }
+
 }
