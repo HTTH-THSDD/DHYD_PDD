@@ -297,9 +297,6 @@
 /* ========================================
    7. STREAMLIT COMPONENT STYLES
 ======================================== */
-[data-testid="stToolbar"] {
-    top: -50px !important
-}
 
 [data-testid="stHeader"] {
     height: 0% !important;
@@ -473,9 +470,6 @@ div[role="dialog"] {
    14. RESPONSIVE DESIGN - MOBILE 480px
 ======================================== */
 @media screen and (max-width: 480px) {
-    [data-testid="stToolbar"] {
-        top: -50px !important
-    }
     .demuc {
         text-align: left;
         font-family: "Source Sans Pro", sans-serif;
@@ -507,9 +501,7 @@ div[role="dialog"] {
    15. RESPONSIVE DESIGN - TABLET 700px
 ======================================== */
 @media screen and (max-width: 700px) {
-    [data-testid="stToolbar"] {
-        top: -50px !important;
-    }
+
     [data-testid="stHorizontalBlock"] {
         flex-wrap: nowrap !important;
         overflow-x: auto;   
