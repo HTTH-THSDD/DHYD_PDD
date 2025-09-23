@@ -297,9 +297,8 @@
 /* ========================================
    7. STREAMLIT COMPONENT STYLES
 ======================================== */
-[data-testid="stToolbar"] {
-    top: 0px;
-    right: 0px;
+ [data-testid="stToolbar"] {
+    top: -50px !important
 }
 
 [data-testid="stHeader"] {
@@ -475,8 +474,7 @@ div[role="dialog"] {
 ======================================== */
 @media screen and (max-width: 480px) {
     [data-testid="stToolbar"] {
-    top: 0px;
-    right: 0px;
+        top: -50px !important
     }
     .demuc {
         text-align: left;
@@ -510,8 +508,7 @@ div[role="dialog"] {
 ======================================== */
 @media screen and (max-width: 700px) {
     [data-testid="stToolbar"] {
-    top: 0px;
-    right: 0px;
+        top: -50px !important;
     }
     [data-testid="stHorizontalBlock"] {
         flex-wrap: nowrap !important;
