@@ -305,6 +305,11 @@
         border-color: rgba(0, 0, 0, 0.3) !important;
     }
 
+    [data-testid="stBaseButton-header"] {
+        right: 10px !important;
+        top: 8px;
+    }   
+
     .header-subtext p {
         font-size: 1.2rem;
         color: #e60d0de9;
