@@ -57,8 +57,7 @@ def load_data(x):
     data_final = pd.DataFrame(values, columns=header)
     return data_final
 
-def kiem_tra():
-    
+def kiem_tra():  
     noi_dung_thieu=[]
     if st.session_state.get("chon_khoa") is None:
         noi_dung_thieu.append("Khoa báo cáo")

@@ -83,6 +83,7 @@ def load_data(x,sd,ed,khoa_select):
     # Lọc ra các dòng tương ứng
     data_final_latest = data_final.loc[idx].reset_index(drop=True)
     return data_final_latest
+
 def to_mau_dong_cuoi(data):
     def highlight(row):
         if row.name == len(data) - 1:
