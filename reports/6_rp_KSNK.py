@@ -60,13 +60,14 @@ def load_data(x,sd,ed):
     header = data[0]
     values = data[1:]
     data = pd.DataFrame(values, columns=header)
-    data['Timestamp'] = pd.to_datetime(data['Timestamp'], errors='coerce')
-    start_date = sd
-    end_date = ed + timedelta(days=1)
-    data_final = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] < pd.Timestamp(end_date))]
+    data['Thời gian báo cáo'] = pd.to_datetime(data.iloc[:, 2], format='%Y-%m', errors='coerce')
+    start_date = f"{sd.year}-{sd.month:02d}"
+    end_date = f"{ed.year}-{ed.month:02d}"
+    data_final = data[(data.iloc[:, 2] >= start_date) & (data.iloc[:, 2] <= end_date)
+    ].reset_index(drop=True)
     idx = data_final.groupby(
-            ["Ngày báo cáo"]
-        )["Timestamp"].idxmax()
+            ["Thời gian báo cáo"]
+        )["Thời gian báo cáo"].idxmax()
 
     # Lọc ra các dòng tương ứng
     data_final_latest = data_final.loc[idx].reset_index(drop=True)
@@ -144,7 +145,7 @@ with st.form("Thời gian"):
         )
     submit_thoigian = st.form_submit_button("OK")
 if submit_thoigian:
-    if ed < sd:
+    if (ed.year < sd.year) or (ed.year == sd.year and ed.month < sd.month):
         st.error("Lỗi ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
     else:
         sheeto9 = st.secrets["sheet_name"]["output_9"]
@@ -176,7 +177,7 @@ if submit_thoigian:
             
             
             #### Ô trung bình NKBV mắc mới (Cột 4)
-            TB_NKBV_ToanVien = data.iloc[:, 5].mean()
+            TB_NKBV_ToanVien = data.iloc[:, 4].mean()
             st.markdown("##### 🚨 :orange[TỈ SUẤT NHIỄM KHUẨN BỆNH VIỆN MẮC MỚI]")
             col_metric = st.columns([1, 2, 1])
             with col_metric[1]:
@@ -192,12 +193,14 @@ if submit_thoigian:
             
             st.markdown("##### 🚩 :red[Nhiễm khuẩn bệnh viện mắc mới khối Hồi sức]")
             Data_Bang_1 = data.iloc[:, [2, 5, 6, 7, 8]].copy()
-            Ten_Cot_Bang_1 = ['Ngày báo cáo','NKBV mắc mới khối Hồi sức','VAP','CLABSI','CAUTI']
+            Ten_Cot_Bang_1 = ['Thời gian báo cáo','NKBV mắc mới khối Hồi sức','VAP','CLABSI','CAUTI']
             Data_Bang_1.columns = Ten_Cot_Bang_1
             
+            # Format lại cột thời gian trước khi tạo bảng
+            Data_Bang_1['Thời gian báo cáo'] = pd.to_datetime(Data_Bang_1['Thời gian báo cáo']).dt.strftime('%Y-%m')
             # Tính dòng trung bình (chỉ tính các cột số)
             TB_Bang_1 = {}
-            TB_Bang_1['Ngày báo cáo'] = 'Trung bình'
+            TB_Bang_1['Thời gian báo cáo'] = 'Trung bình'
             for col in ['NKBV mắc mới khối Hồi sức','VAP','CLABSI','CAUTI']:
                 TB_Bang_1[col] = Data_Bang_1[col].mean()
             
@@ -214,18 +217,13 @@ if submit_thoigian:
                 hide_index=True
             )
            
-            # Chuẩn bị dữ liệu cho biểu đồ (không bao gồm dòng trung bình)
+            # Biểu đồ cho bảng 1
             chart1_data = Data_Bang_1.copy()
-            try:
-                chart1_data['Tháng'] = pd.to_datetime(chart1_data['Ngày báo cáo'], errors='coerce').dt.strftime('%m/%Y')
-            except:
-                chart1_data['Tháng'] = chart1_data['Ngày báo cáo']
-            
-            # Loại bỏ các dòng có Tháng là NaT
+            chart1_data['Tháng'] = pd.to_datetime(chart1_data['Thời gian báo cáo']).dt.strftime('%m/%Y')
             chart1_data = chart1_data.dropna(subset=['Tháng'])
+            
             fig1 = go.Figure()
             
-            # Thêm biểu đồ cột cho Cột 5
             fig1.add_trace(go.Bar(
                 x=chart1_data['Tháng'],
                 y=chart1_data['NKBV mắc mới khối Hồi sức'],
@@ -234,9 +232,8 @@ if submit_thoigian:
                 yaxis='y'
             ))
             
-            # Thêm các đường cho Cột 6, 7, 8
             colors = ['red', 'green', 'orange']
-            for idx, col in enumerate(['VAP','CLABSI','CAUTI']):
+            for idx, col in enumerate(['VAP', 'CLABSI', 'CAUTI']):
                 fig1.add_trace(go.Scatter(
                     x=chart1_data['Tháng'],
                     y=chart1_data[col],
@@ -250,6 +247,10 @@ if submit_thoigian:
             fig1.update_layout(
                 title='Tỉ suất nhiễm khuẩn bệnh viện mắc mới khối Hồi sức theo thời gian',
                 xaxis_title='Tháng',
+                xaxis=dict(
+                    type='category',  # Đảm bảo thứ tự các tháng được giữ nguyên
+                    tickangle=0  # Xoay nhãn 45 độ để dễ đọc
+                ),
                 yaxis_title='Giá trị (‰)',
                 hovermode='x unified',
                 legend=dict(
@@ -270,12 +271,13 @@ if submit_thoigian:
             
             st.markdown("##### 🧼 :red[Tỉ lệ giám sát vệ sinh tay]")
             Data_Bang_2 = data.iloc[:, [2, 9, 10, 11]].copy()
-            Ten_Cot_Bang_2 = ['Ngày báo cáo', 'VST trực tiếp', 'VST camera', 'VST ngoại khoa']
+            Ten_Cot_Bang_2 = ['Thời gian báo cáo', 'VST trực tiếp', 'VST camera', 'VST ngoại khoa']
             Data_Bang_2.columns = Ten_Cot_Bang_2
+            Data_Bang_2['Thời gian báo cáo'] = pd.to_datetime(Data_Bang_2['Thời gian báo cáo']).dt.strftime('%Y-%m')
             
             # Tính dòng trung bình
             TB_Bang_2 = {}
-            TB_Bang_2['Ngày báo cáo'] = 'Trung bình'
+            TB_Bang_2['Thời gian báo cáo'] = 'Trung bình'
             for col in ['VST trực tiếp', 'VST camera', 'VST ngoại khoa']:
                 TB_Bang_2[col] = Data_Bang_2[col].mean()
             
@@ -294,18 +296,13 @@ if submit_thoigian:
                 hide_index=True
             )
             
-            # Chuẩn bị dữ liệu cho biểu đồ
+            # Biểu đồ cho bảng 2
             chart2_data = Data_Bang_2.copy()
-            try:
-                chart2_data['Tháng'] = pd.to_datetime(chart2_data['Ngày báo cáo'], errors='coerce').dt.strftime('%m/%Y')
-            except:
-                chart2_data['Tháng'] = chart2_data['Ngày báo cáo']
-            
-            # Loại bỏ các dòng có Tháng là NaT
+            chart2_data['Tháng'] = pd.to_datetime(chart1_data['Thời gian báo cáo']).dt.strftime('%m/%Y')
             chart2_data = chart2_data.dropna(subset=['Tháng'])
+            
             fig2 = go.Figure()
             
-            # Thêm các đường cho Cột 9, 10, 11
             colors2 = ['blue', 'purple', 'teal']
             for idx, col in enumerate(['VST trực tiếp', 'VST camera', 'VST ngoại khoa']):
                 fig2.add_trace(go.Scatter(
@@ -314,18 +311,22 @@ if submit_thoigian:
                     name=col,
                     mode='lines+markers',
                     line=dict(color=colors2[idx], width=2),
-                    marker=dict(size=8), 
+                    marker=dict(size=8)
                 ))
             
             fig2.update_layout(
                 title='Tỉ lệ giám sát vệ sinh tay theo thời gian',
                 xaxis_title='Tháng',
+                xaxis=dict(
+                    type='category',
+                    tickangle=0
+                ),
                 yaxis_title='Giá trị (%)',
                 yaxis=dict(
-                    range=[0, 100],  # Giá trị từ 0-100%
+                    range=[0, 100],
                     tickmode='linear',
                     tick0=0,
-                    dtick=20  # Khoảng chia là 20%
+                    dtick=20
                 ),
                 hovermode='x unified',
                 legend=dict(

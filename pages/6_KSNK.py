@@ -81,8 +81,10 @@ def kiem_tra():
 def warning(x):
     if x == 1:
         st.warning("Vui lòng nhập đầy đủ nội dung báo cáo")
+        time.sleep(1)
     if x == 2:
         st.success("Đã lưu thành công")
+        time.sleep(1)
 
 def upload_data_PCCS():
     credentials = load_credentials()
@@ -92,7 +94,7 @@ def upload_data_PCCS():
     column_index = len(sheet.get_all_values())
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
-    column_ngay_bao_cao = st.session_state.ngay_bao_cao.strftime('%Y-%m-%d')
+    column_thoi_gian_bao_cao = f"{st.session_state.nam_bao_cao}-{st.session_state.thang_bao_cao:02d}"
     column_nguoi_bao_cao = str(st.session_state.username)
     nkbv_moi = round(float(st.session_state.get("nkbv_moi", 0)),4)
     nkbv_moi_hoi_suc = round(float(st.session_state.get("nkbv_moi_hoi_suc", 0)),4)
@@ -103,11 +105,11 @@ def upload_data_PCCS():
     vst_camera = round(float(st.session_state.get("vst_camera", 0)),3)
     vst_ngoai_khoa = round(float(st.session_state.get("vst_ngoai_khoa", 0)),3)
   
-    sheet.append_row([column_index,column_timestamp,column_ngay_bao_cao,column_nguoi_bao_cao,nkbv_moi,nkbv_moi_hoi_suc,VAP,CLABSI,CAUTI,vst_truc_tiep,vst_camera,vst_ngoai_khoa])
+    sheet.append_row([column_index,column_timestamp,column_thoi_gian_bao_cao,column_nguoi_bao_cao,nkbv_moi,nkbv_moi_hoi_suc,VAP,CLABSI,CAUTI,vst_truc_tiep,vst_camera,vst_ngoai_khoa])
 
 
 def clear_form_state():
-    for key in ["ngay_bao_cao", "nkbv_moi", "nkbv_moi_hoi_suc", "VAP", "CLABSI", "CAUTI", "vst_truc_tiep", "vst_camera", "vst_ngoai_khoa"]:
+    for key in ["nam_bao_cao","thang_bao_cao","nkbv_moi", "nkbv_moi_hoi_suc", "VAP", "CLABSI", "CAUTI", "vst_truc_tiep", "vst_camera", "vst_ngoai_khoa"]:
         if key in st.session_state:
             del st.session_state[key]
 
@@ -133,13 +135,30 @@ html_code = f'<p class="demuc"><i>Nhân viên báo cáo: {st.session_state.usern
 st.html(html_code)
 
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-st.date_input(
-    label="Ngày báo cáo",
-    value=now_vn.date(),
-    format="DD/MM/YYYY",
-    key="ngay_bao_cao",
-    max_value=now_vn.date(),
-)
+if "nam_bao_cao" not in st.session_state:
+    st.session_state.nam_bao_cao = now_vn.year
+if "thang_bao_cao" not in st.session_state:
+    st.session_state.thang_bao_cao = now_vn.month
+
+col1, col2 = st.columns(2)
+with col1:
+    nam_list = list(range(2024, now_vn.year + 1))
+    nam = st.selectbox(
+        label="Năm báo cáo",
+        options=nam_list,
+        key="nam_bao_cao"
+    )
+with col2:
+    thang = st.selectbox(
+        label="Tháng báo cáo",
+        options=list(range(1, 13)),
+        format_func=lambda x: f"Tháng {x}",
+        key="thang_bao_cao"
+    )
+
+
+# Hiển thị tháng/năm đã chọn
+st.info(f"📅 Báo cáo số liệu cho: **Tháng {st.session_state.thang_bao_cao}/{st.session_state.nam_bao_cao}**")
 
 st.divider()
 
