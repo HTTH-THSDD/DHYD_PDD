@@ -8,6 +8,11 @@ import base64
 import time
 from google.oauth2.service_account import Credentials
 # FS
+import locale
+try:
+    locale.setlocale(locale.LC_NUMERIC, 'C')
+except:
+    pass
 
 @st.cache_data(ttl=3600)
 def get_img_as_base64(file):

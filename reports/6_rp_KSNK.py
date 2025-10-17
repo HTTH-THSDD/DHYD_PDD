@@ -271,14 +271,14 @@ if submit_thoigian:
             
             st.markdown("##### 🧼 :red[Tỉ lệ giám sát vệ sinh tay]")
             Data_Bang_2 = data.iloc[:, [2, 9, 10, 11]].copy()
-            Ten_Cot_Bang_2 = ['Thời gian báo cáo', 'VST trực tiếp', 'VST camera', 'VST ngoại khoa']
+            Ten_Cot_Bang_2 = ['Thời gian báo cáo', 'VST thường quy - GS trực tiếp', 'VST thường quy - GS camera', 'VST ngoại khoa']
             Data_Bang_2.columns = Ten_Cot_Bang_2
             Data_Bang_2['Thời gian báo cáo'] = pd.to_datetime(Data_Bang_2['Thời gian báo cáo']).dt.strftime('%Y-%m')
             
             # Tính dòng trung bình
             TB_Bang_2 = {}
             TB_Bang_2['Thời gian báo cáo'] = 'Trung bình'
-            for col in ['VST trực tiếp', 'VST camera', 'VST ngoại khoa']:
+            for col in ['VST thường quy - GS trực tiếp', 'VST thường quy - GS camera', 'VST ngoại khoa']:
                 TB_Bang_2[col] = Data_Bang_2[col].mean()
             
             Dong_TB_Bang_2 = pd.DataFrame([TB_Bang_2])
@@ -286,7 +286,7 @@ if submit_thoigian:
             # Gộp dòng trung bình vào bảng
             Bang_2_display = pd.concat([Data_Bang_2, Dong_TB_Bang_2], ignore_index=True)
             Bang_2_styled = Bang_2_display.copy()
-            for col in ['VST trực tiếp', 'VST camera', 'VST ngoại khoa']:
+            for col in ['VST thường quy - GS trực tiếp', 'VST thường quy - GS camera', 'VST ngoại khoa']:
                 Bang_2_styled[col] = Bang_2_styled[col].apply(format_percent)
             
             styled_df2 = Bang_2_styled.style.apply(to_mau_dong_cuoi(Bang_2_styled), axis=1)
@@ -304,7 +304,7 @@ if submit_thoigian:
             fig2 = go.Figure()
             
             colors2 = ['blue', 'purple', 'teal']
-            for idx, col in enumerate(['VST trực tiếp', 'VST camera', 'VST ngoại khoa']):
+            for idx, col in enumerate(['VST thường quy - GS trực tiếp', 'VST thường quy - GS camera', 'VST ngoại khoa']):
                 fig2.add_trace(go.Scatter(
                     x=chart2_data['Tháng'],
                     y=chart2_data[col],
