@@ -6,13 +6,15 @@ from zoneinfo import ZoneInfo
 import pathlib
 import base64
 import time
+import locale
 from google.oauth2.service_account import Credentials
 # FS
-import locale
+
+# Thiết lập locale để đảm bảo dấu thập phân nhất quán
 try:
-    locale.setlocale(locale.LC_NUMERIC, 'C')
+    locale.setlocale(locale.LC_NUMERIC, 'C') # Sử dụng định dạng số chuẩn quốc tế
 except:
-    pass
+    pass  # Nếu không set được, bỏ qua
 
 @st.cache_data(ttl=3600)
 def get_img_as_base64(file):
@@ -118,6 +120,39 @@ def clear_form_state():
         if key in st.session_state:
             del st.session_state[key]
 
+
+def number_input_custom(label, key, step=0.0001, format_str="%.4f", help_text=None, label_color="#005259", label_size="15px"):
+    st.markdown(
+        f'<p style="color: {label_color}; font-size: {label_size}; font-weight: bold;">{label}</p>',
+        unsafe_allow_html=True
+    )
+    current_value = st.session_state.get(key, None)
+    default_text = format_str % current_value if current_value is not None else ""
+    text_value = st.text_input(
+        label=label,
+        value= default_text,
+        key=f"{key}_text",
+        placeholder=f"VD: {format_str % step}",
+        help=help_text or f"Nhập số thập phân. Có thể dùng dấu chấm (.) hoặc dấu phẩy (,). VD: {format_str % (step*10)}",
+        label_visibility="collapsed",
+    )
+    if text_value and text_value.strip():
+        try:
+            cleaned_value = text_value.strip().replace(',', '.')
+            number_value = float(cleaned_value)
+            st.session_state[key] = number_value
+            return number_value     
+        except ValueError:
+            st.error("❌")
+            st.session_state[key] = None
+            return None
+    else:
+        st.session_state[key] = None
+        st.write("")  # Placeholder để giữ layout
+        return None
+
+
+
 # Main Section ####################################################################################
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
@@ -167,71 +202,63 @@ st.info(f"📅 Báo cáo số liệu cho: **Tháng {st.session_state.thang_bao_c
 
 st.divider()
 
-nkbv_moi = st.number_input(
+nkbv_moi = number_input_custom(
                 label="Tỷ suất mắc mới NKBV toàn viện",
-                value=st.session_state.get("nkbv_moi", None),
                 step=0.0001,
-                format="%.4f",
+                format_str="%.4f",
                 key=f"nkbv_moi"
             )
 
 st.markdown("**:orange[I. Tỷ suất mắc mới NKBV tại Khối Hồi sức]**")
 
-nkbv_moi_hoi_suc = st.number_input(
+nkbv_moi_hoi_suc = number_input_custom(
                 label="Nhiễm khuẩn bệnh viện/ 1000 người bệnh",
-                value=st.session_state.get("nkbv_moi_hoi_suc", None),
                 step=0.0001,
-                format="%.4f",
+                format_str="%.4f",
                 key=f"nkbv_moi_hoi_suc"
             )
 
-VAP = st.number_input(
+VAP = number_input_custom(
                 label="Viêm phổi bệnh viện liên quan đến thở máy (VAP)/1000 máy thở-ngày",
-                value=st.session_state.get("VAP", None),
                 step=0.0001,
-                format="%.4f",
+                format_str="%.4f",
                 key=f"VAP"
             )
 
-CLABSI = st.number_input(
+CLABSI = number_input_custom(
                 label="Nhiễm khuẩn liên quan đến catheter (CLABSI)/1000 catheter-ngày",
-                value=st.session_state.get("CLABSI", None),
                 step=0.0001,
-                format="%.4f",                
+                format_str="%.4f",                
                 key=f"CLABSI"
             )
 
-CAUTI = st.number_input(
+CAUTI = number_input_custom(
                 label="Nhiễm khuẩn tiết niệu liên quan đến thông tiểu (CAUTI)/1000 thông tiểu-ngày",
-                value=st.session_state.get("CAUTI", None),
                 step=0.0001,
-                format="%.4f",
+                format_str="%.4f",
                 key=f"CAUTI"
             )
 
 st.markdown("**:orange[II. Vệ sinh tay]**")
 
-vst_truc_tiep = st.number_input(
+vst_truc_tiep = number_input_custom(
                 label="Tỷ lệ tuân thủ VST thường quy (quan sát trực tiếp)",
-                value=st.session_state.get("vst_truc_tiep", None),
                 step=0.001,
-                format="%.3f",
+                format_str="%.3f",
                 key=f"vst_truc_tiep"
             )
 
-vst_camera = st.number_input(
+vst_camera = number_input_custom(
                 label="Tỷ lệ tuân thủ VST thường quy (quan sát qua camera)",
-                value=st.session_state.get("vst_camera", None),
                 step=0.001,
-                format="%.3f",
+                format_str="%.3f",
                 key=f"vst_camera"
             )
 
-vst_ngoai_khoa = st.number_input(
+vst_ngoai_khoa = number_input_custom(
                 label="Tỷ lệ tuân thủ VST ngoại khoa",
-                value=st.session_state.get("vst_ngoai_khoa", None),
                 step=0.001,
-                format="%.3f",
+                format_str="%.3f",
                 key=f"vst_ngoai_khoa"
             )
 
