@@ -124,7 +124,7 @@ st.markdown(f"""
 html_code = f'<p class="demuc"><i>Nhân viên: {st.session_state.username}</i></p>'
 st.html(html_code)
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
-md = date(2025, 1, 1)
+md = date(2024, 1, 1)
 with st.form("Thời gian"):
     cold = st.columns([5,5])
     with cold[0]:
