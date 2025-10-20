@@ -883,7 +883,7 @@ else:  # Tab 3
                             # 4. Hiển thị cảnh báo nếu có lỗi
                             total_errors = (result_df['Kiểm tra'] == 'X').sum()
                             if total_errors > 0:
-                                st.warning(f"⚠️ Phát hiện {total_errors} báo cáo có công thức không đúng (đánh dấu 'X')")
+                                st.warning(f"⚠️ Phát hiện {total_errors} báo cáo không đúng (đánh dấu 'X')")
                             if not cross_check_df.empty:
                                 st.error(f"❌ Phát hiện {len(cross_check_df)} lỗi không khớp giữa các khoa")
 
