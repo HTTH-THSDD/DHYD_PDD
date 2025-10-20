@@ -320,6 +320,121 @@ def get_number_after_colon(col_series: pd.Series) -> pd.Series:
         .astype(float)                         # ép kiểu số
     )
 
+def parse_scd_data(scd_string):  # Hàm tách chuỗi SCD
+    """
+    Parse chuỗi SCD format 'Khoa A:5\nKhoa B:3' thành dictionary
+    Returns: {'Khoa A': 5, 'Khoa B': 3}
+    """
+    result = {}
+    if pd.isna(scd_string) or not scd_string or str(scd_string).strip() == '':
+        return result
+    lines = str(scd_string).strip().split('\n') # Chuyển thành string và split theo xuống dòng
+    for line in lines:
+        line = line.strip()
+        if not line or ':' not in line:
+            continue       
+        parts = line.split(':', 1)  # Split theo dấu : (chỉ split lần đầu)
+        if len(parts) == 2:
+            khoa_name = parts[0].strip()
+            so_luong_str = parts[1].strip()
+            # Loại bỏ tất cả ký tự không phải số
+            import re
+            numbers = re.findall(r'\d+', so_luong_str) 
+            if numbers:
+                try:
+                    so_luong = int(numbers[0])  # Lấy số đầu tiên tìm được
+                    result[khoa_name] = so_luong
+                except ValueError:
+                    continue  
+    return result
+
+def check_scd_balance(row):
+    """
+    Kiểm tra công thức: Đang dùng - Tổng mượn + Tổng cho mượn + Trống + Hư = Cơ số
+    Returns: 'X' nếu không đúng, '' nếu đúng
+    """
+    if row['Timestamp'] == 'Tổng':
+        return ''
+    try:
+        # Lấy các giá trị số
+        co_so = float(row['Cơ số']) if pd.notna(row['Cơ số']) else 0
+        dang_dung = float(row['Đang dùng']) if pd.notna(row['Đang dùng']) else 0
+        trong = float(row['Trống']) if pd.notna(row['Trống']) else 0
+        hu = float(row['Hư']) if pd.notna(row['Hư']) else 0
+        # Parse và tính tổng mượn
+        muon_string = row.get('SCD mượn từ khoa khác', '')
+        muon_dict = parse_scd_data(muon_string)
+        tong_muon = sum(muon_dict.values()) if muon_dict else 0
+        # Parse và tính tổng cho mượn
+        cho_muon_string = row.get('SCD cho khoa khác mượn', '')
+        cho_muon_dict = parse_scd_data(cho_muon_string)
+        tong_cho_muon = sum(cho_muon_dict.values()) if cho_muon_dict else 0 
+        # Kiểm tra công thức: Đang dùng + Tổng mượn - Tổng cho mượn = Cơ số
+        calculated = dang_dung - tong_muon + tong_cho_muon + trong + hu
+        # So sánh (cho phép sai số nhỏ do làm tròn)
+        if abs(calculated - co_so) > 0.01:
+            return 'X'
+        return ''      
+    except Exception as e:
+        return ''
+
+
+def check_cross_reference(result_df):
+    """
+    Kiểm tra chéo giữa các khoa: 
+    Nếu khoa A cho khoa B mượn N máy -> khoa B phải báo mượn từ khoa A đúng N máy
+    Returns: DataFrame danh sách các lỗi không khớp
+    """
+    errors = []
+    # Loại bỏ dòng tổng
+    data_check = result_df[result_df['Timestamp'] != 'Tổng'].copy()
+    # Tạo dictionary mapping: {khoa: {cho_muon: {...}, muon_tu: {...}}}
+    khoa_mapping = {}
+    for idx, row in data_check.iterrows():
+        khoa = row['Khoa báo cáo']
+        timestamp = row['Timestamp']
+        if khoa not in khoa_mapping:
+            khoa_mapping[khoa] = []
+        # Parse dữ liệu cho mượn
+        cho_muon_dict = parse_scd_data(row.get('SCD cho khoa khác mượn', ''))
+        # Parse dữ liệu mượn từ
+        muon_tu_dict = parse_scd_data(row.get('SCD mượn từ khoa khác', ''))
+        khoa_mapping[khoa].append({
+            'timestamp': timestamp,
+            'cho_muon': cho_muon_dict,
+            'muon_tu': muon_tu_dict
+        })
+    # Kiểm tra chéo
+    for khoa_a, records_a in khoa_mapping.items():
+        for record_a in records_a:
+            # Kiểm tra từng khoa mà A cho mượn
+            for khoa_b, so_luong_a_cho in record_a['cho_muon'].items():
+                # Tìm xem khoa B có báo cáo mượn từ khoa A không
+                found_match = False
+                if khoa_b in khoa_mapping:
+                    for record_b in khoa_mapping[khoa_b]:
+                        if khoa_a in record_b['muon_tu']:
+                            so_luong_b_muon = record_b['muon_tu'][khoa_a]
+                            if so_luong_b_muon == so_luong_a_cho:
+                                found_match = True
+                                break 
+                if not found_match:
+                    # Kiểm tra xem khoa B có báo cáo mượn từ A không (nhưng số lượng sai)
+                    khoa_b_muon = None
+                    if khoa_b in khoa_mapping:
+                        for record_b in khoa_mapping[khoa_b]:
+                            if khoa_a in record_b['muon_tu']:
+                                khoa_b_muon = record_b['muon_tu'][khoa_a]
+                                break
+                    errors.append({
+                        'Khoa cho mượn': khoa_a,
+                        'Khoa mượn': khoa_b,
+                        'SL khoa A báo cáo cho mượn': so_luong_a_cho,
+                        'SL khoa B báo cáo mượn': khoa_b_muon if khoa_b_muon is not None else 0,
+                        'Trạng thái': 'Không khớp' if khoa_b_muon is not None else 'Khoa B chưa báo cáo mượn',
+                        'Thời gian khoa A báo cáo': record_a['timestamp']
+                    })
+    return pd.DataFrame(errors)
 
 
 ##################################### Main Section ###############################################
@@ -576,7 +691,6 @@ else:  # Tab 3
         )
         
         submit_thoigian = st.form_submit_button("OK")
-        
         if submit_thoigian:
             if ed < sd:
                 st.error("Lỗi ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
@@ -590,15 +704,12 @@ else:  # Tab 3
                     # Lọc để chỉ lấy báo cáo cuối cùng của mỗi khoa trong từng ngày
                     data_output5['Timestamp'] = pd.to_datetime(data_output5['Timestamp'])
                     data_output5['Ngày báo cáo'] = data_output5['Timestamp'].dt.date
-                    
                     # Lấy chỉ số của timestamp cuối cùng cho mỗi khoa trong mỗi ngày
                     data_filtered = data_output5.loc[
                         data_output5.groupby(['Khoa báo cáo', 'Ngày báo cáo'])['Timestamp'].idxmax()
                     ].reset_index(drop=True)
-                    
                     # Tạo danh sách để chứa các dòng dữ liệu
                     rows_list = []
-                    
                     # Duyệt qua từng dòng trong data_filtered
                     for index, row in data_filtered.iterrows():
                         # Lấy thông tin cơ bản
@@ -680,7 +791,6 @@ else:  # Tab 3
                     
                     # Tạo DataFrame từ danh sách
                     result_df = pd.DataFrame(rows_list)
-                    
                     if result_df.empty:
                         st.warning(f"Không có dữ liệu về {chon_thiet_bi} trong khoảng thời gian đã chọn")
                     else:
@@ -744,8 +854,6 @@ else:  # Tab 3
                             return [''] * len(row)
                         
                         styled_df = result_df.style.apply(highlight_total_row, axis=1)
-                        
-                        # Tạo column_config động
                         column_config = {
                             'Timestamp': st.column_config.TextColumn('Thời gian báo cáo'),
                             'Khoa báo cáo': st.column_config.TextColumn('Khoa báo cáo'),
@@ -755,15 +863,77 @@ else:  # Tab 3
                             'Trống': st.column_config.NumberColumn('Trống', format="%.0f"),
                             'Hư': st.column_config.NumberColumn('Hư', format="%.0f")
                         }
-                        
+
                         # Nếu là Máy SCD, thêm config cho 2 cột đặc biệt
                         if chon_thiet_bi == "Máy SCD":
                             column_config['SCD mượn từ khoa khác'] = st.column_config.TextColumn('SCD mượn từ khoa khác')
                             column_config['SCD cho khoa khác mượn'] = st.column_config.TextColumn('SCD cho khoa khác mượn')
-                        
+
+                        # ==== XỬ LÝ CHỈ KHI LÀ MÁY SCD ====
+                        if chon_thiet_bi == "Máy SCD":
+                            # 1. Thêm cột "Kiểm tra" vào result_df
+                            result_df['Kiểm tra'] = result_df.apply(check_scd_balance, axis=1)
+                            # 2. Thêm cột Kiểm tra vào column_config
+                            column_config['Kiểm tra'] = st.column_config.TextColumn(
+                                'Kiểm tra',
+                                help="'X' = Công thức không đúng: Đang dùng + Mượn - Cho mượn ≠ Cơ số"
+                            )
+                            # 3. Tạo bảng kiểm tra chéo
+                            cross_check_df = check_cross_reference(result_df)
+                            # 4. Hiển thị cảnh báo nếu có lỗi
+                            total_errors = (result_df['Kiểm tra'] == 'X').sum()
+                            if total_errors > 0:
+                                st.warning(f"⚠️ Phát hiện {total_errors} báo cáo có công thức không đúng (đánh dấu 'X')")
+                            if not cross_check_df.empty:
+                                st.error(f"❌ Phát hiện {len(cross_check_df)} lỗi không khớp giữa các khoa")
+
+                        # Hiển thị bảng chính
+                        styled_df = result_df.style.apply(highlight_total_row, axis=1)
                         st.dataframe(
                             styled_df,
                             use_container_width=True,
                             hide_index=True,
                             column_config=column_config
                         )
+
+                        # ==== HIỂN THỊ BẢNG KIỂM TRA CHÉO (CHỈ KHI LÀ MÁY SCD) ====
+                        if chon_thiet_bi == "Máy SCD" and not cross_check_df.empty:
+                            st.divider()
+                            st.markdown("### 🔍 Chi tiết các khoa báo cáo không khớp")
+                            st.markdown("""
+                            <div style='background-color: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px;'>
+                            <b>Lưu ý:</b> Bảng dưới đây liệt kê các trường hợp khoa A báo cáo cho khoa B mượn X máy, 
+                            nhưng khoa B không báo cáo mượn từ khoa A (hoặc số lượng không khớp).
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            # Highlight các dòng theo trạng thái
+                            def highlight_error_status(row):
+                                if row['Trạng thái'] == 'Khoa B chưa báo cáo mượn':
+                                    return ['background-color: #f8d7da; color: #721c24'] * len(row)
+                                else:
+                                    return ['background-color: #fff3cd; color: #856404'] * len(row)
+                            
+                            styled_cross_check = cross_check_df.style.apply(highlight_error_status, axis=1)
+                            
+                            st.dataframe(
+                                styled_cross_check,
+                                use_container_width=True,
+                                hide_index=True,
+                                column_config={
+                                    'Khoa cho mượn': st.column_config.TextColumn('Khoa cho mượn (Khoa A)'),
+                                    'Khoa mượn': st.column_config.TextColumn('Khoa mượn (Khoa B)'),
+                                    'SL khoa A báo cáo cho mượn': st.column_config.NumberColumn('SL cho mượn', format="%.0f"),
+                                    'SL khoa B báo cáo mượn': st.column_config.NumberColumn('SL mượn', format="%.0f"),
+                                    'Trạng thái': st.column_config.TextColumn('Trạng thái'),
+                                    'Thời gian khoa A báo cáo': st.column_config.TextColumn('Thời điểm')
+                                }
+                            )                       
+                            # Thống kê tổng quan
+                            st.divider()
+                            col_stat1, col_stat2 = st.columns(2)
+                            with col_stat1:
+                                st.metric("Tổng số lỗi không khớp", len(cross_check_df))
+                            with col_stat2:
+                                khoa_co_loi = set(cross_check_df['Khoa cho mượn'].tolist() + cross_check_df['Khoa mượn'].tolist())
+                                st.metric("Số khoa liên quan đến lỗi", len(khoa_co_loi))
