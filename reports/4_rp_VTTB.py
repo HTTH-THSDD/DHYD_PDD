@@ -348,6 +348,20 @@ def parse_scd_data(scd_string):  # Hàm tách chuỗi SCD
                     continue  
     return result
 
+
+def tinh_tong_scd(df, column_name):
+    """
+    Tính tổng số lượng SCD từ một cột (SCD mượn hoặc cho mượn)
+    Returns: tổng số lượng (int)
+    """
+    total = 0
+    for idx, row in df.iterrows():
+        if row['Timestamp'] != 'Tổng':  # Bỏ qua dòng tổng
+            scd_data = parse_scd_data(row.get(column_name, ''))
+            total += sum(scd_data.values())
+    return total
+
+
 def check_scd_balance(row):
     """
     Kiểm tra công thức: Đang dùng - Tổng mượn + Tổng cho mượn + Trống + Hư = Cơ số
@@ -708,7 +722,7 @@ else:  # Tab 3
                     data_filtered = data_output5.loc[
                         data_output5.groupby(['Khoa báo cáo', 'Ngày báo cáo'])['Timestamp'].idxmax()
                     ].reset_index(drop=True)
-                    # Tạo danh sách để chứa các dòng dữ liệu
+                    # Tạo danh sách để chứa các dòng dữ liệu 
                     rows_list = []
                     # Duyệt qua từng dòng trong data_filtered
                     for index, row in data_filtered.iterrows():
@@ -812,8 +826,10 @@ else:  # Tab 3
                         
                         # Nếu là Máy SCD, thêm cột trống cho dòng tổng
                         if chon_thiet_bi == "Máy SCD":
-                            total_row['SCD mượn từ khoa khác'] = ''
-                            total_row['SCD cho khoa khác mượn'] = ''
+                            tong_scd_muon = tinh_tong_scd(result_df, 'SCD mượn từ khoa khác')
+                            tong_scd_cho_muon = tinh_tong_scd(result_df, 'SCD cho khoa khác mượn') 
+                            total_row['SCD mượn từ khoa khác'] = f'{tong_scd_muon}'
+                            total_row['SCD cho khoa khác mượn'] = f'{tong_scd_cho_muon}'
                         
                         # Thêm dòng tổng vào DataFrame
                         result_df = pd.concat([result_df, pd.DataFrame([total_row])], ignore_index=True)
@@ -854,6 +870,7 @@ else:  # Tab 3
                             return [''] * len(row)
                         
                         styled_df = result_df.style.apply(highlight_total_row, axis=1)
+                        
                         column_config = {
                             'Timestamp': st.column_config.TextColumn('Thời gian báo cáo'),
                             'Khoa báo cáo': st.column_config.TextColumn('Khoa báo cáo'),
@@ -863,32 +880,33 @@ else:  # Tab 3
                             'Trống': st.column_config.NumberColumn('Trống', format="%.0f"),
                             'Hư': st.column_config.NumberColumn('Hư', format="%.0f")
                         }
-
-                        # Nếu là Máy SCD, thêm config cho 2 cột đặc biệt
+                        
+                        # Nếu là Máy SCD, thêm config cho các cột đặc biệt
                         if chon_thiet_bi == "Máy SCD":
                             column_config['SCD mượn từ khoa khác'] = st.column_config.TextColumn('SCD mượn từ khoa khác')
                             column_config['SCD cho khoa khác mượn'] = st.column_config.TextColumn('SCD cho khoa khác mượn')
-
-                        # ==== XỬ LÝ CHỈ KHI LÀ MÁY SCD ====
-                        if chon_thiet_bi == "Máy SCD":
-                            # 1. Thêm cột "Kiểm tra" vào result_df
+                            
+                            # Thêm cột Kiểm tra
                             result_df['Kiểm tra'] = result_df.apply(check_scd_balance, axis=1)
-                            # 2. Thêm cột Kiểm tra vào column_config
                             column_config['Kiểm tra'] = st.column_config.TextColumn(
                                 'Kiểm tra',
-                                help="'X' = Công thức không đúng: Đang dùng + Mượn - Cho mượn ≠ Cơ số"
+                                help="'X' = Công thức không đúng"
                             )
-                            # 3. Tạo bảng kiểm tra chéo
+                            
+                            # Tạo bảng kiểm tra chéo
                             cross_check_df = check_cross_reference(result_df)
-                            # 4. Hiển thị cảnh báo nếu có lỗi
+                            
+                            # Hiển thị cảnh báo
                             total_errors = (result_df['Kiểm tra'] == 'X').sum()
                             if total_errors > 0:
-                                st.warning(f"⚠️ Phát hiện {total_errors} báo cáo không đúng (đánh dấu 'X')")
+                                st.warning(f"⚠️ Phát hiện {total_errors} báo cáo không đúng")
+                            
                             if not cross_check_df.empty:
                                 st.error(f"❌ Phát hiện {len(cross_check_df)} lỗi không khớp giữa các khoa")
-
+                        
                         # Hiển thị bảng chính
                         styled_df = result_df.style.apply(highlight_total_row, axis=1)
+                        
                         st.dataframe(
                             styled_df,
                             use_container_width=True,
