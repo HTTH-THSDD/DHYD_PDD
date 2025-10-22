@@ -395,61 +395,125 @@ def check_scd_balance(row):
 
 def check_cross_reference(result_df):
     """
-    Kiểm tra chéo giữa các khoa: 
-    Nếu khoa A cho khoa B mượn N máy -> khoa B phải báo mượn từ khoa A đúng N máy
-    Returns: DataFrame danh sách các lỗi không khớp
+    Kiểm tra chéo giữa các khoa (2 chiều)
     """
     errors = []
-    # Loại bỏ dòng tổng
     data_check = result_df[result_df['Timestamp'] != 'Tổng'].copy()
-    # Tạo dictionary mapping: {khoa: {cho_muon: {...}, muon_tu: {...}}}
-    khoa_mapping = {}
+    
+    # Tạo dictionary để lưu thông tin mượn/cho mượn của từng khoa
+    # Structure: {khoa: {'cho_muon': {khoa_nhan: so_luong}, 'muon_tu': {khoa_cho: so_luong}}}
+    khoa_data = {}
     for idx, row in data_check.iterrows():
-        khoa = row['Khoa báo cáo']
+        khoa = row['Khoa báo cáo'].strip()  # Loại bỏ khoảng trắng thừa
         timestamp = row['Timestamp']
-        if khoa not in khoa_mapping:
-            khoa_mapping[khoa] = []
-        # Parse dữ liệu cho mượn
+        # Parse dữ liệu cho mượn và mượn từ
         cho_muon_dict = parse_scd_data(row.get('SCD cho khoa khác mượn', ''))
-        # Parse dữ liệu mượn từ
         muon_tu_dict = parse_scd_data(row.get('SCD mượn từ khoa khác', ''))
-        khoa_mapping[khoa].append({
+        # Normalize tên khoa trong dictionary (loại bỏ khoảng trắng thừa)
+        cho_muon_dict_normalized = {k.strip(): v for k, v in cho_muon_dict.items()}
+        muon_tu_dict_normalized = {k.strip(): v for k, v in muon_tu_dict.items()} 
+        # Lưu thông tin (ghi đè nếu đã tồn tại = lấy báo cáo mới nhất)
+        khoa_data[khoa] = {
             'timestamp': timestamp,
-            'cho_muon': cho_muon_dict,
-            'muon_tu': muon_tu_dict
-        })
-    # Kiểm tra chéo
-    for khoa_a, records_a in khoa_mapping.items():
-        for record_a in records_a:
-            # Kiểm tra từng khoa mà A cho mượn
-            for khoa_b, so_luong_a_cho in record_a['cho_muon'].items():
-                # Tìm xem khoa B có báo cáo mượn từ khoa A không
-                found_match = False
-                if khoa_b in khoa_mapping:
-                    for record_b in khoa_mapping[khoa_b]:
-                        if khoa_a in record_b['muon_tu']:
-                            so_luong_b_muon = record_b['muon_tu'][khoa_a]
-                            if so_luong_b_muon == so_luong_a_cho:
-                                found_match = True
-                                break 
-                if not found_match:
-                    # Kiểm tra xem khoa B có báo cáo mượn từ A không (nhưng số lượng sai)
-                    khoa_b_muon = None
-                    if khoa_b in khoa_mapping:
-                        for record_b in khoa_mapping[khoa_b]:
-                            if khoa_a in record_b['muon_tu']:
-                                khoa_b_muon = record_b['muon_tu'][khoa_a]
-                                break
+            'cho_muon': cho_muon_dict_normalized,
+            'muon_tu': muon_tu_dict_normalized
+        }
+    error_set = set()
+    
+    # KIỂM TRA CHIỀU 1: Khoa A cho khoa B mượn → Khoa B phải báo mượn từ khoa A
+    for khoa_a, data_a in khoa_data.items():
+        for khoa_b, so_luong_a_cho in data_a['cho_muon'].items():
+            khoa_b = khoa_b.strip()
+            if khoa_b not in khoa_data:
+                error_key = (khoa_a, khoa_b, so_luong_a_cho, None, 'cho')
+                if error_key not in error_set:
+                    error_set.add(error_key)
                     errors.append({
                         'Khoa cho mượn': khoa_a,
                         'Khoa mượn': khoa_b,
-                        'SL khoa A báo cáo cho mượn': so_luong_a_cho,
-                        'SL khoa B báo cáo mượn': khoa_b_muon if khoa_b_muon is not None else 0,
-                        'Trạng thái': 'Không khớp' if khoa_b_muon is not None else 'Khoa B chưa báo cáo mượn',
-                        'Thời gian khoa A báo cáo': record_a['timestamp']
+                        'SL khoa cho báo cáo': so_luong_a_cho,
+                        'SL khoa mượn báo cáo': '',  # Để trống
+                        'Trạng thái': 'Khoa B chưa báo cáo mượn',
+                        'Thời gian': data_a['timestamp']
                     })
+                continue
+            
+            # Lấy thông tin mượn của khoa B
+            data_b = khoa_data[khoa_b]
+            so_luong_b_muon = data_b['muon_tu'].get(khoa_a, None)
+            # Trường hợp khoa B có báo cáo nhưng không ghi nhận mượn từ khoa A
+            if so_luong_b_muon is None or so_luong_b_muon == 0:
+                error_key = (khoa_a, khoa_b, so_luong_a_cho, None, 'cho_b_khong_muon')
+                if error_key not in error_set:
+                    error_set.add(error_key)
+                    errors.append({
+                        'Khoa cho mượn': khoa_a,
+                        'Khoa mượn': khoa_b,
+                        'SL khoa cho báo cáo': so_luong_a_cho,
+                        'SL khoa mượn báo cáo': '',  # Để trống
+                        'Trạng thái': 'Khoa B chưa báo cáo mượn',
+                        'Thời gian': data_a['timestamp']
+                    })
+            # Trường hợp cả 2 đều có báo cáo nhưng số lượng không khớp
+            elif so_luong_b_muon != so_luong_a_cho:
+                error_key = (khoa_a, khoa_b, so_luong_a_cho, so_luong_b_muon, 'khong_khop')
+                if error_key not in error_set:
+                    error_set.add(error_key)
+                    errors.append({
+                        'Khoa cho mượn': khoa_a,
+                        'Khoa mượn': khoa_b,
+                        'SL khoa cho báo cáo': so_luong_a_cho,
+                        'SL khoa mượn báo cáo': so_luong_b_muon,
+                        'Trạng thái': 'Không khớp',
+                        'Thời gian': data_a['timestamp']
+                    })
+    
+    # KIỂM TRA CHIỀU 2: Khoa B báo mượn từ khoa A → Khoa A phải báo cho khoa B mượn
+    for khoa_b, data_b in khoa_data.items():
+        for khoa_a, so_luong_b_muon in data_b['muon_tu'].items():
+            # Normalize tên khoa A
+            khoa_a = khoa_a.strip() 
+            # Kiểm tra xem khoa A có tồn tại trong dữ liệu không
+            if khoa_a not in khoa_data:
+                error_key = (khoa_a, khoa_b, None, so_luong_b_muon, 'muon')
+                if error_key not in error_set:
+                    error_set.add(error_key)
+                    errors.append({
+                        'Khoa cho mượn': khoa_a,
+                        'Khoa mượn': khoa_b,
+                        'SL khoa cho báo cáo': '',  # Để trống
+                        'SL khoa mượn báo cáo': so_luong_b_muon,
+                        'Trạng thái': 'Khoa A chưa báo cáo cho mượn',
+                        'Thời gian': data_b['timestamp']
+                    })
+                continue
+            
+            # Lấy thông tin cho mượn của khoa A
+            data_a = khoa_data[khoa_a]
+            so_luong_a_cho = data_a['cho_muon'].get(khoa_b, None)
+            # Trường hợp khoa A có báo cáo nhưng không ghi nhận cho khoa B mượn
+            if so_luong_a_cho is None or so_luong_a_cho == 0:
+                # Kiểm tra xem lỗi này đã được thêm từ chiều 1 chưa
+                error_key_check = (khoa_a, khoa_b, None, so_luong_b_muon, 'cho_b_khong_muon')
+                error_key = (khoa_a, khoa_b, None, so_luong_b_muon, 'a_khong_cho')
+                if error_key not in error_set and error_key_check not in error_set:
+                    error_set.add(error_key)
+                    errors.append({
+                        'Khoa cho mượn': khoa_a,
+                        'Khoa mượn': khoa_b,
+                        'SL khoa cho báo cáo': '',  # Để trống
+                        'SL khoa mượn báo cáo': so_luong_b_muon,
+                        'Trạng thái': 'Khoa A chưa báo cáo cho mượn',
+                        'Thời gian': data_b['timestamp']
+                    })
+            # Trường hợp cả 2 đều có báo cáo nhưng số lượng không khớp
+            # (chỉ thêm nếu chưa được thêm từ chiều 1)
+            elif so_luong_a_cho != so_luong_b_muon:
+                error_key_reverse = (khoa_a, khoa_b, so_luong_a_cho, so_luong_b_muon, 'khong_khop')
+                if error_key_reverse not in error_set:
+                    # Không thêm vì đã được xử lý ở chiều 1
+                    pass
     return pd.DataFrame(errors)
-
 
 ##################################### Main Section ###############################################
 css_path = pathlib.Path("asset/style.css")
@@ -928,6 +992,8 @@ else:  # Tab 3
                             # Highlight các dòng theo trạng thái
                             def highlight_error_status(row):
                                 if row['Trạng thái'] == 'Khoa B chưa báo cáo mượn':
+                                    return ['background-color: #f8d7da; color: #721c24'] * len(row)
+                                elif row['Trạng thái'] == 'Khoa A chưa báo cáo cho mượn':
                                     return ['background-color: #f8d7da; color: #721c24'] * len(row)
                                 else:
                                     return ['background-color: #fff3cd; color: #856404'] * len(row)
