@@ -278,11 +278,9 @@ def tinh_metrics(data):
     dieu_duong_set = set()
     for col in ['Tên người thực hiện', 'Ghi chú 1', 'Ghi chú 2']:
         if col in data.columns:
-            # Lọc các giá trị không rỗng và không chỉ là khoảng trắng
             valid_values = data[col].dropna()
             valid_values = valid_values[valid_values.astype(str).str.strip() != '']
             dieu_duong_set.update(valid_values.unique())
-    # Loại bỏ giá trị rỗng nếu có trong set
     dieu_duong_set.discard('')
     dieu_duong_set.discard(None)
     so_dieu_duong = len(dieu_duong_set)
@@ -290,18 +288,24 @@ def tinh_metrics(data):
     # Số QTKT
     so_qtkt = data['Tên quy trình'].nunique()
     
-    # Tỉ lệ tuân thủ toàn QTKT
+    # Tỉ lệ tuân thủ toàn QTKT - TÍNH GIỐNG BẢNG TỔNG QUÁT
     data_temp = data.copy()
     data_temp['Tỉ lệ tuân thủ'] = data_temp['Tỉ lệ tuân thủ'].astype(str).str.replace(',', '.')
     data_temp['Tỉ lệ tuân thủ'] = pd.to_numeric(data_temp['Tỉ lệ tuân thủ'], errors='coerce')
-    tl_tuan_thu = (data_temp['Tỉ lệ tuân thủ'].mean() * 100).round(2)
+    
+    # Tính theo logic của bảng tổng quát: group by Khoa và Tên quy trình rồi mới lấy mean
+    grouped_tuan_thu = data_temp.groupby(['Khoa', 'Tên quy trình'])['Tỉ lệ tuân thủ'].mean()
+    tl_tuan_thu = (grouped_tuan_thu.mean() * 100).round(2)
     
     # Tỉ lệ tuân thủ CSAT (Tỉ lệ an toàn)
     data_temp['Tỉ lệ an toàn'] = data_temp['Tỉ lệ an toàn'].astype(str).str.replace(',', '.')
     data_temp['Tỉ lệ an toàn'] = pd.to_numeric(data_temp['Tỉ lệ an toàn'], errors='coerce')
     tl_an_toan_values = data_temp['Tỉ lệ an toàn'].dropna()
     if len(tl_an_toan_values) > 0:
-        tl_an_toan = (tl_an_toan_values.mean() * 100).round(2)
+        # Tính theo cách weighted average như trong hàm tao_thong_ke
+        sum_antoan = tl_an_toan_values.sum()
+        count_antoan = len(tl_an_toan_values)
+        tl_an_toan = (sum_antoan / count_antoan * 100).round(2)
     else:
         tl_an_toan = None
     
@@ -310,7 +314,10 @@ def tinh_metrics(data):
     data_temp['Tỉ lệ nhận dạng NB'] = pd.to_numeric(data_temp['Tỉ lệ nhận dạng NB'], errors='coerce')
     tl_nhan_dang_values = data_temp['Tỉ lệ nhận dạng NB'].dropna()
     if len(tl_nhan_dang_values) > 0:
-        tl_nhan_dang = (tl_nhan_dang_values.mean() * 100).round(2)
+        # Tính theo cách weighted average như trong hàm tao_thong_ke
+        sum_nhan_dang = tl_nhan_dang_values.sum()
+        count_nhan_dang = len(tl_nhan_dang_values)
+        tl_nhan_dang = (sum_nhan_dang / count_nhan_dang * 100).round(2)
     else:
         tl_nhan_dang = None
     
@@ -391,7 +398,7 @@ if submit_thoigian:
         else:
             if loc_loai_qt != "All":
                 data = data[(data["Mã quy trình"] == loc_loai_qt)]
-            elif data.empty:
+            if data.empty:
                 st.warning("Không có dữ liệu theo yêu cầu")
             else:
                 # Tính toán metrics
@@ -434,10 +441,10 @@ if submit_thoigian:
                          
                 with st.expander("**:blue[Thống kê tổng quát]**"):
                     thongke = tao_thong_ke(data,"Tổng quát")
-
                     styled_thongke = thongke.style.apply(highlight_total_row, axis=1)
-                    st.dataframe(thongke, 
-                                hide_index=True, 
+                    st.dataframe(styled_thongke, 
+                                hide_index=True,
+                                use_container_width=True,
                                 column_config = {
                                     "Số QTKT": st.column_config.NumberColumn(format="%d"),
                                     "Số lượt": st.column_config.NumberColumn(format="%d"),
