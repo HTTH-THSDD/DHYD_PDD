@@ -193,6 +193,41 @@ def chon_khoa(khoa):
             khoa_select = [khoa_select]
             return khoa_select
 
+def tinh_metrics(data):
+    """Tính các metrics để hiển thị trên thẻ"""
+    # Lượt giám sát
+    luot_giam_sat = len(data)
+    # Số khoa
+    so_khoa = data['Khoa'].nunique()
+    # Số Điều dưỡng - đếm distinct từ 1 cột, loại bỏ giá trị rỗng và khoảng trắng
+    dieu_duong_set = set()
+    for col in ['Tên người thực hiện']:
+        if col in data.columns:
+            # Lọc các giá trị không rỗng và không chỉ là khoảng trắng
+            valid_values = data[col].dropna()
+            valid_values = valid_values[valid_values.astype(str).str.strip() != '']
+            dieu_duong_set.update(valid_values.unique())
+    # Loại bỏ giá trị rỗng nếu có trong set
+    dieu_duong_set.discard('')
+    dieu_duong_set.discard(None)
+    so_dieu_duong = len(dieu_duong_set)
+    # Số chỉ số chăm sóc
+    so_cscs = data['Tên chỉ số chăm sóc'].nunique()
+    # Tỉ lệ tuân thủ toàn CSCS
+    data_temp = data.copy()
+    data_temp['Tỉ lệ tuân thủ'] = data_temp['Tỉ lệ tuân thủ'].astype(str).str.replace(',', '.')
+    data_temp['Tỉ lệ tuân thủ'] = pd.to_numeric(data_temp['Tỉ lệ tuân thủ'], errors='coerce')
+    mean_value = data_temp['Tỉ lệ tuân thủ'].mean() * 100
+    tl_tuan_thu = float(format(mean_value, '.2f'))  # Format với 2 chữ số thập phân
+    
+    return {
+        'luot_giam_sat': luot_giam_sat,
+        'so_khoa': so_khoa,
+        'so_dieu_duong': so_dieu_duong,
+        'so_cscs': so_cscs,
+        'tl_tuan_thu': tl_tuan_thu,
+    }
+
 ##################################### Main Section ###############################################
 load_css(css_path)
 img = get_img_as_base64("pages/img/logo.png")
@@ -248,19 +283,37 @@ if submit_thoigian:
     else:
         sheeto7 = st.secrets["sheet_name"]["output_7"]
         data = load_data(sheeto7,sd,ed,khoa_select)
+        metrics = tinh_metrics(data)
+        col1, col2, col3, col4, col5 = st.columns([2,1.5,2,2,2.5])
+        with col1:
+            st.metric("**:red[Lượt giám sát]**", f"{metrics['luot_giam_sat']:,}",border=True)
+        with col2:
+            st.metric("**:red[Số khoa]**", metrics['so_khoa'],border=True)
+        with col3:
+            st.metric("**:red[Số điều dưỡng]**", metrics['so_dieu_duong'],border=True)
+        with col4:
+            st.metric("**:red[Số CSCS]**", metrics['so_cscs'],border=True)
+        with col5:
+            if metrics['tl_tuan_thu'] is not None:
+                if metrics['tl_tuan_thu'] != 100:
+                    st.metric("**:red[Tỉ lệ tuân thủ]**", f"{metrics['tl_tuan_thu']:.2f}%",border=True)
+                else:
+                    st.metric("**:red[Tỉ lệ tuân thủ]**", f"{metrics['tl_tuan_thu']:.0f}%",border=True)                
+            else:
+                st.metric("**:red[Tỉ lệ tuân thủ]**", "-")
         if data.empty:
             st.toast("Không có dữ liệu theo yêu cầu")
         else:
             if cscs_select != "All":
-               data = data[data["Tên chỉ số chăm sóc"].isin(cscs_select)]
-            with st.expander("Thống kê tổng quát"):
+                data = data[data["Tên chỉ số chăm sóc"].isin(cscs_select)]
+            with st.expander("**:blue[Thống kê tổng quát]**"):
                 thongke = tao_thong_ke(data,"Tổng quát")
                 st.dataframe(thongke, 
                             hide_index=True, 
                             column_config = {
                                 "Tỉ lệ tuân thủ": st.column_config.NumberColumn(format="%.2f %%")
                                 })
-            with st.expander("Thống kê chi tiết"):
+            with st.expander("**:blue[Thống kê chi tiết]**"):
                 thongkechitiet = tao_thong_ke(data,"Chi tiết")
                 st.dataframe(thongkechitiet,
                             hide_index=True, 

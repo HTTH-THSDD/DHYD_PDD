@@ -102,6 +102,7 @@ def tao_thong_ke(x,y):
         bo_cot = bo_cot.groupby(['Khoa', 'Thời gian']).agg({'Khoa':'count','Tỉ lệ đạt': 'mean'}).rename(columns={"Khoa": "Số lượt"}).reset_index()
         bo_cot.insert(0, 'STT', range(1, len(bo_cot) + 1))
     return bo_cot
+
 def chon_khoa(khoa):
     placeholder1 = st.empty()
     if st.session_state.phan_quyen in ["1","2","3"]:
@@ -112,7 +113,6 @@ def chon_khoa(khoa):
             with placeholder1:
                 khoa_select = st.multiselect(label="Chọn khoa",
                                                   options= khoa.unique())
-            st.write("Hãy chọn khoa xem thống kê")
         return khoa_select
     else:
         if st.session_state.username == st.secrets["user_special"]["u1"]:
@@ -154,6 +154,48 @@ def chon_khoa(khoa):
             khoa_select = [khoa_select]
             return khoa_select
 
+def chon_thoi_diem(thoi_diem):
+    placeholder1 = st.empty()
+    if st.checkbox("Chọn tất cả thời điểm"):
+        placeholder1.empty()
+        thoi_diem_select = "All"
+    else:
+        with placeholder1:
+            thoi_diem_select = st.multiselect(label="Chọn thời điểm đánh giá",
+                                            options= thoi_diem.unique())
+    return thoi_diem_select
+
+def tinh_metrics(data):
+    """Tính các metrics để hiển thị trên thẻ"""
+    # Lượt đánh giá
+    luot_danh_gia = len(data)
+    # Số khoa
+    so_khoa = data['Khoa'].nunique()
+    # Số Điều dưỡng - đếm distinct từ 1 cột, loại bỏ giá trị rỗng và khoảng trắng
+    dieu_duong_set = set()
+    for col in ['Tên người thực hiện']:
+        if col in data.columns:
+            # Lọc các giá trị không rỗng và không chỉ là khoảng trắng
+            valid_values = data[col].dropna()
+            valid_values = valid_values[valid_values.astype(str).str.strip() != '']
+            dieu_duong_set.update(valid_values.unique())
+    # Loại bỏ giá trị rỗng nếu có trong set
+    dieu_duong_set.discard('')
+    dieu_duong_set.discard(None)
+    so_dieu_duong = len(dieu_duong_set)
+    # Tỉ lệ tuân thủ toàn CSCS
+    data_temp = data.copy()
+    data_temp['Tỉ lệ đạt'] = data_temp['Tỉ lệ đạt'].astype(str).str.replace(',', '.')
+    data_temp['Tỉ lệ đạt'] = pd.to_numeric(data_temp['Tỉ lệ đạt'], errors='coerce')
+    mean_value = data_temp['Tỉ lệ đạt'].mean() * 100
+    tl_dat= float(format(mean_value, '.2f'))  # Format với 2 chữ số thập phân
+    
+    return {
+        'luot_danh_gia': luot_danh_gia,
+        'so_khoa': so_khoa,
+        'so_dieu_duong': so_dieu_duong,
+        'tl_dat': tl_dat,
+    }
 ##################################### Main Section ###############################################
 load_css(css_path)
 img = get_img_as_base64("pages/img/logo.png")
@@ -175,8 +217,11 @@ st.markdown(f"""
 html_code = f'<p class="demuc"><i>Nhân viên: {st.session_state.username}</i></p>'
 st.html(html_code)
 sheeti1 = st.secrets["sheet_name"]["input_1"]
+sheeto6 = st.secrets["sheet_name"]["output_6"]
 data = load_data1(sheeti1)
+data_thoi_diem = load_data1(sheeto6)
 khoa = data["Khoa"]
+thoi_diem = data_thoi_diem["Thời điểm đánh giá"]
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
 md = date(2025, 1, 1)
 with st.form("Thời gian"):
@@ -199,6 +244,8 @@ with st.form("Thời gian"):
         )
   
     khoa_select = chon_khoa(khoa)
+    thoi_diem_select = chon_thoi_diem(thoi_diem)
+    
     submit_thoigian = st.form_submit_button("OK")
 if submit_thoigian:
     if ed < sd:
@@ -206,17 +253,36 @@ if submit_thoigian:
     else:
         sheeto6 = st.secrets["sheet_name"]["output_6"]
         data = load_data(sheeto6,sd,ed,khoa_select)
-        if data.empty:
-            st.toast("Không có dữ liệu theo yêu cầu")
-        else:      
-            with st.expander("Thống kê tổng quát"):
+        if thoi_diem_select != "All":
+            data = data[data["Thời điểm đánh giá"].isin(thoi_diem_select)]
+            if data.empty:
+                st.toast("Không có dữ liệu theo yêu cầu")
+        else:
+            metrics = tinh_metrics(data)
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("**:red[Lượt đánh giá]**", metrics['luot_danh_gia'],border=True)
+            with col2:
+                st.metric("**:red[Số khoa]**", metrics['so_khoa'],border=True)
+            with col3:
+                st.metric("**:red[Số điều dưỡng]**", metrics['so_dieu_duong'],border=True)
+            with col4:
+                if metrics['tl_dat'] is not None:
+                    if metrics['tl_dat'] != 100:
+                        st.metric("**:red[Tỉ lệ đạt]**", f"{metrics['tl_dat']:.2f}%",border=True)
+                    else:
+                        st.metric("**:red[Tỉ lệ đạt]**", f"{metrics['tl_dat']:.0f}%",border=True)                
+                else:
+                    st.metric("**:red[Tỉ lệ đạt]**", "-")  
+
+            with st.expander("**:blue[Thống kê tổng quát]**"):
                 thongke = tao_thong_ke(data,"Tổng quát")
                 st.dataframe(thongke, 
                             hide_index=True,
                             column_config = {
                                     "Tỉ lệ đạt": st.column_config.NumberColumn(format="%.2f %%")
                                     })
-            with st.expander("Thống kê chi tiết"):
+            with st.expander("**:blue[Thống kê chi tiết]**"):
                 thongkechitiet = tao_thong_ke(data,"Chi tiết")
                 st.dataframe(thongkechitiet,
                             hide_index=True, 

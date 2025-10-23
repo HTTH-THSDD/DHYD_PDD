@@ -103,17 +103,6 @@ def tao_thong_ke(x,y):
     bo_cot['Tỉ lệ tuân thủ'] = (bo_cot['Tỉ lệ tuân thủ']*100).round(1)
     bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].round(4)
     bo_cot['Tỉ lệ nhận dạng NB'] = bo_cot['Tỉ lệ nhận dạng NB'].round(4)
-  
-    # #Chuyển dạng số chính thức
-    # bo_cot['Tỉ lệ tuân thủ'] = pd.to_numeric(bo_cot["Tỉ lệ tuân thủ"], errors='coerce'.round(4))
-    # #Nhấn 100 thành tỉ lệ phần trăm
-    # bo_cot['Tỉ lệ tuân thủ'] = bo_cot['Tỉ lệ tuân thủ'] * 100
-    # #Tương tự với tỉ lệ an toàn, không nhân cho 100 là vì có những giá trị là NaN, nếu nhân cho 100 thì sẽ thành NaN * 100 = NaN
-    # bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].astype(str).str.replace(',', '.')
-    # bo_cot['Tỉ lệ an toàn'] = pd.to_numeric(bo_cot["Tỉ lệ an toàn"], errors='coerce'.round(4))
-    # #Tỉ lệ nhận dạng NB, không nhân cho 100 là vì có những giá trị là NaN, nếu nhân cho 100 thì sẽ thành NaN * 100 = NaN
-    # bo_cot['Tỉ lệ nhận dạng NB'] = bo_cot['Tỉ lệ nhận dạng NB'].astype(str).str.replace(',', '.')
-    # bo_cot['Tỉ lệ nhận dạng NB'] = pd.to_numeric(bo_cot["Tỉ lệ nhận dạng NB"], errors='coerce'.round(4))
 
     if y == "Chi tiết":
         bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
@@ -173,34 +162,57 @@ def tao_thong_ke(x,y):
         }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
         
         ket_qua = pd.concat([ket_qua1, ket_qua2, ket_qua3, ket_qua4], ignore_index=True)
-        # Forrmat lại với điều kiện nếu giá trị trong cột an toàn không là NaN (if pd.notna(x)) thì giá trị đó được * 100 để chuyển sang dạng %, còn ngược lại (else thì sẽ giữ nguyên giá trị là NaN)
-        ket_qua['Tỉ lệ an toàn'] = ket_qua['Tỉ lệ an toàn'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
-        ket_qua['Tỉ lệ nhận dạng NB'] = ket_qua['Tỉ lệ nhận dạng NB'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
-        # Sort kết quả theo tên khoa
-        ket_qua = pd.DataFrame(ket_qua).sort_values("Khoa")
-        # Gắn thêm cột số thứ tự cho i chạy từ 1 đến số dòng của bảng mới gộp
-        ket_qua.insert(0, 'STT', range(1, len(ket_qua) + 1))
-        # Thêm cột trung bình
-
+        
+        # Đếm distinct count của Tên quy trình theo Khoa
+        distinct_qtkt = ket_qua.groupby('Khoa')['Tên quy trình'].nunique().reset_index()
+        distinct_qtkt.columns = ['Khoa', 'Số QTKT']
+        
+        # Gộp dữ liệu tổng hợp theo Khoa
+        ket_qua_grouped = ket_qua.groupby('Khoa').agg({
+            'Số lượt': 'sum',
+            'Tỉ lệ tuân thủ': 'mean',
+            'Tỉ lệ an toàn': lambda x: x.mean() if x.notna().any() else np.nan,
+            'Tỉ lệ nhận dạng NB': lambda x: x.mean() if x.notna().any() else np.nan
+        }).reset_index()
+        
+        # Merge với distinct count
+        ket_qua_final = ket_qua_grouped.merge(distinct_qtkt, on='Khoa') 
+        # Sắp xếp lại thứ tự cột
+        ket_qua_final = ket_qua_final[['Khoa', 'Số QTKT', 'Số lượt', 'Tỉ lệ tuân thủ', 'Tỉ lệ an toàn', 'Tỉ lệ nhận dạng NB']]
+        # Format lại tỉ lệ
+        ket_qua_final['Tỉ lệ an toàn'] = ket_qua_final['Tỉ lệ an toàn'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
+        ket_qua_final['Tỉ lệ nhận dạng NB'] = ket_qua_final['Tỉ lệ nhận dạng NB'].apply(lambda x: x * 100 if pd.notna(x) else np.nan) 
+        # Sort theo tên khoa
+        ket_qua_final = ket_qua_final.sort_values("Khoa")
+        # Thêm STT
+        ket_qua_final.insert(0, 'STT', range(1, len(ket_qua_final) + 1))
+        # Tính dòng tổng kết
         tong_so_luot = ket_qua["Số lượt"].sum()
         mean_tuan_thu = ket_qua["Tỉ lệ tuân thủ"].mean()
-        mean_antoan = (sum_antoan1 + sum_antoan2)/(so_luot_an_toan1 + so_luot_an_toan2) * 100
-        mean_nhan_dang = (sum_nhan_dang1 + sum_nhan_dang2)/(so_luot_nhan_dang1 + so_luot_nhan_dang2) * 100
+        mean_antoan = (sum_antoan1 + sum_antoan2)/(so_luot_an_toan1 + so_luot_an_toan2) * 100 if (so_luot_an_toan1 + so_luot_an_toan2) > 0 else np.nan
+        mean_nhan_dang = (sum_nhan_dang1 + sum_nhan_dang2)/(so_luot_nhan_dang1 + so_luot_nhan_dang2) * 100 if (so_luot_nhan_dang1 + so_luot_nhan_dang2) > 0 else np.nan
+        tong_so_qtkt = ket_qua['Tên quy trình'].nunique()
         row_mean = pd.DataFrame({
-        "STT": [""],
-        "Khoa":["Tổng kết"],
-        "Tên quy trình": [""],
-        "Số lượt": [tong_so_luot],
-        "Tỉ lệ tuân thủ": [mean_tuan_thu],
-        "Tỉ lệ an toàn": [mean_antoan],
-        "Tỉ lệ nhận dạng NB": [mean_nhan_dang]})
-        # Ghép dòng trung bình vào cuối bảng
-        cols = ket_qua.columns
-        row_mean = row_mean[[c for c in cols if c in row_mean.columns]]  # Đảm bảo đúng thứ tự cột
-        ket_qua = pd.concat([ket_qua, row_mean], ignore_index=True)
+            "STT": [""],
+            "Khoa": ["Tổng"],
+            "Số QTKT": [tong_so_qtkt],
+            "Số lượt": [tong_so_luot],
+            "Tỉ lệ tuân thủ": [mean_tuan_thu],
+            "Tỉ lệ an toàn": [mean_antoan],
+            "Tỉ lệ nhận dạng NB": [mean_nhan_dang]
+        })
+        # Ghép dòng tổng kết vào cuối bảng
+        cols = ket_qua_final.columns
+        row_mean = row_mean[[c for c in cols if c in row_mean.columns]]
+        ket_qua_final = pd.concat([ket_qua_final, row_mean], ignore_index=True)
         if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
-            ket_qua=ket_qua.drop("Khoa",axis=1)
-        return ket_qua
+            ket_qua_final = ket_qua_final.drop("Khoa", axis=1)
+        return ket_qua_final
+
+def highlight_total_row(row):
+    if row['Khoa'] == "Tổng":
+        return ['background-color: #ffe599; color: #cf1c00; font-weight: bold'] * len(row)
+    return [''] * len(row) 
 
 def chon_khoa(khoa):
     placeholder1 = st.empty()
@@ -253,6 +265,65 @@ def chon_khoa(khoa):
             khoa_select = st.session_state.khoa
             khoa_select = [khoa_select]
             return khoa_select
+
+def tinh_metrics(data):
+    """Tính các metrics để hiển thị trên thẻ"""
+    # Lượt giám sát
+    luot_giam_sat = len(data)
+    
+    # Số khoa
+    so_khoa = data['Khoa'].nunique()
+    
+    # Số Điều dưỡng - đếm distinct từ 3 cột, loại bỏ giá trị rỗng và khoảng trắng
+    dieu_duong_set = set()
+    for col in ['Tên người thực hiện', 'Ghi chú 1', 'Ghi chú 2']:
+        if col in data.columns:
+            # Lọc các giá trị không rỗng và không chỉ là khoảng trắng
+            valid_values = data[col].dropna()
+            valid_values = valid_values[valid_values.astype(str).str.strip() != '']
+            dieu_duong_set.update(valid_values.unique())
+    # Loại bỏ giá trị rỗng nếu có trong set
+    dieu_duong_set.discard('')
+    dieu_duong_set.discard(None)
+    so_dieu_duong = len(dieu_duong_set)
+    
+    # Số QTKT
+    so_qtkt = data['Tên quy trình'].nunique()
+    
+    # Tỉ lệ tuân thủ toàn QTKT
+    data_temp = data.copy()
+    data_temp['Tỉ lệ tuân thủ'] = data_temp['Tỉ lệ tuân thủ'].astype(str).str.replace(',', '.')
+    data_temp['Tỉ lệ tuân thủ'] = pd.to_numeric(data_temp['Tỉ lệ tuân thủ'], errors='coerce')
+    tl_tuan_thu = (data_temp['Tỉ lệ tuân thủ'].mean() * 100).round(2)
+    
+    # Tỉ lệ tuân thủ CSAT (Tỉ lệ an toàn)
+    data_temp['Tỉ lệ an toàn'] = data_temp['Tỉ lệ an toàn'].astype(str).str.replace(',', '.')
+    data_temp['Tỉ lệ an toàn'] = pd.to_numeric(data_temp['Tỉ lệ an toàn'], errors='coerce')
+    tl_an_toan_values = data_temp['Tỉ lệ an toàn'].dropna()
+    if len(tl_an_toan_values) > 0:
+        tl_an_toan = (tl_an_toan_values.mean() * 100).round(2)
+    else:
+        tl_an_toan = None
+    
+    # Tỉ lệ tuân thủ NDNB (Tỉ lệ nhận dạng NB)
+    data_temp['Tỉ lệ nhận dạng NB'] = data_temp['Tỉ lệ nhận dạng NB'].astype(str).str.replace(',', '.')
+    data_temp['Tỉ lệ nhận dạng NB'] = pd.to_numeric(data_temp['Tỉ lệ nhận dạng NB'], errors='coerce')
+    tl_nhan_dang_values = data_temp['Tỉ lệ nhận dạng NB'].dropna()
+    if len(tl_nhan_dang_values) > 0:
+        tl_nhan_dang = (tl_nhan_dang_values.mean() * 100).round(2)
+    else:
+        tl_nhan_dang = None
+    
+    return {
+        'luot_giam_sat': luot_giam_sat,
+        'so_khoa': so_khoa,
+        'so_dieu_duong': so_dieu_duong,
+        'so_qtkt': so_qtkt,
+        'tl_tuan_thu': tl_tuan_thu,
+        'tl_an_toan': tl_an_toan,
+        'tl_nhan_dang': tl_nhan_dang
+    }
+
 
 ##################################### Main Section ###############################################
 load_css(css_path)
@@ -320,19 +391,61 @@ if submit_thoigian:
         else:
             if loc_loai_qt != "All":
                 data = data[(data["Mã quy trình"] == loc_loai_qt)]
-            if data.empty:
+            elif data.empty:
                 st.warning("Không có dữ liệu theo yêu cầu")
             else:
-                with st.expander("Thống kê tổng quát"):
+                # Tính toán metrics
+                metrics = tinh_metrics(data)
+                
+                # Hiển thị các thẻ metrics
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    st.metric("**:red[Lượt giám sát]**", f"{metrics['luot_giam_sat']:,}",border=True)
+                with col2:
+                    st.metric("**:red[Số khoa]**", metrics['so_khoa'],border=True)
+                with col3:
+                    st.metric("**:red[Số điều dưỡng]**", metrics['so_dieu_duong'],border=True)
+                with col4:
+                    st.metric("**:red[Số QTKT]**", metrics['so_qtkt'],border=True)
+                
+                col5, col6, col7, col8 = st.columns(4)
+                with col5:
+                    if metrics['tl_tuan_thu'] != 100:
+                        st.metric("**:red[Tỉ lệ tuân thủ QTKT]**", f"{metrics['tl_tuan_thu']:.2f}%",border=True)
+                    else:
+                        st.metric("**:red[Tỉ lệ tuân thủ QTKT]**", f"{metrics['tl_tuan_thu']:.0f}%",border=True)
+                with col6:
+                    if metrics['tl_an_toan'] is not None:
+                        if metrics['tl_an_toan'] != 100:
+                            st.metric("**:red[Tỉ lệ tuân thủ CSAT]**", f"{metrics['tl_an_toan']:.2f}%",border=True)
+                        else:
+                            st.metric("**:red[Tỉ lệ tuân thủ CSAT]**", f"{metrics['tl_an_toan']:.0f}%",border=True)                
+                    else:
+                        st.metric("**:red[Tỉ lệ tuân thủ CSAT]**", "-",border=True)
+                with col7:
+                    if metrics['tl_nhan_dang'] is not None:
+                        if metrics['tl_nhan_dang'] != 100:
+                            st.metric("**:red[Tỉ lệ tuân thủ NDNB]**", f"{metrics['tl_nhan_dang']:.2f}%",border=True)
+                        else:
+                            st.metric("**:red[Tỉ lệ tuân thủ NDNB]**", f"{metrics['tl_nhan_dang']:.0f}%",border=True)
+                    else:
+                        st.metric("**:red[Tỉ lệ tuân thủ NDNB]**", "-",border=True)
+                         
+                with st.expander("**:blue[Thống kê tổng quát]**"):
                     thongke = tao_thong_ke(data,"Tổng quát")
+
+                    styled_thongke = thongke.style.apply(highlight_total_row, axis=1)
                     st.dataframe(thongke, 
                                 hide_index=True, 
                                 column_config = {
-                                    "Tỉ lệ tuân thủ": st.column_config.NumberColumn(format="%.4f"),
-                                    "Tỉ lệ an toàn": st.column_config.NumberColumn(format="%.4f"),
-                                    "Tỉ lệ nhận dạng NB": st.column_config.NumberColumn(format="%.4f")
+                                    "Số QTKT": st.column_config.NumberColumn(format="%d"),
+                                    "Số lượt": st.column_config.NumberColumn(format="%d"),
+                                    "Tỉ lệ tuân thủ": st.column_config.NumberColumn(format="%.2f"),
+                                    "Tỉ lệ an toàn": st.column_config.NumberColumn(format="%.2f"),
+                                    "Tỉ lệ nhận dạng NB": st.column_config.NumberColumn(format="%.2f")
                                     })
-                with st.expander("Thống kê chi tiết"):
+                with st.expander("**:blue[Thống kê chi tiết]**"):
                     thongkechitiet = tao_thong_ke(data,"Chi tiết")
                     st.dataframe(thongkechitiet,
                                 hide_index=True, 

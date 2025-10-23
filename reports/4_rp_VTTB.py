@@ -168,41 +168,6 @@ def tach_gia_tri_co_so(column_data, header):
                 return 0
     return 0
 
-# def tinh_phan_tram_su_dung(data, headers):
-    """
-    Trả về DataFrame phần trăm sử dụng theo ngày và thiết bị.
-    """
-    # Lấy danh sách ngày báo cáo
-    data["Ngày báo cáo"] = pd.to_datetime(data["Ngày báo cáo"]).dt.strftime("%d/%m/%Y")
-    ngay_bao_cao = data["Ngày báo cáo"].unique()
-    # Tạo bảng tổng số lượng đang sử dụng
-    tong_su_dung = tinh_tong_dang_su_dung(data, headers)
-    # Tạo bảng tổng cơ số
-    co_so_dict = {}
-    for header in headers:
-        co_so_dict[header] = []
-        for ngay in ngay_bao_cao:
-            mask = data["Ngày báo cáo"] == ngay
-            co_so = data.loc[mask, "Thiết bị thông thường"].apply(lambda x: tach_gia_tri_co_so(x, header)).sum()
-            co_so_dict[header].append(co_so)
-    # Tạo DataFrame cơ số
-    co_so_df = pd.DataFrame(co_so_dict)
-    co_so_df.insert(0, "Ngày báo cáo", ngay_bao_cao)
-    # Tính phần trăm
-    phan_tram_df = tong_su_dung.copy()
-    for header in headers:
-        co_so_df[header] = pd.to_numeric(co_so_df[header], errors="coerce")
-        tong_su_dung[header] = pd.to_numeric(tong_su_dung[header], errors="coerce")
-
-# Tính toán phần trăm và làm tròn
-        phan_tram_df[header] = (
-                tong_su_dung[header] / co_so_df[header].mask(co_so_df[header] == 0)
-            ).round(2)
-    # Dòng trung bình
-    avg_row = pd.DataFrame(phan_tram_df[headers].mean(axis=0)).T
-    avg_row.insert(0, "Ngày báo cáo", "Trung bình")
-    phan_tram_df = pd.concat([phan_tram_df.iloc[:-1], avg_row], ignore_index=True)
-    return phan_tram_df
 
 def tinh_phan_tram_su_dung(data,headers):
     credentials = load_credentials()
@@ -234,15 +199,6 @@ def tinh_phan_tram_su_dung(data,headers):
             phan_tram_df[header] = (tong_su_dung[header] / mau_so).round(2)
         else:
             phan_tram_df[header] = np.nan
-
-    ##for header in headers:
-        # Lấy mẫu số cố định; nếu thiếu thì gắn NaN để dễ kiểm tra lỗi
-        ##mau_so = phan_phoi_dict.get(header, np.nan)
-        ##mau_so = float(mau_so)
-        # Tính % (nhân 100 nếu muốn hiển thị dạng phần trăm)
-        ##phan_tram_df[header] = (tong_su_dung[header] / mau_so).round(2)
-        # Nếu cần nhân 100:
-        # phan_tram_df[header] = (tong_su_dung[header] / mau_so * 100).round(2)
 
     # ----- THÊM DÒNG TRUNG BÌNH --------------------------------------------
     avg_row = pd.DataFrame(phan_tram_df[headers].mean(axis=0)).T
@@ -431,8 +387,8 @@ def check_cross_reference(result_df):
                     errors.append({
                         'Khoa cho mượn': khoa_a,
                         'Khoa mượn': khoa_b,
-                        'SL khoa cho báo cáo': so_luong_a_cho,
-                        'SL khoa mượn báo cáo': '',  # Để trống
+                        'SL cho mượn': so_luong_a_cho,
+                        'SL mượn': '',  # Để trống
                         'Trạng thái': 'Khoa B chưa báo cáo mượn',
                         'Thời gian': data_a['timestamp']
                     })
@@ -449,8 +405,8 @@ def check_cross_reference(result_df):
                     errors.append({
                         'Khoa cho mượn': khoa_a,
                         'Khoa mượn': khoa_b,
-                        'SL khoa cho báo cáo': so_luong_a_cho,
-                        'SL khoa mượn báo cáo': '',  # Để trống
+                        'SL cho mượn': so_luong_a_cho,
+                        'SL mượn': '',  # Để trống
                         'Trạng thái': 'Khoa B chưa báo cáo mượn',
                         'Thời gian': data_a['timestamp']
                     })
@@ -462,8 +418,8 @@ def check_cross_reference(result_df):
                     errors.append({
                         'Khoa cho mượn': khoa_a,
                         'Khoa mượn': khoa_b,
-                        'SL khoa cho báo cáo': so_luong_a_cho,
-                        'SL khoa mượn báo cáo': so_luong_b_muon,
+                        'SL cho mượn': so_luong_a_cho,
+                        'SL mượn': so_luong_b_muon,
                         'Trạng thái': 'Không khớp',
                         'Thời gian': data_a['timestamp']
                     })
@@ -481,8 +437,8 @@ def check_cross_reference(result_df):
                     errors.append({
                         'Khoa cho mượn': khoa_a,
                         'Khoa mượn': khoa_b,
-                        'SL khoa cho báo cáo': '',  # Để trống
-                        'SL khoa mượn báo cáo': so_luong_b_muon,
+                        'SL cho mượn': '',  # Để trống
+                        'SL mượn': so_luong_b_muon,
                         'Trạng thái': 'Khoa A chưa báo cáo cho mượn',
                         'Thời gian': data_b['timestamp']
                     })
@@ -501,8 +457,8 @@ def check_cross_reference(result_df):
                     errors.append({
                         'Khoa cho mượn': khoa_a,
                         'Khoa mượn': khoa_b,
-                        'SL khoa cho báo cáo': '',  # Để trống
-                        'SL khoa mượn báo cáo': so_luong_b_muon,
+                        'SL cho mượn': '',  # Để trống
+                        'SL mượn': so_luong_b_muon,
                         'Trạng thái': 'Khoa A chưa báo cáo cho mượn',
                         'Thời gian': data_b['timestamp']
                     })

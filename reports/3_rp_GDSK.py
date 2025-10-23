@@ -176,6 +176,25 @@ def chon_khoa(khoa):
             khoa_select = st.session_state.khoa
             khoa_select = [khoa_select]
             return khoa_select
+        
+def tinh_metrics(data):
+    """Tính các metrics để hiển thị trên thẻ"""
+    # Lượt danh gia
+    luot_danh_gia = len(data)
+    # Số khoa
+    so_khoa = data['Khoa'].nunique()
+    # Các tỉ lệ
+    data_temp = data.copy()
+    data_temp['Tỉ lệ hiểu'] = data_temp['Tỉ lệ hiểu'].astype(str).str.replace(',', '.')
+    data_temp['Tỉ lệ hiểu'] = pd.to_numeric(data_temp['Tỉ lệ hiểu'], errors='coerce')
+    mean_value = data_temp['Tỉ lệ hiểu'].mean() * 100
+    tl_hieu = float(format(mean_value, '.2f'))  # Format với 2 chữ số thập phân
+    
+    return {
+        'luot_danh_gia': luot_danh_gia,
+        'so_khoa': so_khoa,
+        'tl_hieu': tl_hieu,
+    }
 ##################################### Main Section ###############################################
 load_css(css_path)
 img = get_img_as_base64("pages/img/logo.png")
@@ -230,7 +249,21 @@ if submit_thoigian:
         if data.empty:
             st.toast("Không có dữ liệu theo yêu cầu")
         else:
-            with st.expander("Thống kê tổng quát"):
+            metrics = tinh_metrics(data)
+            col1, col2, col3 = st.columns([1,1,1])
+            with col1:
+                st.metric("**:red[Lượt đánh giá]**", f"{metrics['luot_danh_gia']:,}",border=True)
+            with col2:
+                st.metric("**:red[Số khoa]**", metrics['so_khoa'],border=True)
+            with col3:
+                if metrics['tl_hieu'] is not None:
+                    if metrics['tl_hieu'] != 100:
+                        st.metric("**:red[Tỉ lệ bước NB đạt mức độ HIỂU]**", f"{metrics['tl_hieu']:.2f}%",border=True)
+                    else:
+                        st.metric("**:red[Tỉ lệ bước NB đạt mức độ HIỂU]**", f"{metrics['tl_hieu']:.0f}%",border=True)                
+                else:
+                    st.metric("**:red[Tỉ lệ bước NB đạt mức độ HIỂU]**", "-")            
+            with st.expander("**:blue[Thống kê tổng quát]**"):
                 thongke = tao_thong_ke(data,"Tổng quát")
                 st.dataframe(thongke, 
                             hide_index=True,
@@ -239,7 +272,7 @@ if submit_thoigian:
                         "Tỉ lệ biết": st.column_config.NumberColumn(format="%.2f %%"),
                         "Tỉ lệ không biết": st.column_config.NumberColumn(format="%.2f %%"),
                             })
-            with st.expander("Thống kê chi tiết"):
+            with st.expander("**:blue[Thống kê chi tiết]**"):
                 thongkechitiet = tao_thong_ke(data,"Chi tiết")
                 st.dataframe(thongkechitiet,
                         hide_index=True,

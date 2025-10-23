@@ -28,6 +28,7 @@ def get_key_from_value(dictionary, value):
     return next((key for key, val in dictionary.items() if val == value), None)
 
 @st.cache_data(ttl=3600)
+
 def load_credentials():
     creds_info = {
     "type": st.secrets["google_service_account"]["type"],
@@ -174,6 +175,25 @@ def chon_khoa(khoa):
             khoa_select = st.session_state.khoa
             khoa_select = [khoa_select]
             return khoa_select
+        
+def tinh_metrics(data):
+    """Tính các metrics để hiển thị trên thẻ"""
+    # Lượt danh gia
+    luot_danh_gia = len(data)
+    # Số khoa
+    so_khoa = data['Khoa'].nunique()
+    # Các tỉ lệ
+    data_temp = data.copy()
+    data_temp['Tỉ lệ bước đúng, đủ'] = data_temp['Tỉ lệ bước đúng, đủ'].astype(str).str.replace(',', '.')
+    data_temp['Tỉ lệ bước đúng, đủ'] = pd.to_numeric(data_temp['Tỉ lệ bước đúng, đủ'], errors='coerce')
+    mean_value = data_temp['Tỉ lệ bước đúng, đủ'].mean() * 100
+    tl_dung_du = float(format(mean_value, '.2f'))  # Format với 2 chữ số thập phân
+    
+    return {
+        'luot_danh_gia': luot_danh_gia,
+        'so_khoa': so_khoa,
+        'tl_dung_du': tl_dung_du,
+    }
 ##################################### Main Section ###############################################
 load_css(css_path)
 img = get_img_as_base64("pages/img/logo.png")
@@ -228,7 +248,21 @@ if submit_thoigian:
         if data.empty:
             st.toast("Không có dữ liệu theo yêu cầu")
         else:
-            with st.expander("Thống kê tổng quát"):
+            metrics = tinh_metrics(data)
+            col1, col2, col3 = st.columns([1,1,1])
+            with col1:
+                st.metric("**:red[Lượt đánh giá]**", f"{metrics['luot_danh_gia']:,}",border=True)
+            with col2:
+                st.metric("**:red[Số khoa]**", metrics['so_khoa'],border=True)
+            with col3:
+                if metrics['tl_dung_du'] is not None:
+                    if metrics['tl_dung_du'] != 100:
+                        st.metric("**:red[Tỉ lệ số bước đúng,đủ]**", f"{metrics['tl_dung_du']:.2f}%",border=True)
+                    else:
+                        st.metric("**:red[Tỉ lệ số bước đúng,đủ]**", f"{metrics['tl_dung_du']:.0f}%",border=True)                
+                else:
+                    st.metric("**:red[Tỉ lệ số bước đúng,đủ]**", "-")
+            with st.expander("**:blue[Thống kê tổng quát]**"):
                 thongke = tao_thong_ke(data,"Tổng quát")
                 st.dataframe(thongke, 
                             hide_index=True,
@@ -237,7 +271,7 @@ if submit_thoigian:
                                     "Tỉ lệ bước đúng, nhưng chưa đủ": st.column_config.NumberColumn(format="%.2f %%"),
                                     "Tỉ lệ bước Không thực hiện hoặc ghi sai": st.column_config.NumberColumn(format="%.2f %%"),
                                     })
-            with st.expander("Thống kê chi tiết"):
+            with st.expander("**:blue[Thống kê chi tiết]**"):
                 thongkechitiet = tao_thong_ke(data,"Chi tiết")
                 st.dataframe(thongkechitiet,
                         hide_index=True,
