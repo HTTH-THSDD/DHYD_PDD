@@ -107,8 +107,8 @@ def tao_thong_ke(x,y):
     if y == "Chi tiết":
         bo_cot['Tỉ lệ an toàn'] = bo_cot['Tỉ lệ an toàn'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
         bo_cot['Tỉ lệ nhận dạng NB'] = bo_cot['Tỉ lệ nhận dạng NB'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
-        if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
-            bo_cot = bo_cot.drop("Khoa",axis=1)
+        #if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
+            #bo_cot = bo_cot.drop("Khoa",axis=1)
         return bo_cot
     else:
         bo_cot = bo_cot.drop(["Timestamp","Tên người đánh giá", "Tên người thực hiện","Ghi chú 1","Ghi chú 2"], axis=1)
@@ -205,8 +205,8 @@ def tao_thong_ke(x,y):
         cols = ket_qua_final.columns
         row_mean = row_mean[[c for c in cols if c in row_mean.columns]]
         ket_qua_final = pd.concat([ket_qua_final, row_mean], ignore_index=True)
-        if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
-            ket_qua_final = ket_qua_final.drop("Khoa", axis=1)
+        #if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
+            #ket_qua_final = ket_qua_final.drop("Khoa", axis=1)
         return ket_qua_final
 
 def highlight_total_row(row):
