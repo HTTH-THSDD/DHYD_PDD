@@ -210,9 +210,9 @@ def tao_thong_ke(x,y):
         return ket_qua_final
 
 def highlight_total_row(row):
-    if row['Khoa'] == "Tổng":
+    if any(isinstance(val, str) and val == "Tổng" for val in row):
         return ['background-color: #ffe599; color: #cf1c00; font-weight: bold'] * len(row)
-    return [''] * len(row) 
+    return [''] * len(row)
 
 def chon_khoa(khoa):
     placeholder1 = st.empty()
