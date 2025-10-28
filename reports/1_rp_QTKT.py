@@ -111,103 +111,92 @@ def tao_thong_ke(x,y):
             #bo_cot = bo_cot.drop("Khoa",axis=1)
         return bo_cot
     else:
-        bo_cot = bo_cot.drop(["Timestamp","Tên người đánh giá", "Tên người thực hiện","Ghi chú 1","Ghi chú 2"], axis=1)
-        # Lọc ra 1 bảng chứa những dòng có giá trị an toàn là số và giá trị nhận dạng NB là số
-        bang_co_tlan_tlnd_SS = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ an toàn"])]
-        bang_co_tlan_tlnd_SS = bang_co_tlan_tlnd_SS.loc[pd.notna(bo_cot["Tỉ lệ nhận dạng NB"])]
-        sum_antoan1 = bang_co_tlan_tlnd_SS["Tỉ lệ an toàn"].sum()
-        so_luot_an_toan1 = bang_co_tlan_tlnd_SS["Tỉ lệ an toàn"].count()
-        sum_nhan_dang1 = bang_co_tlan_tlnd_SS["Tỉ lệ nhận dạng NB"].sum()
-        so_luot_nhan_dang1 = bang_co_tlan_tlnd_SS["Tỉ lệ nhận dạng NB"].count()
-        # Nhóm lại bảng đó theo khoa và tên quy trình, tạo thêm 3 cột, là tỉ lệ an toàn bàng trung bình, tỉ lệ tuân thủ bằng trung bình, tỉ lệ nhận dạng là trung bình và cột số lượt là bằng count số lần của tên quy trình
-        ket_qua1 = bang_co_tlan_tlnd_SS.groupby(["Khoa","Tên quy trình"]).agg({
-        "Tên quy trình": "count",
-        "Tỉ lệ tuân thủ": "mean",
-        "Tỉ lệ an toàn": "mean",
-        "Tỉ lệ nhận dạng NB": "mean",
-        }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
-        
-        # Lọc ra bảng không có giá trị an toàn và nhận dạng NB là NaN
-        bang_khong_tlan_tlnd_NN = bo_cot.loc[pd.isna(bo_cot["Tỉ lệ an toàn"])]
-        bang_khong_tlan_tlnd_NN = bang_khong_tlan_tlnd_NN.loc[pd.isna(bo_cot["Tỉ lệ nhận dạng NB"])]
-        ket_qua2 = bang_khong_tlan_tlnd_NN.groupby(["Khoa","Tên quy trình"]).agg({
-        "Tên quy trình": "count",
-        "Tỉ lệ tuân thủ": "mean",
-        "Tỉ lệ an toàn": "first",
-        "Tỉ lệ nhận dạng NB": "first",
-        }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
+            bo_cot = bo_cot.drop(["Timestamp","Tên người đánh giá", "Tên người thực hiện","Ghi chú 1","Ghi chú 2"], axis=1)
+            # Lọc ra 1 bảng chứa những dòng có giá trị an toàn là số và giá trị nhận dạng NB là số
+            bang_co_tlan_tlnd_SS = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ an toàn"])]
+            bang_co_tlan_tlnd_SS = bang_co_tlan_tlnd_SS.loc[pd.notna(bo_cot["Tỉ lệ nhận dạng NB"])]
+            sum_antoan1 = bang_co_tlan_tlnd_SS["Tỉ lệ an toàn"].sum()
+            so_luot_an_toan1 = bang_co_tlan_tlnd_SS["Tỉ lệ an toàn"].count()
+            sum_nhan_dang1 = bang_co_tlan_tlnd_SS["Tỉ lệ nhận dạng NB"].sum()
+            so_luot_nhan_dang1 = bang_co_tlan_tlnd_SS["Tỉ lệ nhận dạng NB"].count()
+            # Nhóm lại bảng đó theo khoa và tên quy trình
+            ket_qua1 = bang_co_tlan_tlnd_SS.groupby(["Khoa","Tên quy trình"]).agg({
+                "Tên quy trình": "count",
+                "Tỉ lệ tuân thủ": "mean",
+                "Tỉ lệ an toàn": "mean",
+                "Tỉ lệ nhận dạng NB": "mean",
+            }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
+            
+            # Lọc ra bảng không có giá trị an toàn và nhận dạng NB là NaN
+            bang_khong_tlan_tlnd_NN = bo_cot.loc[pd.isna(bo_cot["Tỉ lệ an toàn"])]
+            bang_khong_tlan_tlnd_NN = bang_khong_tlan_tlnd_NN.loc[pd.isna(bo_cot["Tỉ lệ nhận dạng NB"])]
+            ket_qua2 = bang_khong_tlan_tlnd_NN.groupby(["Khoa","Tên quy trình"]).agg({
+                "Tên quy trình": "count",
+                "Tỉ lệ tuân thủ": "mean",
+                "Tỉ lệ an toàn": "first",
+                "Tỉ lệ nhận dạng NB": "first",
+            }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
 
-        #Lọc ra những dòng có giá trị an toàn là số và nhận dạng NB là NaN
-        bang_co_tlan_tlnd_SN = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ an toàn"])]
-        bang_co_tlan_tlnd_SN = bang_co_tlan_tlnd_SN.loc[pd.isna(bo_cot["Tỉ lệ nhận dạng NB"])]
-        sum_antoan2 = bang_co_tlan_tlnd_SN["Tỉ lệ an toàn"].sum()
-        so_luot_an_toan2 = bang_co_tlan_tlnd_SN["Tỉ lệ an toàn"].count()
-        ket_qua3 = bang_co_tlan_tlnd_SN.groupby(["Khoa","Tên quy trình"]).agg({
-        "Tên quy trình": "count",
-        "Tỉ lệ tuân thủ": "mean",
-        "Tỉ lệ an toàn": "mean",
-        "Tỉ lệ nhận dạng NB": "first",
-        }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
+            #Lọc ra những dòng có giá trị an toàn là số và nhận dạng NB là NaN
+            bang_co_tlan_tlnd_SN = bo_cot.loc[pd.notna(bo_cot["Tỉ lệ an toàn"])]
+            bang_co_tlan_tlnd_SN = bang_co_tlan_tlnd_SN.loc[pd.isna(bo_cot["Tỉ lệ nhận dạng NB"])]
+            sum_antoan2 = bang_co_tlan_tlnd_SN["Tỉ lệ an toàn"].sum()
+            so_luot_an_toan2 = bang_co_tlan_tlnd_SN["Tỉ lệ an toàn"].count()
+            ket_qua3 = bang_co_tlan_tlnd_SN.groupby(["Khoa","Tên quy trình"]).agg({
+                "Tên quy trình": "count",
+                "Tỉ lệ tuân thủ": "mean",
+                "Tỉ lệ an toàn": "mean",
+                "Tỉ lệ nhận dạng NB": "first",
+            }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
 
-        #Lọc ra những dòng có giá trị an toàn là NaN và nhận dạng NB là số
-        bang_khong_tlan_tlnd_NS = bo_cot.loc[pd.isna(bo_cot["Tỉ lệ an toàn"])]
-        bang_khong_tlan_tlnd_NS = bang_khong_tlan_tlnd_NS.loc[pd.notna(bo_cot["Tỉ lệ nhận dạng NB"])]
-        sum_nhan_dang2 = bang_khong_tlan_tlnd_NS["Tỉ lệ nhận dạng NB"].sum()
-        so_luot_nhan_dang2 = bang_khong_tlan_tlnd_NS["Tỉ lệ nhận dạng NB"].count()
-        ket_qua4 = bang_khong_tlan_tlnd_NS.groupby(["Khoa","Tên quy trình"]).agg({
-        "Tên quy trình": "count",
-        "Tỉ lệ tuân thủ": "mean",
-        "Tỉ lệ an toàn": "first",
-        "Tỉ lệ nhận dạng NB": "mean",
-        }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
-        
-        ket_qua = pd.concat([ket_qua1, ket_qua2, ket_qua3, ket_qua4], ignore_index=True)
-        
-        # Đếm distinct count của Tên quy trình theo Khoa
-        distinct_qtkt = ket_qua.groupby('Khoa')['Tên quy trình'].nunique().reset_index()
-        distinct_qtkt.columns = ['Khoa', 'Số QTKT']
-        
-        # Gộp dữ liệu tổng hợp theo Khoa
-        ket_qua_grouped = ket_qua.groupby('Khoa').agg({
-            'Số lượt': 'sum',
-            'Tỉ lệ tuân thủ': 'mean',
-            'Tỉ lệ an toàn': lambda x: x.mean() if x.notna().any() else np.nan,
-            'Tỉ lệ nhận dạng NB': lambda x: x.mean() if x.notna().any() else np.nan
-        }).reset_index()
-        
-        # Merge với distinct count
-        ket_qua_final = ket_qua_grouped.merge(distinct_qtkt, on='Khoa') 
-        # Sắp xếp lại thứ tự cột
-        ket_qua_final = ket_qua_final[['Khoa', 'Số QTKT', 'Số lượt', 'Tỉ lệ tuân thủ', 'Tỉ lệ an toàn', 'Tỉ lệ nhận dạng NB']]
-        # Format lại tỉ lệ
-        ket_qua_final['Tỉ lệ an toàn'] = ket_qua_final['Tỉ lệ an toàn'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
-        ket_qua_final['Tỉ lệ nhận dạng NB'] = ket_qua_final['Tỉ lệ nhận dạng NB'].apply(lambda x: x * 100 if pd.notna(x) else np.nan) 
-        # Sort theo tên khoa
-        ket_qua_final = ket_qua_final.sort_values("Khoa")
-        # Thêm STT
-        ket_qua_final.insert(0, 'STT', range(1, len(ket_qua_final) + 1))
-        # Tính dòng tổng kết
-        tong_so_luot = ket_qua["Số lượt"].sum()
-        mean_tuan_thu = ket_qua["Tỉ lệ tuân thủ"].mean()
-        mean_antoan = (sum_antoan1 + sum_antoan2)/(so_luot_an_toan1 + so_luot_an_toan2) * 100 if (so_luot_an_toan1 + so_luot_an_toan2) > 0 else np.nan
-        mean_nhan_dang = (sum_nhan_dang1 + sum_nhan_dang2)/(so_luot_nhan_dang1 + so_luot_nhan_dang2) * 100 if (so_luot_nhan_dang1 + so_luot_nhan_dang2) > 0 else np.nan
-        tong_so_qtkt = ket_qua['Tên quy trình'].nunique()
-        row_mean = pd.DataFrame({
-            "STT": [""],
-            "Khoa": ["Tổng"],
-            "Số QTKT": [tong_so_qtkt],
-            "Số lượt": [tong_so_luot],
-            "Tỉ lệ tuân thủ": [mean_tuan_thu],
-            "Tỉ lệ an toàn": [mean_antoan],
-            "Tỉ lệ nhận dạng NB": [mean_nhan_dang]
-        })
-        # Ghép dòng tổng kết vào cuối bảng
-        cols = ket_qua_final.columns
-        row_mean = row_mean[[c for c in cols if c in row_mean.columns]]
-        ket_qua_final = pd.concat([ket_qua_final, row_mean], ignore_index=True)
-        #if st.session_state.phan_quyen == "4" and st.session_state.username not in [st.secrets["user_special"]["u1"],st.secrets["user_special"]["u2"],st.secrets["user_special"]["u3"]]:
-            #ket_qua_final = ket_qua_final.drop("Khoa", axis=1)
-        return ket_qua_final
+            #Lọc ra những dòng có giá trị an toàn là NaN và nhận dạng NB là số
+            bang_khong_tlan_tlnd_NS = bo_cot.loc[pd.isna(bo_cot["Tỉ lệ an toàn"])]
+            bang_khong_tlan_tlnd_NS = bang_khong_tlan_tlnd_NS.loc[pd.notna(bo_cot["Tỉ lệ nhận dạng NB"])]
+            sum_nhan_dang2 = bang_khong_tlan_tlnd_NS["Tỉ lệ nhận dạng NB"].sum()
+            so_luot_nhan_dang2 = bang_khong_tlan_tlnd_NS["Tỉ lệ nhận dạng NB"].count()
+            ket_qua4 = bang_khong_tlan_tlnd_NS.groupby(["Khoa","Tên quy trình"]).agg({
+                "Tên quy trình": "count",
+                "Tỉ lệ tuân thủ": "mean",
+                "Tỉ lệ an toàn": "first",
+                "Tỉ lệ nhận dạng NB": "mean",
+            }).rename(columns={"Tên quy trình": "Số lượt"}).reset_index()
+            
+            # Gộp tất cả kết quả
+            ket_qua = pd.concat([ket_qua1, ket_qua2, ket_qua3, ket_qua4], ignore_index=True)
+            
+            # Format lại tỉ lệ
+            ket_qua['Tỉ lệ an toàn'] = ket_qua['Tỉ lệ an toàn'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
+            ket_qua['Tỉ lệ nhận dạng NB'] = ket_qua['Tỉ lệ nhận dạng NB'].apply(lambda x: x * 100 if pd.notna(x) else np.nan)
+            
+            # Sort theo Khoa và Tên quy trình
+            ket_qua = ket_qua.sort_values(["Khoa", "Tên quy trình"])
+            
+            # Thêm STT
+            ket_qua.insert(0, 'STT', range(1, len(ket_qua) + 1))
+            
+            # Tính dòng tổng kết
+            tong_so_luot = ket_qua["Số lượt"].sum()
+            mean_tuan_thu = ket_qua["Tỉ lệ tuân thủ"].mean()
+            mean_antoan = (sum_antoan1 + sum_antoan2)/(so_luot_an_toan1 + so_luot_an_toan2) * 100 if (so_luot_an_toan1 + so_luot_an_toan2) > 0 else np.nan
+            mean_nhan_dang = (sum_nhan_dang1 + sum_nhan_dang2)/(so_luot_nhan_dang1 + so_luot_nhan_dang2) * 100 if (so_luot_nhan_dang1 + so_luot_nhan_dang2) > 0 else np.nan
+            tong_so_qtkt = ket_qua['Tên quy trình'].nunique()  # Đếm distinct
+            
+            row_mean = pd.DataFrame({
+                "STT": [""],
+                "Khoa": ["Tổng"],
+                "Tên quy trình": [f"{tong_so_qtkt} QTKT"],  # Hiển thị số lượng QTKT
+                "Số lượt": [tong_so_luot],
+                "Tỉ lệ tuân thủ": [mean_tuan_thu],
+                "Tỉ lệ an toàn": [mean_antoan],
+                "Tỉ lệ nhận dạng NB": [mean_nhan_dang]
+            })
+            
+            # Ghép dòng tổng kết vào cuối bảng
+            cols = ket_qua.columns
+            row_mean = row_mean[[c for c in cols if c in row_mean.columns]]
+            ket_qua = pd.concat([ket_qua, row_mean], ignore_index=True)
+            
+            return ket_qua
 
 def highlight_total_row(row):
     if any(isinstance(val, str) and val == "Tổng" for val in row):
