@@ -257,6 +257,38 @@ if submit_thoigian:
             data = data[data["Thời điểm đánh giá"].isin(thoi_diem_select)]
             if data.empty:
                 st.toast("Không có dữ liệu theo yêu cầu")
+            else:
+                metrics = tinh_metrics(data)
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("**:red[Lượt đánh giá]**", metrics['luot_danh_gia'],border=True)
+                with col2:
+                    st.metric("**:red[Số khoa]**", metrics['so_khoa'],border=True)
+                with col3:
+                    st.metric("**:red[Số điều dưỡng]**", metrics['so_dieu_duong'],border=True)
+                with col4:
+                    if metrics['tl_dat'] is not None:
+                        if metrics['tl_dat'] != 100:
+                            st.metric("**:red[Tỉ lệ đạt]**", f"{metrics['tl_dat']:.2f}%",border=True)
+                        else:
+                            st.metric("**:red[Tỉ lệ đạt]**", f"{metrics['tl_dat']:.0f}%",border=True)                
+                    else:
+                        st.metric("**:red[Tỉ lệ đạt]**", "-")  
+
+                with st.expander("**:blue[Thống kê tổng quát]**"):
+                    thongke = tao_thong_ke(data,"Tổng quát")
+                    st.dataframe(thongke, 
+                                hide_index=True,
+                                column_config = {
+                                        "Tỉ lệ đạt": st.column_config.NumberColumn(format="%.2f %%")
+                                        })
+                with st.expander("**:blue[Thống kê chi tiết]**"):
+                    thongkechitiet = tao_thong_ke(data,"Chi tiết")
+                    st.dataframe(thongkechitiet,
+                                hide_index=True, 
+                                column_config = {
+                                        "Tỉ lệ đạt": st.column_config.NumberColumn(format="%.2f %%")
+                                        })
         else:
             metrics = tinh_metrics(data)
             col1, col2, col3, col4 = st.columns(4)
@@ -288,13 +320,7 @@ if submit_thoigian:
                             hide_index=True, 
                             column_config = {
                                     "Tỉ lệ đạt": st.column_config.NumberColumn(format="%.2f %%")
-                                    })
+                                    })                
 powerbi_url = "https://app.powerbi.com/groups/fbea42ac-f40a-4ada-bdbe-95cd1dc34b62/reports/e4d93ac2-150f-4e45-9932-e93fc32666e8/49312121a00775315830?experience=power-bi"
 st.markdown(f"[📊 Xem báo cáo chi tiết tại Power BI]({powerbi_url})", unsafe_allow_html=True)
-
-
-
-
-    
-
 

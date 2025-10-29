@@ -352,7 +352,47 @@ if "username" in st.session_state:
                 },
             expanded=False,
             )
-    else: ##### 8: ĐD viên bình thường ########
+    ##### 8: ĐD viên + QTKT + CSCS + PRIME + VTTB + PCCS ########
+    elif st.session_state.phan_quyen in ["8"]:
+        if st.session_state.khoa in khoa:
+            pg = st.navigation(
+            {
+                "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
+                "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_VTTB, BC_PCCS],
+            },
+        expanded=False,
+        )
+        else:
+            pg = st.navigation(
+                {
+                    "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                    "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
+                    "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_VTTB, BC_PCCS],
+                },
+            expanded=False,
+            )
+    ##### 9: ĐD viên + GDSK + HSBA + VTTB + PCCS ########
+    elif st.session_state.phan_quyen in ["9"]:
+        if st.session_state.khoa in khoa:
+            pg = st.navigation(
+            {
+                "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
+                "Báo cáo": [BC_GDSK, BC_HSBA, BC_VTTB, BC_PCCS],
+            },
+        expanded=False,
+        )
+        else:
+            pg = st.navigation(
+                {
+                    "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                    "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
+                    "Báo cáo": [BC_GDSK, BC_HSBA, BC_VTTB, BC_PCCS],
+                },
+            expanded=False,
+            )
+    else: ##### 10: ĐD viên bình thường ########
         if st.session_state.khoa in khoa:
            pg = st.navigation(
                 {

@@ -55,15 +55,19 @@ st.markdown("""
         <br><br>
         <span style="color: #042f66; font-weight: bold;">3. Người dùng (user) - Nhóm lâm sàng PĐD:</span> Có quyền truy cập và sử dụng các chức năng, được phân quyền <b>toàn viện</b>.
         <br><br>
-        <span style="color: #042f66; font-weight: bold;">4. Người dùng (user)- ĐD Trưởng Khoa/Đơn nguyên:</span> Có quyền truy cập và sử dụng các chức năng, được phân quyền theo <b>Khoa/Đơn nguyên trực tiếp quản lý,</b> Không bao gồm các chức năng liên quan đến KSNK và Loét tì đè.
+        <span style="color: #042f66; font-weight: bold;">4. Người dùng (user) - ĐD Trưởng Khoa/Đơn nguyên:</span> Có quyền truy cập và sử dụng các chức năng, được phân quyền theo <b>Khoa/Đơn nguyên trực tiếp quản lý,</b> Không bao gồm các chức năng liên quan đến KSNK và Loét tì đè.
         <br><br>
-        <span style="color: #042f66; font-weight: bold;">5. Người dùng (user)- ĐD viên + QTKT + CSCS + PRIME:</span> Có quyền truy cập và sử dụng các chức năng, được phân quyền theo <b>cá nhân (vào được tất cả Nhập kết quả, xem được thống kê cá nhân, xem được Thống kê báo cáo: QTKT, CSCS, PRIME).</b>
+        <span style="color: #042f66; font-weight: bold;">5. Người dùng (user) - ĐD viên + QTKT + CSCS + PRIME:</span> Có quyền truy cập và sử dụng các chức năng, được phân quyền theo <b>cá nhân (vào được tất cả Nhập kết quả, xem được thống kê cá nhân, xem được Thống kê báo cáo: QTKT, CSCS, PRIME).</b>
         <br><br>
-        <span style="color: #042f66; font-weight: bold;">6. Người dùng (user)- ĐD viên + HSBA + GDSK:</span> Chỉ có quyền truy cập và sử dụng các chức năng, được phân quyền theo <b>cá nhân (vào được tất cả Nhập kết quả, xem được thống kê cá nhân, xem được Thống kê báo cáo: HSBA, GDSK).</b>
+        <span style="color: #042f66; font-weight: bold;">6. Người dùng (user) - ĐD viên + HSBA + GDSK:</span> Chỉ có quyền truy cập và sử dụng các chức năng, được phân quyền theo <b>cá nhân (vào được tất cả Nhập kết quả, xem được thống kê cá nhân, xem được Thống kê báo cáo: HSBA, GDSK).</b>
         <br><br>
-        <span style="color: #042f66; font-weight: bold;">7. Người dùng (user)- ĐD viên + VTTB + PCCS:</span> Chỉ có quyền truy cập và sử dụng các chức năng, được phân quyền theo <b>cá nhân (vào được tất cả Nhập kết quả, xem được thống kê cá nhân, xem được Thống kê báo cáo: VTTB, PCCS).</b>
+        <span style="color: #042f66; font-weight: bold;">7. Người dùng (user) - ĐD viên + VTTB + PCCS:</span> Chỉ có quyền truy cập và sử dụng các chức năng, được phân quyền theo <b>cá nhân (vào được tất cả Nhập kết quả, xem được thống kê cá nhân, xem được Thống kê báo cáo: VTTB, PCCS).</b>
         <br><br>
-        <span style="color: #042f66; font-weight: bold;">8. Người dùng (user)- ĐD viên:</span> Chỉ có quyền truy cập và sử dụng các chức năng, được phân quyền theo <b>cá nhân (vào được tất cả Nhập kết quả nhưng chỉ xem được thống kê cá nhân, không hiện mục Thống kê báo cáo).</b>
+        <span style="color: #042f66; font-weight: bold;">8. Người dùng (user) - ĐD viên + QTKT + CSCS + PRIME + VTTB + PCCS:</span> Chỉ có quyền truy cập và sử dụng các chức năng, được phân quyền theo <b>cá nhân (vào được tất cả Nhập kết quả, xem được thống kê cá nhân, xem được Thống kê báo cáo: QTKT, CSCS, PRIME, VTTB, PCCS).</b>
+        <br><br>
+        <span style="color: #042f66; font-weight: bold;">9. Người dùng (user) - ĐD viên + HSBA + GDSK + VTTB + PCCS:</span> Chỉ có quyền truy cập và sử dụng các chức năng, được phân quyền theo <b>cá nhân (vào được tất cả Nhập kết quả, xem được thống kê cá nhân, xem được Thống kê báo cáo: HSBA, GDSK, VTTB, PCCS).</b>
+        <br><br>
+        <span style="color: #042f66; font-weight: bold;">10. Người dùng (user) - ĐD viên:</span> Chỉ có quyền truy cập và sử dụng các chức năng, được phân quyền theo <b>cá nhân (vào được tất cả Nhập kết quả nhưng chỉ xem được thống kê cá nhân, không hiện mục Thống kê báo cáo).</b>
     </p>
 """, unsafe_allow_html=True)
 
