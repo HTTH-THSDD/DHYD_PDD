@@ -240,7 +240,7 @@ if submit_thoigian:
                     name=col,
                     mode='lines+markers',
                     line=dict(color=colors[idx], width=2),
-                    marker=dict(size=8),
+                    marker=dict(size=5),
                     yaxis='y'
                 ))
             

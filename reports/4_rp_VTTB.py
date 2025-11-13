@@ -74,10 +74,10 @@ def load_data1(sheeto5,sd,ed,khoa_select):
     data = pd.DataFrame(values, columns=header)
     if khoa_select != "Chọn tất cả khoa":
         data = data.loc[data["Khoa báo cáo"].isin(khoa_select)]
-    data['Timestamp'] = pd.to_datetime(data['Timestamp'], errors='coerce')
+    data["Ngày báo cáo"] = pd.to_datetime(data["Ngày báo cáo"], format="%Y-%m-%d", errors='coerce')
     start_date = sd
     end_date = ed + timedelta(days=1)
-    data_final = data[(data['Timestamp'] >= pd.Timestamp(start_date)) & (data['Timestamp'] < pd.Timestamp(end_date))]
+    data_final = data[(data['Ngày báo cáo'] >= pd.Timestamp(start_date)) & (data['Ngày báo cáo'] < pd.Timestamp(end_date))]
     return data_final
 
 def chon_khoa(khoa):

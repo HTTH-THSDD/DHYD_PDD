@@ -223,6 +223,10 @@ KSNK = st.Page("pages/6_KSNK.py",
                 title="Kiểm soát nhiễm khuẩn",
                 icon="🌷"
 )
+TTD_TN = st.Page("pages/7_TTD_TN.py",
+                title="Loét - Té ngã",
+                icon="🔖"
+)
 BC_QTKT = st.Page("reports/1_rp_QTKT.py", title="TK Giám sát quy trình kỹ thuật",  icon="🔹")
 BC_CSCS = st.Page("reports/1.2_rp_CSCS.py", title="TK Chỉ số chăm sóc ", icon="🔹")
 BC_PRIME = st.Page("reports/1.1_rp_PRIME.py", title="TK PRIME ", icon="🔹")
@@ -231,6 +235,7 @@ BC_GDSK = st.Page("reports/3_rp_GDSK.py", title="TK Giáo dục sức khỏe", i
 BC_VTTB = st.Page("reports/4_rp_VTTB.py", title="TK Báo cáo thiết bị", icon="🔹")
 BC_PCCS = st.Page("reports/5_rp_PCCS.py", title="TK NB PCCS Cấp I/ ĐD", icon="🔹")
 BC_KSNK = st.Page("reports/6_rp_KSNK.py", title="TK Số liệu KSNK", icon="🔹")
+BC_TTD_TN = st.Page("reports/7_rp_TTD_TN.py", title="TK Số liệu Loét - Té ngã", icon="🔹")
 
 khoa = ["Đơn vị Gây mê hồi sức Phẫu thuật tim mạch",
         "Đơn vị Hồi sức Ngoại Thần kinh",
@@ -246,8 +251,8 @@ if "username" in st.session_state:
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS, KSNK],
-                "Thống kê báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS, BC_KSNK],
+                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS, KSNK, TTD_TN],
+                "Thống kê báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS, BC_KSNK, BC_TTD_TN],
                 "Quản trị viên": [AD1, AD2, AD3],
             },
         expanded=False,
@@ -256,8 +261,8 @@ if "username" in st.session_state:
         pg = st.navigation(    
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Nhập kết quả": [QTKT,CSCS,PRIME, HSBA, GDSK,VTTB, PCCS, KSNK],
-                "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS, BC_KSNK],
+                "Nhập kết quả": [QTKT,CSCS,PRIME, HSBA, GDSK,VTTB, PCCS, KSNK, TTD_TN],
+                "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS, BC_KSNK, BC_TTD_TN],
                 "Quản trị viên": [AD1],
             },
         expanded=False,
@@ -267,8 +272,8 @@ if "username" in st.session_state:
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS, KSNK],
-                "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK,BC_VTTB, BC_PCCS, BC_KSNK],
+                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS, KSNK, TTD_TN],
+                "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK,BC_VTTB, BC_PCCS, BC_KSNK, BC_TTD_TN],
             },
         expanded=False,
         )
