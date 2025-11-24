@@ -217,7 +217,6 @@ if outp and outp != "---":
                             with col[0]:
                                 stt = st.number_input(label="STT yêu cầu", 
                                                     min_value=1, 
-                                                    max_value=len(data_out), 
                                                     step=1,
                                                     key="stt",
                                                     )

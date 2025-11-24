@@ -95,21 +95,48 @@ html_code = f'<p class="admin_1"><i>Xin chào admin:{st.session_state.username}<
 st.html(html_code)
 sheeti1 =  st.secrets["sheet_name"]["input_1"]
 data_in = load_data(sheeti1)
-data_in1 = data_in[["Nhân viên","Phân quyền","Mật khẩu"]]
+data_in1 = data_in[["Khoa","Nhân viên","Phân quyền","Mật khẩu"]]
 
-data_in2 = data_in[["Nhân viên","Phân quyền","Mật khẩu", "Mã số"]]
-tim_nv = st.selectbox(label="Tên hoặc mã nhân viên",
-                      options=["Tất cả nhân viên"] + list(data_in["Nhân viên"]),
-                      key="sl")
-data_sl=data_in1.loc[data_in1["Nhân viên"]==tim_nv]
-if tim_nv == "Tất cả nhân viên": 
-    st.dataframe(data_in1, hide_index=True, height=225)
+data_in2 = data_in[["Khoa","Nhân viên","Phân quyền","Mật khẩu", "Mã số"]]
+
+Ngoai_Tru_PDD = "Phòng Điều dưỡng"
+data_no_PDD = data_in[data_in["Khoa"].fillna("").str.strip() != Ngoai_Tru_PDD].copy()
+khoa_list = ["Tất cả khoa"] + sorted(data_no_PDD["Khoa"].dropna().unique().tolist())
+tim_khoa = st.selectbox(
+    label="Khoa/Đơn vị/Đơn nguyên",
+    options=khoa_list,
+    index=0,
+    key="tim_khoa",
+)
+
+if tim_khoa != "Tất cả khoa":
+    nv_options = data_no_PDD.loc[data_no_PDD["Khoa"] == tim_khoa, "Nhân viên"].dropna().unique().tolist()
 else:
-    data_sl = data_in1.loc[data_in1["Nhân viên"] == tim_nv]
-    if data_sl.empty:
-        st.warning("Không tìm thấy nhân viên theo yêu cầu")
-    else:
-        st.dataframe(data_sl, hide_index=True)
+    nv_options = data_no_PDD["Nhân viên"].dropna().unique().tolist()
+
+nv_options = ["Tất cả nhân viên"] + sorted(nv_options)
+tim_nv = st.selectbox(
+    label="Tên hoặc mã nhân viên",
+    options=nv_options,
+    index=0,
+    key="tim_nv"
+)
+
+data_sl = data_no_PDD[["Khoa","Nhân viên","Phân quyền","Mật khẩu"]].copy()
+if tim_khoa != "Tất cả khoa":
+    data_sl = data_sl[data_sl["Khoa"] == tim_khoa]
+if tim_nv != "Tất cả nhân viên":
+    data_sl = data_sl[data_sl["Nhân viên"] == tim_nv]
+
+# lưu giá trị lên session nếu cần
+st.session_state.khoa_tim = tim_khoa
+
+# hiển thị kết quả (1 bảng duy nhất)
+if data_sl.empty:
+    st.warning("Không tìm thấy nhân viên theo yêu cầu")
+else:
+    st.dataframe(data_sl, hide_index=True, height=225)
+
 
 if st.button("Tải lại"):
     st.rerun()
@@ -126,7 +153,7 @@ with col[0]:
             row1 = data_in2.index[data_in2["Mã số"] == manv].tolist()[0]
             doi_mat_khau(row1, mk)
         else:
-            st.warning("Không tìm thấy mã nhân viên.")
+            st.warning("Không tìm thấy thông tim theo yêu cầu.")
 with col[1]:
     with st.form("Phân quyền"):
         st.write("Phân quyền")
@@ -139,4 +166,4 @@ with col[1]:
             row = data_in2.index[data_in2["Mã số"]==mnv].tolist()[0]
             phan_quyen(row,quyen)
         else:
-            st.warning("Không tìm thấy mã nhân viên.")
+            st.warning("Không tìm thấy thông tin theo yêu cầu.")
