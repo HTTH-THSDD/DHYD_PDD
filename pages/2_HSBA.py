@@ -130,6 +130,13 @@ def kiemtra_svv():
     else:
         return False
 
+def clear_session_state():
+    keys_to_clear = ["khoa_HSBA", "vtgs_HSBA"]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.rerun()
+
 @st.dialog("Thông báo")
 def warning(x,y):
     if x == 1:
@@ -185,7 +192,7 @@ if "khoa_HSBA" in st.session_state and st.session_state["khoa_HSBA"] and "vtgs_H
             )
         st.divider()
         for i in range (0,len(data_hsba)):
-            st.subheader(f"Bước {data_hsba['Mục'][i][1:]}: {data_hsba['Nội dung'][i]}")
+            st.subheader(f"Nội dung {data_hsba['Mục'][i][1:]}: {data_hsba['Nội dung'][i]}")
             st.radio(
                 label=f"{data_hsba['Chi tiết'][i]}",
                 options=luachon,
@@ -213,6 +220,7 @@ if "khoa_HSBA" in st.session_state and st.session_state["khoa_HSBA"] and "vtgs_H
                     buoc_chua_dien_str = ", ".join(buoc_chua_dien)
                     if buoc_chua_dien_str == "":
                         upload_data_HSBA(len(data_hsba))
+                        clear_session_state()
                     else:
                         warning(1,buoc_chua_dien_str)
             else:

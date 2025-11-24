@@ -155,6 +155,12 @@ def kiemtra_svv():
     else:
         return False
 
+def clear_session_state():
+    keys_to_clear = ["khoa_GDSK", "vtgs_GDSK"]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.rerun()
 
 @st.dialog("Thông báo")
 def warning(x):
@@ -240,6 +246,7 @@ if "khoa_GDSK" in st.session_state and st.session_state["khoa_GDSK"] and "vtgs_G
                     buoc_chua_dien_str = ", ".join(buoc_chua_dien)
                     if buoc_chua_dien_str == "":
                         upload_data_GDSK(len(data_gdsk))
+                        clear_session_state()
                     else:
                         warning(4)
                         st.info(f"Các bước chưa chọn kết quả: {buoc_chua_dien_str}", icon="ℹ️")

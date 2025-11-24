@@ -227,6 +227,17 @@ def gui_email_cscs(receiver_email,data):
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, receiver_email, msg.as_string())
 
+
+def clear_session_state():
+    keys_to_clear = [
+        "khoa_GSQT", "nv_thuchien_GSQT", "vtgs_GSQT", "quy_trinh"
+    ]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.rerun()
+
+
 @st.dialog("Thông báo")
 def warning(x,y):
     if x == 1:
@@ -311,7 +322,7 @@ if (
             prechecktable = precheck_table()         
             upload_data_GS(prechecktable)
             gui_email_cscs(st.session_state.email_nvthqt, prechecktable)
-            st.rerun()
+            clear_session_state()
         else:
             warning(1,buoc_chua_dien_str)
 else:

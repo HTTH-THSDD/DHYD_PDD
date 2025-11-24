@@ -132,6 +132,15 @@ def upload_data_VTTB():
 
     sheet.append_row([column_index,column_timestamp, column_ngay_bao_cao, column_khoa_bao_cao, column_nguoi_bao_cao, column_tb_thong_thuong, column_SCD_bo_sung, columnn_SCD_muon_khoa_khac, columnn_SCD_cho_khoa_khac_muon])
     st.toast("Báo cáo đã được gửi thành công")
+
+
+def clear_session_state():
+    keys_to_clear = ["khoa_VTTB"]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.rerun()
+
 # Main Section ####################################################################################
 css_path = pathlib.Path("asset/style_4_VTTB.css")
 load_css(css_path)
@@ -193,21 +202,6 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 </p>
                 ''', unsafe_allow_html=True
                 )
-        # st.markdown(f'''<div class="divider">''', unsafe_allow_html=True)
-        # st.markdown('''
-        #     <style>
-        #     .divider .stHorizontalBlock {
-        #         display: flex;
-        #         flex-wrap: wrap;
-        #         gap: 10px !important;
-        #     }
-        #     .divider .stHorizontalBlock > div {
-        #         width: 100px !important;
-        #         min-width: 100px !important;
-        #         max-width: 100px !important;
-        #     }
-        #     </style>
-        #     ''', unsafe_allow_html=True)
 
         ma_thiet_bi = thiet_bi['Mã thiết bị'].iloc[i]
         col1, col2, col3, col4  = st.columns([1, 1, 1, 1])
@@ -336,6 +330,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
         a = kiem_tra()
         if len(a) == 0:
             upload_data_VTTB()
+            clear_session_state()
         else:
             warning(a)
 else:

@@ -151,12 +151,23 @@ def upload_data_GS(data):
     sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,tltt,column_thoigiandanhgia])
     warning(3,3)
 
+def clear_session_state():
+    keys_to_clear = [
+        "khoa_PRIME", "nv_thuchien_PRIME", "vtgs_PRIME"
+    ]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.rerun()
+
 @st.dialog("Thông báo")
 def warning(x,y):
     if x == 1:
         st.warning("Các tiêu chí chưa đánh giá: " + str(y))
     if x == 3:
         st.success("Gửi thành công")
+
+
 # Main Section ####################################################################################
 css_path = pathlib.Path("asset/style.css")
 load_css(css_path)
@@ -239,6 +250,7 @@ if (
         if buoc_chua_dien_str == "":
                 prechecktable = precheck_table()         
                 upload_data_GS(prechecktable)
+                clear_session_state()
         else:
             warning(1,buoc_chua_dien_str)
 
