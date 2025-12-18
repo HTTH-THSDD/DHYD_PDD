@@ -54,6 +54,37 @@ def load_data(x):
     header = data[0]
     values = data[1:]
 
+def thong_tin_hanh_chinh():
+    sheeti5 = st.secrets["sheet_name"]["input_5"]
+    data_khoa = load_data(sheeti5) 
+    chon_khoa = st.selectbox("Khoa/Đơn vị báo cáo ",
+                             options=data_khoa["Khoa"].unique(),
+                             index=None,
+                             placeholder="",
+                             )
+    if chon_khoa:
+        st.session_state.khoa_VTTB = chon_khoa
+        ckx = data_khoa.loc[data_khoa["Khoa"]==chon_khoa]
+        st.session_state.thiet_bi = ckx
+        st.session_state.ten_thiet_bi =  ckx["Tên thiết bị"].iloc[0]
+    else:
+        if "khoa_VTTB" in st.session_state:
+            del st.session_state["khoa_VTTB"]
+def kiem_tra():
+    so_thiet_bi_thieu=[]
+    for i in range (0, len(st.session_state.thiet_bi)):
+        if (
+            f"trong_{i}" not in st.session_state or st.session_state[f"trong_{i}"] is None
+        ) or (
+            f"hu_{i}" not in st.session_state or st.session_state[f"hu_{i}"] is None
+        ):
+            so_thiet_bi_thieu.append(f"{st.session_state.thiet_bi['Tên thiết bị'].iloc[i]}")
+    return so_thiet_bi_thieu
+
+@st.dialog("Thông báo")
+def warning(a):
+    st.warning(f"Vui lòng điền đầy đủ thông tin thiết bị: {', '.join(a)}")
+
 def upload_data_VTTB():
     try:
         # Tạo credentials mới
