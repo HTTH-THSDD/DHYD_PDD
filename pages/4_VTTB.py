@@ -53,85 +53,120 @@ def load_data(x):
     data = sheet.get_all_values()
     header = data[0]
     values = data[1:]
-    data_final = pd.DataFrame(values, columns=header)
-    return data_final
-
-def thong_tin_hanh_chinh():
-    sheeti5 = st.secrets["sheet_name"]["input_5"]
-    data_khoa = load_data(sheeti5) 
-    chon_khoa = st.selectbox("Khoa/Đơn vị báo cáo ",
-                             options=data_khoa["Khoa"].unique(),
-                             index=None,
-                             placeholder="",
-                             )
-    if chon_khoa:
-        st.session_state.khoa_VTTB = chon_khoa
-        ckx = data_khoa.loc[data_khoa["Khoa"]==chon_khoa]
-        st.session_state.thiet_bi = ckx
-        st.session_state.ten_thiet_bi =  ckx["Tên thiết bị"].iloc[0]
-    else:
-        if "khoa_VTTB" in st.session_state:
-            del st.session_state["khoa_VTTB"]
-def kiem_tra():
-    so_thiet_bi_thieu=[]
-    for i in range (0, len(st.session_state.thiet_bi)):
-        if (
-            f"trong_{i}" not in st.session_state or st.session_state[f"trong_{i}"] is None
-        ) or (
-            f"hu_{i}" not in st.session_state or st.session_state[f"hu_{i}"] is None
-        ):
-            so_thiet_bi_thieu.append(f"{st.session_state.thiet_bi['Tên thiết bị'].iloc[i]}")
-    return so_thiet_bi_thieu
-
-@st.dialog("Thông báo")
-def warning(a):
-    st.warning(f"Vui lòng điền đầy đủ thông tin thiết bị: {', '.join(a)}")
 
 def upload_data_VTTB():
-    credentials = load_credentials()
-    gc = gspread.authorize(credentials)
-    sheeto5 = st.secrets["sheet_name"]["output_5"]
-    sheet = gc.open(sheeto5).sheet1
-    column_index = len(sheet.get_all_values())  
-    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
-    column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
-    column_ngay_bao_cao = st.session_state.ngay_bao_cao.strftime('%Y-%m-%d')
-    column_khoa_bao_cao = str(st.session_state.khoa_VTTB)
-    column_nguoi_bao_cao = str(st.session_state.username)
-    column_tb_thong_thuong = ""
-    for i in range (0, len(st.session_state.thiet_bi)):
-        ten = st.session_state.thiet_bi['Tên thiết bị'].iloc[i]
-        co_so = str(st.session_state[f"co_so_{i}"])
-        dang_su_dung = str(st.session_state[f"dang_su_dung_{i}"])
-        trong = str(st.session_state[f"trong_{i}"]) 
-        hu = str(st.session_state[f"hu_{i}"])
-        column_tb_thong_thuong += ten + "|" + co_so + "|" + dang_su_dung + "|" + trong + "|" + hu + "#"
-    column_SCD_bo_sung = ""
-    SCD_so_bn = str(st.session_state[f"chua_thuc_hien_{i}"])
-    SCD_nguyen_nhan = str(st.session_state[f"nguyen_nhan_{i}"])
-    if SCD_so_bn != 0 and SCD_nguyen_nhan != "":
-        column_SCD_bo_sung += SCD_so_bn + "|" + SCD_nguyen_nhan
+    try:
+        # Tạo credentials mới
+        creds_info = {
+            "type": st.secrets["google_service_account"]["type"],
+            "project_id": st.secrets["google_service_account"]["project_id"],
+            "private_key_id": st.secrets["google_service_account"]["private_key_id"],
+            "private_key": st.secrets["google_service_account"]["private_key"],
+            "client_email": st.secrets["google_service_account"]["client_email"],
+            "client_id": st.secrets["google_service_account"]["client_id"],
+            "auth_uri": st.secrets["google_service_account"]["auth_uri"],
+            "token_uri": st.secrets["google_service_account"]["token_uri"],
+            "auth_provider_x509_cert_url": st.secrets["google_service_account"]["auth_provider_x509_cert_url"],
+            "client_x509_cert_url": st.secrets["google_service_account"]["client_x509_cert_url"],
+            "universe_domain": st.secrets["google_service_account"]["universe_domain"],
+        }
+        
+        credentials = Credentials.from_service_account_info(
+            creds_info,
+            scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+        )
+        
+        gc = gspread.authorize(credentials)
+        sheeto5 = st.secrets["sheet_name"]["output_5"]
+        spreadsheet = gc.open(sheeto5)
+        sheet = spreadsheet.get_worksheet(0)
+        
+        # Lấy tất cả giá trị để tìm dòng cuối cùng có dữ liệu
+        all_values = sheet.get_all_values()
+        
+        # Tìm dòng cuối cùng có dữ liệu (không phải dòng trống)
+        last_row = len(all_values)
+        next_row = last_row + 1
+        
+        # Tạo STT mới (lấy STT từ dòng cuối + 1)
+        if last_row > 1:  # Có ít nhất 1 dòng dữ liệu (ngoài header)
+            try:
+                last_stt = int(all_values[-1][0])  # STT ở cột A
+                new_stt = last_stt + 1
+            except:
+                new_stt = last_row  # Fallback nếu không parse được
+        else:
+            new_stt = 1
+        
+        now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
+        column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
+        column_ngay_bao_cao = st.session_state.ngay_bao_cao.strftime('%Y-%m-%d')
+        column_khoa_bao_cao = str(st.session_state.khoa_VTTB)
+        column_nguoi_bao_cao = str(st.session_state.username)
+        
+        column_tb_thong_thuong = ""
+        for i in range(0, len(st.session_state.thiet_bi)):
+            ten = st.session_state.thiet_bi['Tên thiết bị'].iloc[i]
+            co_so = str(st.session_state.get(f"co_so_{i}", 0))
+            dang_su_dung = str(st.session_state.get(f"dang_su_dung_{i}", 0))
+            trong = str(st.session_state.get(f"trong_{i}", 0)) 
+            hu = str(st.session_state.get(f"hu_{i}", 0))
+            column_tb_thong_thuong += ten + "|" + co_so + "|" + dang_su_dung + "|" + trong + "|" + hu + "#"
+        
+        column_SCD_bo_sung = ""
+        last_index = len(st.session_state.thiet_bi) - 1
+        SCD_so_bn = str(st.session_state.get(f"chua_thuc_hien_{last_index}", 0))
+        SCD_nguyen_nhan = str(st.session_state.get(f"nguyen_nhan_{last_index}", ""))
+        if SCD_so_bn != "0" and SCD_nguyen_nhan != "":
+            column_SCD_bo_sung += SCD_so_bn + "|" + SCD_nguyen_nhan
 
-    columnn_SCD_muon_khoa_khac =""
-    for idx in st.session_state.additional_columns:
-        SCD_muon_khoa_khac = st.session_state[f"muon_tu_khoa_khac_{idx}"]
-        SCD_so_luong_muon = str(st.session_state[f"so_luong_muon_{idx}"])
-        if SCD_muon_khoa_khac != "--Chọn khoa--" and SCD_so_luong_muon != 0:
-                columnn_SCD_muon_khoa_khac += SCD_muon_khoa_khac + ":" + SCD_so_luong_muon + "+"
-    if columnn_SCD_muon_khoa_khac != "":
-        columnn_SCD_muon_khoa_khac = columnn_SCD_muon_khoa_khac.rstrip("+")
+        columnn_SCD_muon_khoa_khac = ""
+        if "additional_columns" in st.session_state:
+            for idx in st.session_state.additional_columns:
+                SCD_muon_khoa_khac = st.session_state.get(f"muon_tu_khoa_khac_{idx}", "--Chọn khoa--")
+                SCD_so_luong_muon = str(st.session_state.get(f"so_luong_muon_{idx}", 0))
+                if SCD_muon_khoa_khac != "--Chọn khoa--" and SCD_so_luong_muon != "0":
+                    columnn_SCD_muon_khoa_khac += SCD_muon_khoa_khac + ":" + SCD_so_luong_muon + "+"
+        if columnn_SCD_muon_khoa_khac != "":
+            columnn_SCD_muon_khoa_khac = columnn_SCD_muon_khoa_khac.rstrip("+")
 
-    columnn_SCD_cho_khoa_khac_muon =""
-    for idx in st.session_state.additional_columns_2:
-        SCD_cho_khoa_khac = st.session_state[f"cho_khoa_khac_muon{idx}"]
-        SCD_so_luong_cho_muon = str(st.session_state[f"so_luong_cho_muon_{idx}"])
-        if SCD_cho_khoa_khac != "--Chọn khoa--" and SCD_so_luong_cho_muon != 0:
-                columnn_SCD_cho_khoa_khac_muon += SCD_cho_khoa_khac + ":" + SCD_so_luong_cho_muon + "+"
-    if columnn_SCD_cho_khoa_khac_muon != "":
-        columnn_SCD_cho_khoa_khac_muon = columnn_SCD_cho_khoa_khac_muon.rstrip("+")
+        columnn_SCD_cho_khoa_khac_muon = ""
+        if "additional_columns_2" in st.session_state:
+            for idx in st.session_state.additional_columns_2:
+                SCD_cho_khoa_khac = st.session_state.get(f"cho_khoa_khac_muon{idx}", "--Chọn khoa--")
+                SCD_so_luong_cho_muon = str(st.session_state.get(f"so_luong_cho_muon_{idx}", 0))
+                if SCD_cho_khoa_khac != "--Chọn khoa--" and SCD_so_luong_cho_muon != "0":
+                    columnn_SCD_cho_khoa_khac_muon += SCD_cho_khoa_khac + ":" + SCD_so_luong_cho_muon + "+"
+        if columnn_SCD_cho_khoa_khac_muon != "":
+            columnn_SCD_cho_khoa_khac_muon = columnn_SCD_cho_khoa_khac_muon.rstrip("+")
 
-    sheet.append_row([column_index,column_timestamp, column_ngay_bao_cao, column_khoa_bao_cao, column_nguoi_bao_cao, column_tb_thong_thuong, column_SCD_bo_sung, columnn_SCD_muon_khoa_khac, columnn_SCD_cho_khoa_khac_muon])
-    st.toast("Báo cáo đã được gửi thành công")
+        # Tạo row mới
+        new_row = [
+            new_stt,  # STT tự tăng
+            column_timestamp, 
+            column_ngay_bao_cao, 
+            column_khoa_bao_cao, 
+            column_nguoi_bao_cao, 
+            column_tb_thong_thuong, 
+            column_SCD_bo_sung, 
+            columnn_SCD_muon_khoa_khac, 
+            columnn_SCD_cho_khoa_khac_muon
+        ]
+        
+        # GIẢI PHÁP: Dùng update thay vì append_row
+        # Ghi trực tiếp vào dòng tiếp theo
+        range_to_update = f'A{next_row}:I{next_row}'
+        sheet.update(range_to_update, [new_row], value_input_option='USER_ENTERED')
+        
+        st.toast("✅ Báo cáo đã được gửi thành công")
+  
+      # Clear cache
+        st.cache_data.clear()
+        
+    except Exception as e:
+        st.error(f"❌ Lỗi khi upload dữ liệu: {str(e)}")
+        import traceback
+        st.code(traceback.format_exc())
 
 
 def clear_session_state():
@@ -217,17 +252,18 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
         with col2:
             st.number_input(
                 label="Đang dùng",
-                value=SL,  # Chuyển đổi giá trị thành số nguyên
+                #value=SL,  # Chuyển đổi giá trị thành số nguyên
                 step=1,
                 key=f"dang_su_dung_{i}",
                 min_value=0,
+                
             )
         with col3:
             st.number_input(
                 label="Trống",
                 step=1,
                 key=f"trong_{i}",
-                value=0,
+                #value=0,
                 min_value=0,
                 )
         with col4:
@@ -235,7 +271,7 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
                 label="Hư",
                 step=1,
                 key=f"hu_{i}",
-                value=0,
+                #value=0,
                 min_value=0,
                 )
                  

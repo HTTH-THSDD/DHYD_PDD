@@ -77,7 +77,7 @@ def format_permille(val): #def format phần nghìn (‰)
     if pd.isna(val):
         return "N/A"
     try:
-        return f"{float(val):.2f}‰"
+        return f"{float(val):.2f}"
     except:
         return str(val)
 
@@ -211,7 +211,7 @@ def ve_bieu_do_ti_suat(data):
         name='Tỉ suất hiện mắc',
         line=dict(color='blue', width=3),
         marker=dict(size=5),
-        hovertemplate='Tỉ suất loét hiện mắc: %{y:.2f}‰<extra></extra>'
+        hovertemplate='Tỉ suất loét hiện mắc: %{y:.2f}<extra></extra>'
     ))
     fig.add_trace(go.Scatter(
         x=data_bieu_do_2['Tháng'],
@@ -220,13 +220,13 @@ def ve_bieu_do_ti_suat(data):
         name='Tỉ suất mắc mới',
         line=dict(color='red', width=3),
         marker=dict(size=5),
-        hovertemplate='Tỉ suất loét mắc mới: %{y:.2f}‰<extra></extra>'
+        hovertemplate='Tỉ suất loét mắc mới: %{y:.2f}<extra></extra>'
     ))
     fig.update_layout(
         title='Biểu đồ 2: Tỉ suất loét hiện mắc và mắc mới theo tháng',
         xaxis_title='Tháng',
         xaxis=dict(type='category',tickangle=0),
-        yaxis_title='Tỉ suất (‰)',
+        yaxis_title='Tỉ suất',
         height=450,
         hovermode='x unified',
         showlegend=True
@@ -280,7 +280,7 @@ def ve_bieu_do_te_nga(data):
         line=dict(color='orange', width=3),
         marker=dict(size=5),
         yaxis='y2',
-        hovertemplate='Tỉ suất té ngã: %{y:.2f}‰<extra></extra>'
+        hovertemplate='Tỉ suất té ngã: %{y:.2f}<extra></extra>'
     ))
     
     fig.update_layout(
@@ -293,7 +293,7 @@ def ve_bieu_do_te_nga(data):
             dtick=1,
             showgrid=True),
         yaxis2=dict(
-            title=dict(text='Tỉ suất té ngã (‰)'),
+            title=dict(text='Tỉ suất té ngã'),
             overlaying='y',
             side='right',
             range=[0, y2_max],
@@ -364,21 +364,21 @@ if submit_thoigian:
             with col1:
                 st.metric("**:blue[Số ca hiện mắc (Trung bình)]**", f"{metrics['hien_mac']:.2f}",border=True)
             with col2:
-                st.metric("**:blue[Tỉ suất hiện mắc/1000 ngày điều trị]**",  f"{metrics['ti_suat_hien_mac']:.2f}‰",border=True)
+                st.metric("**:blue[Tỉ suất hiện mắc/1000 ngày điều trị]**",  f"{metrics['ti_suat_hien_mac']:.2f}",border=True)
 
             col3, col4 = st.columns([1,2])
             with col3:
                 st.metric("**:blue[Số ca mắc mới (Tổng)]**", f"{metrics['mac_moi']:.0f}",border=True)
             with col4:
-                st.metric("**:blue[Tỉ suất mắc mới/1000 ngày điều trị]**", f"{metrics['ti_suat_mac_moi']:.2f}‰",border=True)
+                st.metric("**:blue[Tỉ suất mắc mới/1000 ngày điều trị]**", f"{metrics['ti_suat_mac_moi']:.2f}",border=True)
             
             st.markdown("<br></br>", unsafe_allow_html=True)
             st.markdown("##### 🚩 :red[TÉ NGÃ]")
             col5, col6 = st.columns([1,2])
             with col5:
-                st.metric("**:blue[Số ca té ngã (Tổng)]**", f"{metrics['mac_moi']:,}",border=True)
+                st.metric("**:blue[Số ca té ngã (Tổng)]**", f"{metrics['so_ca_te_nga']:,}",border=True)
             with col6:
-                st.metric("**:blue[Tỉ suất số ca té ngã/1000 ngày điều trị]**", f"{metrics['ti_suat_te_nga']:.2f}‰",border=True)
+                st.metric("**:blue[Tỉ suất số ca té ngã/1000 ngày điều trị]**", f"{metrics['ti_suat_te_nga']:.2f}",border=True)
 
             st.markdown("---")
             st.markdown("##### 📊 :red[BIỂU ĐỒ SO SÁNH]")
