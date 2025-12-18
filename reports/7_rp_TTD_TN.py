@@ -116,18 +116,18 @@ def tinh_metrics(data):
         data_temp['Ngày điều trị'].astype(str).str.replace(',', '.'), 
         errors='coerce'
     )
-
-    hien_mac = round(data_temp['Loét hiện mắc'].mean(), 2) 
+    ngay_dieu_tri_total = data_temp['Ngày điều trị'].sum()
+    hien_mac = int(data_temp['Loét hiện mắc'].sum()) 
     data_temp['ti_suat_hien_mac'] = (data_temp['Loét hiện mắc'] / data_temp['Ngày điều trị']) * 1000
-    ti_suat_hien_mac = round(data_temp['ti_suat_hien_mac'].mean(),2)
+    ti_suat_hien_mac = round((hien_mac/ngay_dieu_tri_total)*1000,2)
     
     mac_moi = int(data_temp['Loét mắc mới'].sum())
     data_temp['ti_suat_mac_moi'] = (data_temp['Loét mắc mới'] / data_temp['Ngày điều trị']) * 1000
-    ti_suat_mac_moi = round(data_temp['ti_suat_mac_moi'].mean(),2)
+    ti_suat_mac_moi = round((mac_moi/ngay_dieu_tri_total)*1000,2)
     
     so_ca_te_nga = int(data_temp['Số ca té ngã'].sum())
     data_temp['ti_suat_te_nga'] = (data_temp['Số ca té ngã'] / data_temp['Ngày điều trị']) * 1000
-    ti_suat_te_nga = round(data_temp['ti_suat_te_nga'].mean(),2)
+    ti_suat_te_nga = round((so_ca_te_nga/ngay_dieu_tri_total)*1000,2)
     
     return {
         'hien_mac': hien_mac,
@@ -362,7 +362,7 @@ if submit_thoigian:
             st.markdown("##### 🚩 :red[TỔN THƯƠNG DA DO ÁP LỰC]")
             col1, col2 = st.columns([1,2])
             with col1:
-                st.metric("**:blue[Số ca hiện mắc (Trung bình)]**", f"{metrics['hien_mac']:.2f}",border=True)
+                st.metric("**:blue[Số ca hiện mắc (Tổng)]**", f"{metrics['hien_mac']:.2f}",border=True)
             with col2:
                 st.metric("**:blue[Tỉ suất hiện mắc/1000 ngày điều trị]**",  f"{metrics['ti_suat_hien_mac']:.2f}",border=True)
 
