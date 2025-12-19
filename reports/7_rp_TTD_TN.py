@@ -362,7 +362,7 @@ if submit_thoigian:
             st.markdown("##### 🚩 :red[TỔN THƯƠNG DA DO ÁP LỰC]")
             col1, col2 = st.columns([1,2])
             with col1:
-                st.metric("**:blue[Số ca hiện mắc (Tổng)]**", f"{metrics['hien_mac']:.2f}",border=True)
+                st.metric("**:blue[Số ca hiện mắc (Tổng)]**", f"{metrics['hien_mac']:.0f}",border=True)
             with col2:
                 st.metric("**:blue[Tỉ suất hiện mắc/1000 ngày điều trị]**",  f"{metrics['ti_suat_hien_mac']:.2f}",border=True)
 

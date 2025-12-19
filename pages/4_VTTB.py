@@ -23,7 +23,7 @@ def load_css(file_path):
         with open(file_path, 'r', encoding='latin-1') as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=300)
 def load_credentials():
     creds_info = {
     "type": st.secrets["google_service_account"]["type"],
@@ -45,7 +45,7 @@ def load_credentials():
     )
     return credentials
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=600)
 def load_data(x):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
@@ -141,37 +141,39 @@ def warning_SCD(danh_sach_loi_SCD):
     Loi_SCD = "**Số liệu thiết bị SCD chưa chính xác:**\n\n"  +  "\n".join(f"- {loi}" for loi in danh_sach_loi_SCD) 
     st.error(Loi_SCD)
 
-
-def upload_data_VTTB():
+def upload_data_VTTB(replace_row=None):
+    """
+    Upload dữ liệu lên Google Sheets
+    - replace_row=None: Thêm dòng mới vào cuối
+    - replace_row=số: Thay thế dữ liệu tại dòng đó
+    """
     try:
-        # Sử dụng hàm load_credentials() đã có
         credentials = load_credentials()
         gc = gspread.authorize(credentials)
         sheeto5 = st.secrets["sheet_name"]["output_5"]
         spreadsheet = gc.open(sheeto5)
         sheet = spreadsheet.get_worksheet(0)
-        # Lấy tất cả giá trị để tìm dòng cuối cùng
+        
+        # Lấy tất cả dữ liệu hiện tại
         all_values = sheet.get_all_values()
-        last_row = len(all_values)
-        next_row = last_row + 1 
-        # Tạo STT mới từ dòng cuối
-        if last_row > 1:
+        
+        # Tạo STT mới
+        if len(all_values) > 1:
             try:
-                last_stt = int(all_values[-1][0])
-                new_stt = last_stt + 1
+                new_stt = int(all_values[-1][0]) + 1
             except:
-                new_stt = last_row
+                new_stt = len(all_values)
         else:
             new_stt = 1
         
-        # Chuẩn bị dữ liệu timestamp và thông tin hành chính
+        # Chuẩn bị dữ liệu
         now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
         column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
         column_ngay_bao_cao = st.session_state.ngay_bao_cao.strftime('%Y-%m-%d')
         column_khoa_bao_cao = str(st.session_state.khoa_VTTB)
         column_nguoi_bao_cao = str(st.session_state.username)
         
-        # Xử lý dữ liệu thiết bị thông thường
+        # Xử lý dữ liệu thiết bị
         column_tb_thong_thuong = ""
         for i in range(0, len(st.session_state.thiet_bi)):
             ten = st.session_state.thiet_bi['Tên thiết bị'].iloc[i]
@@ -189,7 +191,7 @@ def upload_data_VTTB():
         if SCD_so_bn != "0" and SCD_nguyen_nhan != "":
             column_SCD_bo_sung += SCD_so_bn + "|" + SCD_nguyen_nhan
 
-        # Xử lý dữ liệu SCD mượn từ khoa khác
+        # Xử lý dữ liệu mượn từ khoa khác
         columnn_SCD_muon_khoa_khac = ""
         if "them_cot_muon" in st.session_state:
             for idx in st.session_state.them_cot_muon:
@@ -197,9 +199,10 @@ def upload_data_VTTB():
                 SCD_so_luong_muon = str(st.session_state.get(f"so_luong_muon_{idx}", 0))
                 if SCD_muon_khoa_khac != "--Chọn khoa--" and SCD_so_luong_muon != "0":
                     columnn_SCD_muon_khoa_khac += SCD_muon_khoa_khac + ":" + SCD_so_luong_muon + "+"
-        if columnn_SCD_muon_khoa_khac != "":
+        if columnn_SCD_muon_khoa_khac:
             columnn_SCD_muon_khoa_khac = columnn_SCD_muon_khoa_khac.rstrip("+")
-        # Xử lý dữ liệu SCD cho khoa khác mượn
+
+        # Xử lý dữ liệu cho khoa khác mượn
         columnn_SCD_cho_khoa_khac_muon = ""
         if "them_cot_cho_muon" in st.session_state:
             for idx in st.session_state.them_cot_cho_muon:
@@ -207,9 +210,10 @@ def upload_data_VTTB():
                 SCD_so_luong_cho_muon = str(st.session_state.get(f"so_luong_cho_muon_{idx}", 0))
                 if SCD_cho_khoa_khac != "--Chọn khoa--" and SCD_so_luong_cho_muon != "0":
                     columnn_SCD_cho_khoa_khac_muon += SCD_cho_khoa_khac + ":" + SCD_so_luong_cho_muon + "+"
-        if columnn_SCD_cho_khoa_khac_muon != "":
+        if columnn_SCD_cho_khoa_khac_muon:
             columnn_SCD_cho_khoa_khac_muon = columnn_SCD_cho_khoa_khac_muon.rstrip("+")
-        # Tạo row mới
+
+        # Tạo row dữ liệu
         new_row = [
             new_stt,
             column_timestamp, 
@@ -221,18 +225,43 @@ def upload_data_VTTB():
             columnn_SCD_muon_khoa_khac, 
             columnn_SCD_cho_khoa_khac_muon
         ]
-        # Ghi dữ liệu vào dòng tiếp theo (fix lỗi replace)
+        
+        # Ghi dữ liệu vào cuối
+        next_row = len(all_values) + 1
         range_to_update = f'A{next_row}:I{next_row}'
         sheet.update(range_to_update, [new_row], value_input_option='USER_ENTERED')
         
-        st.toast("✅ Báo cáo đã được gửi thành công")
-        # Clear cache để load data mới
-        st.cache_data.clear()   
+        # Clear cache
+        st.cache_data.clear()
+        
+        return True  # Trả về True nếu thành công
+        
     except Exception as e:
         st.error(f"❌ Lỗi khi upload dữ liệu: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
+        return False
 
+
+def clear_all_inputs():
+    """Xóa tất cả session state để reset form"""
+    protected_keys = [
+    'username',           # Tên user đang đăng nhập
+    'ngay_bao_cao',      # Ngày báo cáo
+    'authenticated',      # Trạng thái đăng nhập (nếu có)
+    'phan_quyen',        # Phân quyền user (nếu có)
+    'user_id',           # ID user (nếu có)
+]
+    keys_to_delete = [key for key in list(st.session_state.keys()) 
+                      if key not in protected_keys]
+    for key in keys_to_delete:
+        try:
+            del st.session_state[key]
+        except KeyError:
+            pass
+    st.cache_data.clear()
+    st.cache_resource.clear()   
+    st.session_state['force_refresh'] = True
 
 def clear_session_state():
     keys_to_clear = ["khoa_VTTB", "thiet_bi", "ten_thiet_bi"]
@@ -460,8 +489,15 @@ if "khoa_VTTB" in st.session_state and st.session_state["khoa_VTTB"] is not None
             if len(loi_SCD) > 0:
                 warning_SCD(loi_SCD)
             else:
-                upload_data_VTTB()
-                clear_session_state()
+                success = upload_data_VTTB()
+                if success:
+                    st.toast("✅ Báo cáo đã được gửi thành công!")
+                    st.cache_data.clear()
+                    clear_all_inputs()
+                    clear_session_state()
+                    import time
+                    time.sleep(0.5)
+                    st.rerun()
 else:
     st.warning("Vui lòng chọn khoa cần báo cáo")
 

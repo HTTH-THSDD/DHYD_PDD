@@ -92,7 +92,16 @@ def upload_data_PCCS():
     gc = gspread.authorize(credentials)
     sheeto8 = st.secrets["sheet_name"]["output_8"]
     sheet = gc.open(sheeto8).sheet1
-    column_index = len(sheet.get_all_values())  
+
+    all_values = sheet.get_all_values()
+    if len(all_values) > 1:
+        try:
+            new_stt = int(all_values[-1][0]) + 1
+        except:
+            new_stt = len(all_values)
+    else:
+        new_stt = 1
+
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_ngay_bao_cao = st.session_state.ngay_bao_cao.strftime('%Y-%m-%d')
@@ -115,13 +124,26 @@ def upload_data_PCCS():
         st.stop()
     else:
         ti_le_sang = round(SL_NB_cap_1s/SL_DD_cap_1s,2)
-        st.session_state.ti_le = ti_le_sang
         ti_le_chieu = round(SL_NB_cap_1c/SL_DD_cap_1c,2)
-        st.session_state.ti_le = ti_le_chieu
         ti_le_toi = round(SL_NB_cap_1t/SL_DD_cap_1t,2)
-        st.session_state.ti_le = ti_le_toi
-    sheet.append_row([column_index, column_timestamp, column_ngay_bao_cao,
-                       column_khoa_bao_cao, column_nguoi_bao_cao, column_data,ti_le_sang,ti_le_chieu,ti_le_toi])
+
+        # Tạo dòng dữ liệu mới để append
+        new_row = [
+            new_stt,
+            column_timestamp,
+            column_ngay_bao_cao,
+            column_khoa_bao_cao,
+            column_nguoi_bao_cao,
+            column_data,
+            ti_le_sang,
+            ti_le_chieu,
+            ti_le_toi
+        ]
+        next_row = len(all_values) + 1
+        range_to_update = f'A{next_row}:I{next_row}'
+        sheet.update(range_to_update, [new_row], value_input_option='USER_ENTERED')        
+        st.toast("✅ Báo cáo đã được gửi thành công")
+        st.cache_data.clear()
 
 def clear_form_state():
     for key in ["chon_khoa", "ngay_bao_cao", "SL_NB_cap_1s", "SL_DD_cap_1s","SL_NB_cap_1c", "SL_DD_cap_1c","SL_NB_cap_1t", "SL_DD_cap_1t"]:
