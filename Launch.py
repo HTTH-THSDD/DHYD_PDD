@@ -247,6 +247,8 @@ khoa = ["Đơn vị Gây mê hồi sức Phẫu thuật tim mạch",
         "Khoa Tim mạch can thiệp"]
 
 if "username" in st.session_state:
+    if "khoa" not in st.session_state:
+        st.session_state.khoa = ""
     if st.session_state.phan_quyen in ["1"]: 
         pg = st.navigation(
             {
@@ -279,7 +281,7 @@ if "username" in st.session_state:
         )
     ######## 4. ĐD Trưởng Khoa/Đơn nguyên ########
     elif st.session_state.phan_quyen in ["4"]:
-        if st.session_state.khoa in khoa:
+        if st.session_state.khoa and st.session_state.khoa in khoa:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
@@ -299,7 +301,7 @@ if "username" in st.session_state:
             )
     ##### 5: ĐD viên + QTKT + CSCS + PRIME ########
     elif st.session_state.phan_quyen in ["5"]:
-        if st.session_state.khoa in khoa:
+        if st.session_state.khoa and st.session_state.khoa in khoa:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
@@ -319,7 +321,7 @@ if "username" in st.session_state:
             )
     ##### 6: ĐD viên + HSBA + GDSK ########
     elif st.session_state.phan_quyen in ["6"]:
-        if st.session_state.khoa in khoa:
+        if st.session_state.khoa and st.session_state.khoa in khoa:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
@@ -339,7 +341,7 @@ if "username" in st.session_state:
             )
     ##### 7: ĐD viên + VTTB + PCCS ########
     elif st.session_state.phan_quyen in ["7"]:
-        if st.session_state.khoa in khoa:
+        if st.session_state.khoa and st.session_state.khoa in khoa:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
@@ -359,7 +361,7 @@ if "username" in st.session_state:
             )
     ##### 8: ĐD viên + QTKT + CSCS + PRIME + VTTB + PCCS ########
     elif st.session_state.phan_quyen in ["8"]:
-        if st.session_state.khoa in khoa:
+        if st.session_state.khoa and st.session_state.khoa in khoa:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
@@ -379,7 +381,7 @@ if "username" in st.session_state:
             )
     ##### 9: ĐD viên + GDSK + HSBA + VTTB + PCCS ########
     elif st.session_state.phan_quyen in ["9"]:
-        if st.session_state.khoa in khoa:
+        if st.session_state.khoa and st.session_state.khoa in khoa:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
@@ -398,7 +400,7 @@ if "username" in st.session_state:
             expanded=False,
             )
     else: ##### 10: ĐD viên bình thường ########
-        if st.session_state.khoa in khoa:
+        if st.session_state.khoa and st.session_state.khoa in khoa:
            pg = st.navigation(
                 {
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
