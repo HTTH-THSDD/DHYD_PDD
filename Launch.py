@@ -192,41 +192,46 @@ PS = st.Page("users/3_doi_mk.py",
 )
 
 QTKT = st.Page("pages/1_QTKT.py", 
-               title="Giám sát quy trình kỹ thuật", 
+               title="1. Giám sát quy trình kỹ thuật", 
                icon="🩺", default=True
 )
 CSCS = st.Page("pages/1.2_CSCS.py", 
-               title="Chỉ số chăm sóc", 
+               title="2. Chỉ số chăm sóc", 
                icon="🩹"
 )
 PRIME = st.Page("pages/1.1_PRIME.py", 
-               title="PRIME", 
+               title="3. PRIME", 
                icon="💉"
 )
 HSBA = st.Page("pages/2_HSBA.py", 
-               title="Hồ sơ bệnh án", 
+               title="4. Hồ sơ bệnh án", 
                icon="📋"
 )
 GDSK = st.Page("pages/3_GDSK.py",
-                title="Giáo dục sức khỏe",
+                title="5. Giáo dục sức khỏe",
                 icon="👄"
 )
 VTTB = st.Page("pages/4_VTTB.py",
-                title="Báo cáo thiết bị hằng ngày",
+                title="6. Báo cáo thiết bị hằng ngày",
                 icon="🦽"
 )
 PCCS = st.Page("pages/5_PCCS.py",
-                title="Người bệnh PCCS cấp I/ ĐD",
+                title="7. Người bệnh PCCS cấp I/ ĐD",
                 icon="🥇"
 )
 KSNK = st.Page("pages/6_KSNK.py",
-                title="Kiểm soát nhiễm khuẩn",
+                title="8. Kiểm soát nhiễm khuẩn",
                 icon="🌷"
 )
 TTD_TN = st.Page("pages/7_TTD_TN.py",
-                title="Loét - Té ngã",
+                title="9. Loét - Té ngã",
                 icon="🔖"
 )
+QLDD_HDCM = st.Page("pages/8_QLDD_HDCM.py",
+                title="10. Quản lý điều dưỡng",
+                icon="💎"
+)
+
 BC_QTKT = st.Page("reports/1_rp_QTKT.py", title="TK Giám sát quy trình kỹ thuật",  icon="🔹")
 BC_CSCS = st.Page("reports/1.2_rp_CSCS.py", title="TK Chỉ số chăm sóc ", icon="🔹")
 BC_PRIME = st.Page("reports/1.1_rp_PRIME.py", title="TK PRIME ", icon="🔹")
@@ -236,6 +241,13 @@ BC_VTTB = st.Page("reports/4_rp_VTTB.py", title="TK Báo cáo thiết bị", ico
 BC_PCCS = st.Page("reports/5_rp_PCCS.py", title="TK NB PCCS Cấp I/ ĐD", icon="🔹")
 BC_KSNK = st.Page("reports/6_rp_KSNK.py", title="TK Số liệu KSNK", icon="🔹")
 BC_TTD_TN = st.Page("reports/7_rp_TTD_TN.py", title="TK Số liệu Loét - Té ngã", icon="🔹")
+BC_QLDD_HDCM = st.Page("reports/8_rp_QLDD_HDCM.py", title="TK QLĐD & HĐCM", icon="🔹")
+
+
+THI_test = st.Page("DepartmentTest/1_LamBaiThi.py", title="Làm bài thi",  icon="📝")
+THI_manage = st.Page("DepartmentTest/2_QuanLyDeThi.py", title="Quản lý đề thi",  icon="📊")
+THI_result = st.Page("DepartmentTest/3_KetQuaThi.py", title="Xem kết quả thi",  icon="📈")
+
 
 khoa = ["Đơn vị Gây mê hồi sức Phẫu thuật tim mạch",
         "Đơn vị Hồi sức Ngoại Thần kinh",
@@ -253,9 +265,13 @@ if "username" in st.session_state:
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS, KSNK, TTD_TN],
-                "Thống kê báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS, BC_KSNK, BC_TTD_TN],
+                "Trắc nghiệm": [THI_test, THI_manage, THI_result],
+                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS, KSNK, TTD_TN, QLDD_HDCM],
+                "Thống kê báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, 
+                                     BC_GDSK, BC_VTTB, BC_PCCS, BC_KSNK, BC_TTD_TN,
+                                     BC_QLDD_HDCM],
                 "Quản trị viên": [AD1, AD2, AD3],
+                "Trắc nghiệm": [THI_test, THI_manage, THI_result],
             },
         expanded=False,
         )
@@ -263,6 +279,7 @@ if "username" in st.session_state:
         pg = st.navigation(    
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                "Trắc nghiệm": [THI_test, THI_manage],
                 "Nhập kết quả": [QTKT,CSCS,PRIME, HSBA, GDSK,VTTB, PCCS, KSNK, TTD_TN],
                 "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS, BC_KSNK, BC_TTD_TN],
                 "Quản trị viên": [AD1],
@@ -274,6 +291,7 @@ if "username" in st.session_state:
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                "Trắc nghiệm": [THI_test, THI_manage],
                 "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS, KSNK, TTD_TN],
                 "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK,BC_VTTB, BC_PCCS, BC_KSNK, BC_TTD_TN],
             },

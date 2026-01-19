@@ -146,7 +146,19 @@ def upload_data_yc():
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
     sheet = gc.open("Output-st-YC").sheet1
-    column_index = len(sheet.get_all_values())
+    
+    all_values = sheet.get_all_values()
+    next_row = len(all_values) + 1
+    if len(all_values) > 1:
+        try:
+            last_row = all_values[-1]
+            last_stt = int(last_row[0])  # Cột đầu tiên là STT
+            new_stt = last_stt + 1
+        except (ValueError, IndexError):
+            new_stt = len(all_values)
+    else:
+        new_stt = 1
+    
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))    
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_YC)
@@ -154,16 +166,29 @@ def upload_data_yc():
     column_ttlh = str(st.session_state.ttlh)
     column_loaiyc = str(st.session_state.lyc)
     column_ndyc = str(st.session_state.ndyc)
-    sheet.append_row([  column_index,
-                        column_timestamp,
-                        column_khoa,
-                        column_nvyc,
-                        column_ttlh,
-                        column_loaiyc,
-                        column_ndyc,
-                     ])
-    gui_email_yc()
-    st.toast("Yêu cầu đã được gửi!")
+    new_row = [
+        new_stt,
+        column_timestamp,
+        column_khoa,
+        column_nvyc,
+        column_ttlh,
+        column_loaiyc,
+        column_ndyc,
+    ]
+    
+    try:
+        sheet.insert_row(new_row, index=next_row, value_input_option='USER_ENTERED')
+        gui_email_yc()
+        
+        # Clear cache
+        st.cache_data.clear()
+        
+        st.toast("Yêu cầu đã được gửi!")
+        return True
+        
+    except Exception as e:
+        st.error(f"Có lỗi xảy ra khi gửi yêu cầu: {str(e)}")
+        return False
 
 # Main Section ####################################################################################
 css_path = pathlib.Path("asset/style.css")

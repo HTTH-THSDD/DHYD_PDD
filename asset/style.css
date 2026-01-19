@@ -569,3 +569,25 @@ div[role="dialog"] {
     justify-content: center;
     align-items: center;
 }
+
+.fixed-timer {
+        position: fixed;
+        top: 400px;
+        right: 20px;
+        z-index: 9999;
+        background-color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+.timer-text {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 0;
+    }
+.timer-red {
+        color: #ff4b4b;
+    }
+.timer-blue {
+        color: #1f77b4;
+    }
