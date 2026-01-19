@@ -303,6 +303,7 @@ if "username" in st.session_state:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                "Trắc nghiệm": [THI_test],
                 "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                 "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS],
             },
@@ -312,6 +313,7 @@ if "username" in st.session_state:
             pg = st.navigation(
                 {
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                    "Trắc nghiệm": [THI_test],
                     "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                     "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS],
                 },
@@ -323,6 +325,7 @@ if "username" in st.session_state:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                "Trắc nghiệm": [THI_test],
                 "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                 "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME],
             },
@@ -332,6 +335,7 @@ if "username" in st.session_state:
             pg = st.navigation(
                 {
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                    "Trắc nghiệm": [THI_test],
                     "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                     "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME],
                 },
@@ -343,6 +347,7 @@ if "username" in st.session_state:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                "Trắc nghiệm": [THI_test],
                 "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                 "Báo cáo": [BC_HSBA, BC_GDSK],
             },
@@ -352,6 +357,7 @@ if "username" in st.session_state:
             pg = st.navigation(
                 {
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                    "Trắc nghiệm": [THI_test],
                     "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                     "Báo cáo": [BC_HSBA, BC_GDSK],
                 },
@@ -363,6 +369,7 @@ if "username" in st.session_state:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                "Trắc nghiệm": [THI_test],
                 "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                 "Báo cáo": [BC_VTTB, BC_PCCS],
             },
@@ -372,6 +379,7 @@ if "username" in st.session_state:
             pg = st.navigation(
                 {
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                    "Trắc nghiệm": [THI_test],
                     "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                     "Báo cáo": [BC_VTTB, BC_PCCS],
                 },
@@ -383,6 +391,7 @@ if "username" in st.session_state:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                "Trắc nghiệm": [THI_test],
                 "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                 "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_VTTB, BC_PCCS],
             },
@@ -392,6 +401,7 @@ if "username" in st.session_state:
             pg = st.navigation(
                 {
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                    "Trắc nghiệm": [THI_test],
                     "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                     "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_VTTB, BC_PCCS],
                 },
@@ -403,6 +413,7 @@ if "username" in st.session_state:
             pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                "Trắc nghiệm": [THI_test],
                 "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                 "Báo cáo": [BC_GDSK, BC_HSBA, BC_VTTB, BC_PCCS],
             },
@@ -412,6 +423,7 @@ if "username" in st.session_state:
             pg = st.navigation(
                 {
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                    "Trắc nghiệm": [THI_test],
                     "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                     "Báo cáo": [BC_GDSK, BC_HSBA, BC_VTTB, BC_PCCS],
                 },
@@ -422,6 +434,7 @@ if "username" in st.session_state:
            pg = st.navigation(
                 {
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                    "Trắc nghiệm": [THI_test],
                     "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                     "Báo cáo":[BC_VTTB, BC_PCCS]
                 },
@@ -431,6 +444,7 @@ if "username" in st.session_state:
             pg = st.navigation(
                     {
                         "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                        "Trắc nghiệm": [THI_test],
                         "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
                     },
             expanded=False,
