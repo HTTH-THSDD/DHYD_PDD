@@ -10,7 +10,7 @@ import re
 import random
 import time
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=360)
 def load_credentials():
     creds_info = {
         "type": st.secrets["google_service_account"]["type"],
@@ -31,7 +31,7 @@ def load_credentials():
     )
     return credentials
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=360)
 def get_img_as_base64(file):
     with open(file, "rb") as f:
         data = f.read()
@@ -44,7 +44,7 @@ def load_css(file_path):
     except:
         pass
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=360)
 def load_data(x):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
@@ -212,8 +212,8 @@ def hien_thi_cau_hoi_dung_sai(stt, question, answers_text, results_text):
     answer_statements = [ans.strip() for ans in answers_text.split('\n') if ans.strip()]
     correct_results = [res.strip() for res in results_text.split('\n') if res.strip()]
     
-    st.markdown("""<p style="font-size: 15px; color: #024d4d;; font-weight: bold;">
-                Chọn đáp án Đúng hoặc Sai cho mỗi câu sau:</p>""", unsafe_allow_html=True)
+    # st.markdown("""<p style="font-size: 15px; color: #024d4d;; font-weight: bold;">
+    #             Chọn đáp án Đúng hoặc Sai cho mỗi câu sau:</p>""", unsafe_allow_html=True)
     
     if stt not in st.session_state.answers:
         st.session_state.answers[stt] = {}
