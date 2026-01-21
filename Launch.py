@@ -279,7 +279,7 @@ if "username" in st.session_state:
         pg = st.navigation(    
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Trắc nghiệm": [THI_test, THI_manage],
+                "Trắc nghiệm": [THI_test, THI_manage,THI_result],
                 "Nhập kết quả": [QTKT,CSCS,PRIME, HSBA, GDSK,VTTB, PCCS, KSNK, TTD_TN],
                 "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK, BC_VTTB, BC_PCCS, BC_KSNK, BC_TTD_TN],
                 "Quản trị viên": [AD1],
@@ -291,7 +291,7 @@ if "username" in st.session_state:
         pg = st.navigation(
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
-                "Trắc nghiệm": [THI_test, THI_manage],
+                "Trắc nghiệm": [THI_test, THI_manage,THI_result],
                 "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS, KSNK, TTD_TN],
                 "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, BC_GDSK,BC_VTTB, BC_PCCS, BC_KSNK, BC_TTD_TN],
             },

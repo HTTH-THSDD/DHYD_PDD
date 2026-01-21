@@ -130,7 +130,9 @@ tab1, tab2 = st.tabs(["📋 Kiểm soát đề", "➕ Tạo bộ câu hỏi"])
 
 # TAB 1: Kiểm soát đề
 with tab1:
-    st.header("Danh sách bộ câu hỏi")
+    st.markdown("<p style='color:#230ee3;font-size:25px;font-weight:bold;text-align:center'>Danh sách bộ câu hỏi</p>", unsafe_allow_html=True)
+
+  
     
     sheeti8 = st.secrets["sheet_name"]["input_8"]
     
@@ -211,16 +213,17 @@ with tab2:
     
     # Thông tin cơ bản
     st.subheader("Thông tin bộ đề")
-    col1, col2, col3 = st.columns(3)
-    
+    col1, col2= st.columns(2)
     with col1:
+        loai_bo_cau_hoi = st.text_input("Loại bộ câu hỏi *", key="loai_bo_cau_hoi")
+    with col2:
         ten_bo_cau_hoi = st.text_input("Tên bộ câu hỏi *", key="ten_bo_cau_hoi")
     
-    with col2:
-        thoi_gian = st.number_input("Thời gian tối đa (phút) *", min_value=1, value=10, key="thoi_gian")
-    
+    col3, col4 = st.columns(2)
     with col3:
-        diem_toi_da = st.number_input("Điểm số tối đa *", min_value=1, value=10, key="diem_toi_da")
+        diem_toi_da = st.number_input("Điểm số tối đa *", min_value=1, key="diem_toi_da")
+    with col4:
+        thoi_gian = st.number_input("Thời gian tối đa (phút) *", min_value=1, key="thoi_gian")
     
     st.markdown("---")
     
@@ -231,26 +234,28 @@ with tab2:
     col1, col2 = st.columns(2)
     with col1:
         if st.button("➕ Thêm câu hỏi Trắc nghiệm", use_container_width=True):
+            # STT = số lượng câu hỏi hiện tại + 1
+            new_stt = len(st.session_state.questions) + 1
             st.session_state.questions.append({
-                'stt': st.session_state.question_counter,
+                'stt': new_stt,
                 'type': 'Trắc nghiệm',
                 'question': '',
                 'answers': ['', '', '', ''],
                 'results': ['Sai', 'Sai', 'Sai', 'Sai']
             })
-            st.session_state.question_counter += 1
             st.rerun()
     
     with col2:
         if st.button("➕ Thêm câu hỏi Đúng/Sai", use_container_width=True):
+            # STT = số lượng câu hỏi hiện tại + 1
+            new_stt = len(st.session_state.questions) + 1
             st.session_state.questions.append({
-                'stt': st.session_state.question_counter,
+                'stt': new_stt,
                 'type': 'Đúng/Sai',
                 'question': '',
                 'answers': [''],
                 'results': ['Đúng']
             })
-            st.session_state.question_counter += 1
             st.rerun()
     
     # Hiển thị các câu hỏi
@@ -269,6 +274,9 @@ with tab2:
             with col2:
                 if st.button("🗑️ Xóa", key=f"delete_{q_idx}", use_container_width=True):
                     st.session_state.questions.pop(q_idx)
+                    # Re-index STT để luôn liên tiếp
+                    for i, q in enumerate(st.session_state.questions):
+                        q['stt'] = i + 1
                     st.rerun()
             
             st.markdown("**Câu trả lời:**")
@@ -327,12 +335,13 @@ with tab2:
     
     # Nút lưu và tạo mới
     col1, col2 = st.columns(2)
-    
     with col1:
         if st.button("💾 Lưu bộ đề", type="primary", use_container_width=True):
             # Validate
             if not ten_bo_cau_hoi:
                 st.error("❌ Vui lòng nhập tên bộ câu hỏi!")
+            elif not loai_bo_cau_hoi:
+                st.error("❌ Vui lòng nhập loại bộ câu hỏi!")
             elif len(st.session_state.questions) == 0:
                 st.error("❌ Vui lòng thêm ít nhất 1 câu hỏi!")
             else:
@@ -353,51 +362,49 @@ with tab2:
                 
                 if valid:
                     try:
-                        # Lưu vào Sheet 2 (Quy định)
-                        config_row = [ten_bo_cau_hoi, str(thoi_gian), str(diem_toi_da), "OFF"]
+                        # Lưu vào Sheet 2 (Quy định) - cấu trúc: Tên bộ câu hỏi, Thời gian, Điểm số tối đa, Trạng thái, Loại bộ câu hỏi
+                        config_row = [ten_bo_cau_hoi, str(thoi_gian), str(diem_toi_da), "OFF", loai_bo_cau_hoi]
                         append_rows_to_sheet(sheeti8, "Sheet 2", [config_row])
                         
-                        # Lưu vào Sheet 1 (Bộ câu hỏi)
+                        # Lưu vào Sheet 1 (Bộ câu hỏi) theo cấu trúc:
+                        # Tên bộ câu hỏi | STT câu hỏi | Câu hỏi | Loại câu hỏi | Câu trả lời | Kết quả | Loại bộ câu hỏi
                         question_rows = []
+                        
                         for q in st.session_state.questions:
-                            # Format câu trả lời
+                            # Format câu trả lời và kết quả - giữ nguyên với \n
                             answers_text = '\n'.join(q['answers'])
                             results_text = '\n'.join(q['results'])
                             
-                            # Tạo các dòng cho mỗi câu trả lời
-                            for i in range(len(q['answers'])):
-                                if i == 0:
-                                    # Dòng đầu tiên có đầy đủ thông tin
-                                    row = [
-                                        ten_bo_cau_hoi,
-                                        str(q['stt']),
-                                        q['question'],
-                                        q['type'],
-                                        answers_text,
-                                        results_text
-                                    ]
-                                else:
-                                    # Các dòng tiếp theo lặp lại thông tin
-                                    row = [
-                                        ten_bo_cau_hoi,
-                                        str(q['stt']),
-                                        q['question'],
-                                        q['type'],
-                                        answers_text,
-                                        results_text
-                                    ]
-                                question_rows.append(row)
+                            # Tạo 1 dòng duy nhất cho mỗi câu hỏi
+                            row = [
+                                ten_bo_cau_hoi,           # Cột A: Tên bộ câu hỏi
+                                str(q['stt']),            # Cột B: STT câu hỏi
+                                q['question'],            # Cột C: Câu hỏi
+                                q['type'],                # Cột D: Loại câu hỏi (Trắc nghiệm / Đúng-Sai)
+                                answers_text,             # Cột E: Câu trả lời (format: Đáp án 1\nĐáp án 2\n...)
+                                results_text,             # Cột F: Kết quả (format: Đúng\nSai\nSai\n...)
+                                loai_bo_cau_hoi           # Cột G: Loại bộ câu hỏi
+                            ]
+                            question_rows.append(row)
                         
                         append_rows_to_sheet(sheeti8, "Sheet 1", question_rows)
                         
                         st.success(f"✅ Đã lưu bộ đề '{ten_bo_cau_hoi}' thành công!")
+                        st.info(f"ℹ️ Tổng số câu hỏi: {len(st.session_state.questions)}")
                         st.balloons()
+                        
+                        # Reset form sau 2 giây
+                        import time
+                        time.sleep(2)
+                        st.session_state.questions = []
+                        st.rerun()
                         
                     except Exception as e:
                         st.error(f"❌ Lỗi khi lưu: {str(e)}")
+                        import traceback
+                        st.code(traceback.format_exc())
     
     with col2:
         if st.button("🔄 Tạo bộ đề mới", use_container_width=True):
             st.session_state.questions = []
-            st.session_state.question_counter = 1
             st.rerun()

@@ -1,11 +1,28 @@
 import streamlit as st
 import pandas as pd
 import gspread
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
 import pathlib
 import base64
 from google.oauth2.service_account import Credentials
+import plotly.express as px
+
+@st.cache_data(ttl=3600)
+def get_img_as_base64(file):
+    with open(file, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+def load_css(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except UnicodeDecodeError:
+        with open(file_path, 'r', encoding='latin-1') as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+css_path = pathlib.Path("asset/style.css")
 
 @st.cache_data(ttl=3600)
 def load_credentials():
@@ -28,476 +45,478 @@ def load_credentials():
     )
     return credentials
 
-@st.cache_data(ttl=3600)
-def get_img_as_base64(file):
-    with open(file, "rb") as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
-
-def load_css(file_path):
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-    except:
-        pass
-
-@st.cache_data(ttl=3600)
-def load_data(x):
+@st.cache_data(ttl=10)
+def load_data_full(sheet_name):
+    """Load full data from Google Sheets"""
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
-    sheet = gc.open(x).sheet1
+    sheet = gc.open(sheet_name).sheet1
     data = sheet.get_all_values()
     header = data[0]
     values = data[1:]
-    data_final = pd.DataFrame(values, columns=header)
-    return data_final
+    df = pd.DataFrame(values, columns=header)
+    return df
 
-@st.cache_data(ttl=60)
-def load_sheet_by_name(sheet_name, worksheet_name):
-    try:
-        credentials = load_credentials()
-        gc = gspread.authorize(credentials)
-        spreadsheet = gc.open(sheet_name)
+@st.cache_data(ttl=10)
+def load_data_filtered(sheet_name, sd, ed, khoa_list, nv_list=None, loai_bch_list=None):
+    """Load and filter data based on date range, departments, employees and quiz types"""
+    credentials = load_credentials()
+    gc = gspread.authorize(credentials)
+    sheet = gc.open(sheet_name).sheet1
+    data = sheet.get_all_values()
+    header = data[0]
+    values = data[1:]
+    df = pd.DataFrame(values, columns=header)
+    
+    # Filter by department
+    if khoa_list and len(khoa_list) > 0:
+        df = df[df["Khoa"].isin(khoa_list)]
+    
+    # Filter by employee
+    if nv_list and len(nv_list) > 0:
+        df = df[df["Nhân viên"].isin(nv_list)]
+    
+    # Filter by quiz type (Loại bộ câu hỏi) - lọc từ cột F (output_11)
+    if loai_bch_list and len(loai_bch_list) > 0:
+        # Tìm cột chứa "Loại bộ câu hỏi" trong output_11
+        ten_cot_loai_bch = None
+        for cot in df.columns:
+            if 'loại' in cot.lower() and 'câu' in cot.lower():
+                ten_cot_loai_bch = cot
+                break
         
-        try:
-            sheet = spreadsheet.worksheet(worksheet_name)
-            data = sheet.get_all_values()
-        except gspread.exceptions.WorksheetNotFound:
-            worksheet_map = {
-                "Sheet 0": 0, "Sheet 1": 1, "Sheet 2": 2, "Sheet 3": 3,
-            }
-            if worksheet_name in worksheet_map:
-                idx = worksheet_map[worksheet_name]
-                sheet = spreadsheet.get_worksheet(idx)
-                data = sheet.get_all_values()
-            else:
-                return pd.DataFrame()
-        
-        if len(data) > 0:
-            header = data[0]
-            values = data[1:]
-            return pd.DataFrame(values, columns=header)
-        return pd.DataFrame()
-    except Exception as e:
-        st.error(f"Lỗi: {str(e)}")
-        return pd.DataFrame()
+        if ten_cot_loai_bch is None:
+            for cot in df.columns:
+                if 'loại' in cot.lower() and 'bộ' in cot.lower():
+                    ten_cot_loai_bch = cot
+                    break
+        # Nếu vẫn không tìm thấy, dùng cột F (index 5)
+        if ten_cot_loai_bch is None and len(df.columns) > 5:
+            ten_cot_loai_bch = df.columns[5]
+        # Lọc dựa trên cột Loại bộ câu hỏi
+        if ten_cot_loai_bch:
+            df = df[df[ten_cot_loai_bch].astype(str).str.strip().isin([str(x).strip() for x in loai_bch_list])]
+    
+    # Convert timestamp and filter by date
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'], errors='coerce')
+    df['Ngày thực hiện'] = pd.to_datetime(df['Ngày thực hiện'], errors='coerce')
+    
+    start_date = pd.Timestamp(sd)
+    end_date = pd.Timestamp(ed) + timedelta(days=1)
+    
+    df = df[(df['Timestamp'] >= start_date) & (df['Timestamp'] < end_date)]
+    
+    return df
 
-def hien_thi_header():
+@st.cache_data(ttl=10)
+def load_sheet_specific(sheet_name, worksheet_name):
+    """Load dữ liệu từ worksheet cụ thể"""
+    credentials = load_credentials()
+    gc = gspread.authorize(credentials)
     try:
-        img = get_img_as_base64("pages/img/logo.png")
-        css_path = pathlib.Path("asset/style.css")
-        load_css(css_path)
-        st.markdown(f"""
-            <div class="fixed-header">
-                <div class="header-content">
-                    <img src="data:image/png;base64,{img}" alt="logo">
-                    <div class="header-text">
-                        <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&#174;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
-                    </div>
-                </div>
-                <div class="header-subtext">
-                <p style="color:green">THỐNG KÊ KẾT QUẢ KIỂM TRA</p>
-                </div>
-            </div>
-            <div class="header-underline"></div>
-        """, unsafe_allow_html=True)
+        sheet = gc.open(sheet_name).worksheet(worksheet_name)
     except:
-        st.title("THỐNG KÊ KẾT QUẢ KIỂM TRA")
+        sheet = gc.open(sheet_name).get_worksheet(0)
+    data = sheet.get_all_values()
+    header = data[0]
+    values = data[1:]
+    df = pd.DataFrame(values, columns=header)
+    return df
+
+def parse_ket_qua(chuoi_ket_qua):
+    """Phân tích chuỗi kết quả thành các cặp STT-câu trả lời"""
+    danh_sach_cap = []
+    if not chuoi_ket_qua or pd.isna(chuoi_ket_qua):
+        return danh_sach_cap
+    chuoi_ket_qua = str(chuoi_ket_qua).strip()
+    if chuoi_ket_qua == '':
+        return danh_sach_cap
     
-    if 'username' in st.session_state:
-        html_code = f'<p class="demuc"><i>Nhân viên thực hiện: {st.session_state.username}</i></p>'
-        st.html(html_code)
+    cac_cau_hoi = chuoi_ket_qua.split('#')
+    for cau in cac_cau_hoi:
+        if not cau or cau.strip() == '':
+            continue    
+        if '|' in cau:
+            phan_tach = cau.split('|', 1)
+            stt = phan_tach[0].strip()
+            cau_tra_loi = phan_tach[1].strip() if len(phan_tach) > 1 else "Chưa trả lời" 
+            if stt:
+                danh_sach_cap.append({
+                    'STT': stt,
+                    'Cau_tra_loi': cau_tra_loi
+                })  
+    return danh_sach_cap
 
-def parse_result_string(result_str):
-    """Parse chuỗi kết quả: 1|Đáp án A#2|Đúng-Sai-Đúng"""
-    results = []   
-    # Kiểm tra chuỗi có rỗng không
-    if not result_str or result_str == '' or result_str is None:
-        return results
-    # Xóa khoảng trắng dư thừa
-    result_str = str(result_str).strip()
-    if result_str == '':
-        return results
-    questions = result_str.split('#')
-    for q in questions:
-        # Bỏ qua các phần tử rỗng
-        if not q or q.strip() == '':
-            continue
-        q = q.strip()
-        # Kiểm tra xem có ký tự '|' không
-        if '|' not in q:
-            st.warning(f"⚠️ Format kết quả không hợp lệ: {q}")
-            continue
-        parts = q.split('|', 1)
-        # Kiểm tra xem có đủ 2 phần không
-        if len(parts) < 2:
-            st.warning(f"⚠️ Format kết quả không hợp lệ: {q}")
-            continue 
-        stt = parts[0].strip()
-        answer = parts[1].strip() if len(parts) > 1 else ""
-        # Bỏ qua nếu STT rỗng
-        if not stt:
-            continue
-        results.append({'stt': stt, 'answer': answer})
-    return results
-
-
-def get_correct_answer(ma_de, stt):
-    """Lấy đáp án đúng từ input_8"""
-    try:
-        sheeti8 = st.secrets["sheet_name"]["input_8"]
-        df_questions = load_sheet_by_name(sheeti8, "Sheet 3")
-        
-        if len(df_questions) == 0:
-            st.warning(f"⚠️ Không tìm thấy dữ liệu trong Sheet 3")
-            return None
-        
-        # Kiểm tra xem các cột cần thiết có tồn tại không
-        required_columns = ["Tên bộ câu hỏi", "STT câu hỏi", "Câu hỏi", "Loại câu hỏi", "Câu trả lời", "Kết quả"]
-        missing_columns = [col for col in required_columns if col not in df_questions.columns]
-        
-        if missing_columns:
-            st.error(f"❌ Sheet 3 thiếu các cột: {', '.join(missing_columns)}")
-            st.write(f"Các cột hiện có: {list(df_questions.columns)}")
-            return None
-        
-        # Tìm câu hỏi theo mã đề và STT
-        question_data = df_questions[
-            (df_questions["Tên bộ câu hỏi"].astype(str).str.strip() == str(ma_de).strip()) & 
-            (df_questions["STT câu hỏi"].astype(str).str.strip() == str(stt).strip())
-        ]
-        
-        if len(question_data) == 0:
-            st.warning(f"⚠️ Không tìm thấy câu hỏi: mã đề={ma_de}, STT={stt}")
-            return None
-        
-        row = question_data.iloc[0]
-        
-        # Trích xuất dữ liệu một cách an toàn
-        return {
-            'question': str(row["Câu hỏi"]) if "Câu hỏi" in row else "",
-            'type': str(row["Loại câu hỏi"]) if "Loại câu hỏi" in row else "",
-            'answers': str(row["Câu trả lời"]) if "Câu trả lời" in row else "",
-            'results': str(row["Kết quả"]) if "Kết quả" in row else ""
+def tao_tu_dien_dap_an(du_lieu_dap_an):
+    """
+    Tạo từ điển đáp án với cấu trúc:
+    {
+        'ma_de': {
+            'stt': {
+                'loai': 'Trắc nghiệm' hoặc 'Đúng/Sai',
+                'dap_an_dung': 'text câu trả lời đúng' (cho trắc nghiệm),
+                'danh_sach_dap_an': ['Đúng', 'Sai', 'Đúng', ...] (cho Đúng/Sai)
+            }
         }
+    }
+    """
+    tu_dien = {}
+    
+    # Tìm tên các cột
+    ten_cot_ma_de = next((c for c in du_lieu_dap_an.columns if 'đề' in c.lower() or 'de' in c.lower()), du_lieu_dap_an.columns[0])
+    ten_cot_stt = next((c for c in du_lieu_dap_an.columns if 'stt' in c.lower() and 'câu' in c.lower()), None)
+    if not ten_cot_stt:
+        ten_cot_stt = next((c for c in du_lieu_dap_an.columns if 'stt' in c.lower()), du_lieu_dap_an.columns[1])
+    
+    ten_cot_loai = next((c for c in du_lieu_dap_an.columns if 'loại' in c.lower() and 'câu' in c.lower()), None)
+    ten_cot_cau_tra_loi = next((c for c in du_lieu_dap_an.columns if 'câu trả lời' in c.lower()), du_lieu_dap_an.columns[4])
+    ten_cot_ket_qua = next((c for c in du_lieu_dap_an.columns if 'kết quả' in c.lower()), du_lieu_dap_an.columns[5])
+    
+    for _, dong in du_lieu_dap_an.iterrows():
+        ma_de = str(dong[ten_cot_ma_de]).strip()
+        stt = str(dong[ten_cot_stt]).strip()
+        loai_cau_hoi = str(dong[ten_cot_loai]).strip() if ten_cot_loai else ""
         
-    except Exception as e:
-        st.error(f"❌ Lỗi khi lấy đáp án cho câu {stt}: {str(e)}")
-        import traceback
-        st.code(traceback.format_exc())
-        return None
-
-def check_answer_correct(user_answer, ma_de, stt):
-    """Kiểm tra đáp án đúng hay sai"""
-    try:
-        correct_data = get_correct_answer(ma_de, stt)
+        if ma_de not in tu_dien:
+            tu_dien[ma_de] = {}
         
-        if not correct_data:
-            return False, ""
+        # Phân tích câu trả lời và kết quả
+        cac_cau_tra_loi_text = str(dong[ten_cot_cau_tra_loi]).split('\n')
+        cac_ket_qua_text = str(dong[ten_cot_ket_qua]).split('\n')
         
-        q_type = correct_data.get('type', '')
-        answers = correct_data.get('answers', '')
-        results = correct_data.get('results', '')
+        cac_cau_tra_loi = [c.strip() for c in cac_cau_tra_loi_text if c.strip()]
+        cac_ket_qua = [k.strip() for k in cac_ket_qua_text if k.strip()]
         
-        if not answers or not results:
-            return False, ""
-        
-        if q_type == "Trắc nghiệm":
-            answer_list = [ans.strip() for ans in str(answers).split('\n') if ans.strip()]
-            result_list = [res.strip() for res in str(results).split('\n') if res.strip()]
-            
-            if len(answer_list) == 0 or len(result_list) == 0:
-                return False, ""
-            
-            correct_answer = None
-            for ans, res in zip(answer_list, result_list):
-                if res == "Đúng":
-                    correct_answer = ans
+        if loai_cau_hoi == "Trắc nghiệm":
+            # Tìm câu trả lời có kết quả là "Đúng"
+            dap_an_dung = None
+            for i, tra_loi in enumerate(cac_cau_tra_loi):
+                if i < len(cac_ket_qua) and cac_ket_qua[i].lower() == "đúng":
+                    dap_an_dung = tra_loi
                     break
             
-            return user_answer.strip() == correct_answer if correct_answer else False, correct_data.get('question', '')
+            tu_dien[ma_de][stt] = {
+                'loai': 'Trắc nghiệm',
+                'dap_an_dung': dap_an_dung
+            }
         
-        elif q_type == "Đúng/Sai":
-            user_choices = [u.strip() for u in str(user_answer).split('-') if u.strip()]
-            correct_choices = [res.strip() for res in str(results).split('\n') if res.strip()]
+        elif loai_cau_hoi == "Đúng/Sai":
+            # Lưu danh sách kết quả Đúng/Sai cho từng câu
+            tu_dien[ma_de][stt] = {
+                'loai': 'Đúng/Sai',
+                'danh_sach_dap_an': cac_ket_qua
+            }
+    
+    return tu_dien
+
+def thong_ke_chung(du_lieu):
+    """Tạo bảng thống kê chung"""
+    if du_lieu.empty:
+        return pd.DataFrame()
+    
+    ten_cot_ma_de = next((c for c in du_lieu.columns if 'đề' in c.lower() or 'de' in c.lower()), du_lieu.columns[5])
+    
+    bang_thong_ke = du_lieu[['Ngày thực hiện', 'Khoa', 'Nhân viên', ten_cot_ma_de, 'Số câu đúng', 'Điểm quy đổi']].copy()
+    bang_thong_ke.columns = ['Ngày thực hiện', 'Khoa', 'Nhân viên thực hiện', 'Tên bộ câu hỏi', 'Số câu đúng', 'Điểm quy đổi']
+    
+    bang_thong_ke['Ngày thực hiện'] = pd.to_datetime(bang_thong_ke['Ngày thực hiện'], errors='coerce').dt.strftime('%Y-%m-%d')
+    bang_thong_ke['Điểm quy đổi'] = pd.to_numeric(bang_thong_ke['Điểm quy đổi'], errors='coerce').fillna(0).round(1)
+    
+    dong_tong = pd.DataFrame([{
+        'Ngày thực hiện': '',
+        'Khoa': '',
+        'Nhân viên thực hiện': '',
+        'Tên bộ câu hỏi': 'TRUNG BÌNH',
+        'Số câu đúng': '',
+        'Điểm quy đổi': bang_thong_ke['Điểm quy đổi'].mean().round(2)
+    }])
+    bang_thong_ke = pd.concat([bang_thong_ke, dong_tong], ignore_index=True)
+    return bang_thong_ke
+
+def thong_ke_chi_tiet(du_lieu, du_lieu_dap_an):
+    """Tạo bảng thống kê chi tiết với đối chiếu đáp án chính xác"""
+    cac_dong_chi_tiet = []
+    
+    # Tìm tên cột mã đề
+    ten_cot_ma_de = next((c for c in du_lieu.columns if 'đề' in c.lower() or 'de' in c.lower()), 
+                         du_lieu.columns[5] if len(du_lieu.columns) > 5 else du_lieu.columns[0])
+    
+    # Tạo từ điển đáp án
+    tu_dien_dap_an = tao_tu_dien_dap_an(du_lieu_dap_an)
+    
+    for _, dong in du_lieu.iterrows():
+        try:
+            cac_cap_ket_qua = parse_ket_qua(dong['Kết quả'])
+            ma_de = str(dong[ten_cot_ma_de]).strip()
             
-            if len(user_choices) != len(correct_choices):
-                return False, ""
+            ngay_thuc_hien = pd.to_datetime(dong['Ngày thực hiện'], errors='coerce')
+            ngay_thuc_hien_str = ngay_thuc_hien.strftime('%Y-%m-%d') if pd.notna(ngay_thuc_hien) else ''
             
-            all_correct = True
-            for user_choice, correct_choice in zip(user_choices, correct_choices):
-                if user_choice != correct_choice:
-                    all_correct = False
-                    break
+            if ma_de not in tu_dien_dap_an:
+                st.warning(f"⚠️ Không tìm thấy đáp án cho mã đề: {ma_de}")
+                continue
             
-            return all_correct, correct_data.get('question', '')
+            for cap in cac_cap_ket_qua:
+                try:
+                    stt = str(cap['STT']).strip()
+                    cau_tra_loi_user = str(cap['Cau_tra_loi']).strip()
+                    
+                    if stt not in tu_dien_dap_an[ma_de]:
+                        st.warning(f"⚠️ Không tìm thấy đáp án cho câu {stt} trong mã đề {ma_de}")
+                        ket_qua = "?"
+                    else:
+                        thong_tin_cau = tu_dien_dap_an[ma_de][stt]
+                        loai_cau = thong_tin_cau['loai']
+                        
+                        if cau_tra_loi_user == "" or cau_tra_loi_user == "Chưa trả lời":
+                            ket_qua = "Chưa trả lời"
+                        
+                        elif loai_cau == "Trắc nghiệm":
+                            dap_an_dung = thong_tin_cau['dap_an_dung']
+                            if cau_tra_loi_user == dap_an_dung:
+                                ket_qua = "✓"
+                            else:
+                                ket_qua = "✗"
+                        
+                        elif loai_cau == "Đúng/Sai":
+                            danh_sach_dap_an_dung = thong_tin_cau['danh_sach_dap_an']
+                            cac_tra_loi_user = [t.strip() for t in cau_tra_loi_user.split('-')]
+                            
+                            # Tính tỷ lệ đúng
+                            so_cau_dung = 0
+                            tong_so_cau = len(danh_sach_dap_an_dung)
+                            
+                            for i, dap_an_dung in enumerate(danh_sach_dap_an_dung):
+                                if i < len(cac_tra_loi_user):
+                                    if cac_tra_loi_user[i].lower() == dap_an_dung.lower():
+                                        so_cau_dung += 1
+                            
+                            # Hiển thị tỷ lệ đúng
+                            ket_qua = f"{so_cau_dung}/{tong_so_cau}"
+                        else:
+                            ket_qua = "?"
+                    
+                    cac_dong_chi_tiet.append({
+                        'Ngày thực hiện': ngay_thuc_hien_str,
+                        'Khoa': dong['Khoa'],
+                        'Nhân viên thực hiện': dong['Nhân viên'],
+                        'Tên bộ câu hỏi': ma_de,
+                        'STT câu hỏi': stt,
+                        'Câu trả lời của nhân viên': cau_tra_loi_user if cau_tra_loi_user else "Chưa trả lời",
+                        'Kết quả': ket_qua
+                    })
+                
+                except Exception as e:
+                    st.warning(f"⚠️ Lỗi xử lý câu {cap.get('STT', 'N/A')}: {str(e)}")
+                    continue
         
-        return False, ""
+        except Exception as e:
+            st.error(f"❌ Lỗi xử lý dòng: {str(e)}")
+            continue
     
-    except Exception as e:
-        st.warning(f"⚠️ Lỗi khi kiểm tra câu {stt}: {str(e)}")
-        return False, ""
+    if cac_dong_chi_tiet:
+        return pd.DataFrame(cac_dong_chi_tiet)
+    else:
+        st.info("ℹ️ Không có dữ liệu chi tiết để hiển thị")
+        return pd.DataFrame()
 
-def apply_filters(df, start_date, end_date, selected_khoa, selected_nhanvien):
-    """Áp dụng bộ lọc cho dataframe"""
-    filtered = df.copy()
-    
-    # Convert Ngày thực hiện to datetime
-    filtered['Ngày thực hiện'] = pd.to_datetime(filtered['Ngày thực hiện'])
-    
-    # Filter by date range
-    filtered = filtered[
-        (filtered['Ngày thực hiện'].dt.date >= start_date) & 
-        (filtered['Ngày thực hiện'].dt.date <= end_date)
-    ]
-    
-    # Filter by Khoa
-    if selected_khoa != "Tất cả":
-        filtered = filtered[filtered['Khoa'] == selected_khoa]
-    
-    # Filter by Nhân viên
-    if selected_nhanvien != "Tất cả":
-        filtered = filtered[filtered['Nhân viên'] == selected_nhanvien]
-    
-    return filtered
+def to_mau_ket_qua_sai(dong):
+    """Làm nổi bật câu trả lời sai"""
+    if dong['Kết quả'] == '✗':
+        return ['background-color: #ffcccc'] * len(dong)
+    if dong['Kết quả'] == 'Chưa trả lời':
+        return ['background-color: #ffffcc'] * len(dong)
+    elif dong['Kết quả'] not in ['✓', 'Chưa trả lời', '?'] and '/' in str(dong['Kết quả']):
+        # Highlight tỷ lệ không đạt 100%
+        try:
+            parts = str(dong['Kết quả']).split('/')
+            if len(parts) == 2 and parts[0] != parts[1]:
+                return ['background-color: #ffcccc'] * len(dong)
+        except:
+            pass
+    return [''] * len(dong)
 
-# CSS
-st.markdown("""
-<style>
-    .correct-answer {
-        color: #28a745;
-        font-weight: bold;
-    }
-    .incorrect-answer {
-        color: #dc3545;
-        font-weight: bold;
-    }
-    .highlight-correct {
-        background-color: #d4edda;
-        padding: 5px;
-        border-radius: 3px;
-    }
-</style>
+def bang_tra_cuu(du_lieu_input8):
+    ten_cot_ma_de = next((c for c in du_lieu_input8.columns if 'đề' in c.lower() or 'de' in c.lower()), du_lieu_input8.columns[0])
+    cac_bo_cau_hoi = du_lieu_input8[ten_cot_ma_de].unique().tolist() 
+    with st.form("form_tra_cuu"):
+        cot1, cot2 = st.columns(2)
+        with cot1:
+            bo_cau_hoi_duoc_chon = st.selectbox(
+                "Tên bộ câu hỏi",
+                options=cac_bo_cau_hoi,
+                index=0 if cac_bo_cau_hoi else None
+            )
+        with cot2:
+            if bo_cau_hoi_duoc_chon:
+                cac_cau_hoi = du_lieu_input8[du_lieu_input8[ten_cot_ma_de] == bo_cau_hoi_duoc_chon]['STT câu hỏi'].unique().tolist()
+                cau_hoi_duoc_chon = st.selectbox(
+                    "STT câu hỏi",
+                    options=["Tất cả"] + cac_cau_hoi,
+                    index=0
+                )
+            else:
+                cau_hoi_duoc_chon = None
+        
+        nut_tra_cuu = st.form_submit_button("Tra cứu")
+    
+    if nut_tra_cuu and bo_cau_hoi_duoc_chon:
+        du_lieu_loc = du_lieu_input8[du_lieu_input8[ten_cot_ma_de] == bo_cau_hoi_duoc_chon].copy()
+        if cau_hoi_duoc_chon and cau_hoi_duoc_chon != "Tất cả":
+            du_lieu_loc = du_lieu_loc[du_lieu_loc['STT câu hỏi'] == cau_hoi_duoc_chon] 
+        du_lieu_hien_thi = []
+        for _, dong in du_lieu_loc.iterrows():
+            danh_sach_tra_loi = str(dong['Câu trả lời']).split('\n')
+            danh_sach_dung = str(dong['Kết quả']).split('\n')
+            
+            cac_tra_loi_dinh_dang = []
+            for i, tra_loi in enumerate(danh_sach_tra_loi):
+                if i < len(danh_sach_dung) and danh_sach_dung[i].strip().lower() == "đúng":
+                    cac_tra_loi_dinh_dang.append(f"✅ {tra_loi.strip()}")
+                else:
+                    cac_tra_loi_dinh_dang.append(f"❌ {tra_loi.strip()}")
+            
+            du_lieu_hien_thi.append({
+                'Tên bộ câu hỏi': dong[ten_cot_ma_de],
+                'STT câu hỏi': dong['STT câu hỏi'],
+                'Loại câu hỏi': dong.get('Loại câu hỏi', ''),
+                'Câu hỏi': dong['Câu hỏi'],
+                'Các câu trả lời': '\n'.join(cac_tra_loi_dinh_dang),
+            })
+        bang_hien_thi = pd.DataFrame(du_lieu_hien_thi) 
+        st.dataframe(bang_hien_thi, 
+                     use_container_width=True, 
+                     height=450,
+                     hide_index=True
+                    )
+
+##################################### Main Section ###############################################
+load_css(css_path)
+img = get_img_as_base64("pages/img/logo.png")
+
+st.markdown(f"""
+    <div class="fixed-header">
+        <div class="header-content">
+            <img src="data:image/png;base64,{img}" alt="logo">
+            <div class="header-text">
+                <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&#174;</span><br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+            </div>
+        </div>
+        <div class="header-subtext">
+        <p style="color:green">THỐNG KÊ KẾT QUẢ TRẮC NGHIỆM</p>
+        </div>
+    </div>
+    <div class="header-underline"></div>
 """, unsafe_allow_html=True)
 
-# Main
-hien_thi_header()
+html_code = f'<p class="demuc"><i>Nhân viên: {st.session_state.username}</i></p>'
+st.html(html_code)
 
-# Load data
-sheeto = st.secrets["sheet_name"]["output_11"]
-df_output = load_data(sheeto)
-
-if len(df_output) == 0:
-    st.warning("⚠️ Chưa có dữ liệu kết quả thi")
-    st.stop()
-
-# Bộ lọc
-st.markdown("## 🔍 Bộ lọc")
-
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-    start_date = st.date_input(
-        "Từ ngày",
-        value=now_vn.date(),
-        format="DD/MM/YYYY",
-        key="start_date"
-    )
-
-with col2:
-    end_date = st.date_input(
-        "Đến ngày",
-        value=now_vn.date(),
-        format="DD/MM/YYYY",
-        key="end_date"
-    )
-
-with col3:
-    all_khoa = ["Tất cả"] + df_output['Khoa'].unique().tolist()
-    selected_khoa = st.selectbox("Khoa", all_khoa)
-
-with col4:
-    all_nhanvien = ["Tất cả"] + df_output['Nhân viên'].unique().tolist()
-    selected_nhanvien = st.selectbox("Nhân viên", all_nhanvien)
-
-# Apply filters
-df_filtered = apply_filters(df_output, start_date, end_date, selected_khoa, selected_nhanvien)
-
-if len(df_filtered) == 0:
-    st.info("📭 Không có dữ liệu phù hợp với bộ lọc")
-    st.stop()
-
-st.markdown("---")
-
-# Bảng thống kê tổng hợp
-st.markdown("## 📊 Bảng thống kê tổng hợp")
-
-summary_data = []
-for idx, row in df_filtered.iterrows():
-    summary_data.append({
-        'Khoa': row['Khoa'],
-        'Nhân viên': row['Nhân viên'],
-        'Bộ câu hỏi': row['Mã đề'],
-        'Số câu đúng': row['Điểm trên 10'],
-        'Điểm': row['Điểm quy đổi']
-    })
-
-df_summary = pd.DataFrame(summary_data)
-st.dataframe(df_summary, use_container_width=True, hide_index=True)
-
-
-st.markdown("---")
-
-# Bảng thống kê chi tiết
-st.markdown("## 📋 Bảng thống kê chi tiết")
-
-detail_data = []
-
-for idx, row in df_filtered.iterrows():
-    khoa = row['Khoa']
-    nhanvien = row['Nhân viên']
-    ma_de = row['Mã đề']
-    result_str = row['Kết quả']
-    
-    # Parse result string
-    parsed = parse_result_string(result_str)
-    
-    for item in parsed:
-        stt = item['stt']
-        user_answer = item['answer']
-        
-        # Check if answer is correct
-        is_correct, question_text = check_answer_correct(user_answer, ma_de, stt)
-        
-        detail_data.append({
-            'Khoa': khoa,
-            'Nhân viên': nhanvien,
-            'Bộ câu hỏi': ma_de,
-            'Câu hỏi': f"Câu {stt}",
-            'Câu trả lời': user_answer,
-            'Kết quả': '✗ Sai' if not is_correct else '✓ Đúng',
-            '_is_correct': is_correct
-        })
-
-if len(detail_data) > 0:
-    df_detail = pd.DataFrame(detail_data)
-    
-    # Create styled dataframe
-    def highlight_incorrect(row):
-        if not row['_is_correct']:
-            return ['background-color: #f8d7da; color: #721c24; font-weight: bold'] * (len(row) - 1) + ['']
-        else:
-            return [''] * len(row)
-    
-    # Display table
-    df_detail_display = df_detail[['Khoa', 'Nhân viên', 'Bộ câu hỏi', 'Câu hỏi', 'Câu trả lời', 'Kết quả']]
-    
-    # Apply styling manually for each row
-    st.write("**Chú thích:** Dòng màu đỏ là câu trả lời sai")
-    
-    # Hiển thị bảng với HTML để tô màu chính xác
-    try:
-        html_table = "<table style='width:100%; border-collapse: collapse;'>"
-        html_table += "<thead><tr style='background-color: #f0f0f0;'>"
-        for col in df_detail_display.columns:
-            html_table += f"<th style='padding: 10px; border: 1px solid #ddd; text-align: left;'>{col}</th>"
-        html_table += "</tr></thead><tbody>"
-        
-        for i, row_data in df_detail_display.iterrows():
-            if i < len(df_detail):
-                is_correct = df_detail.loc[i, '_is_correct']
-                row_style = "background-color: #f8d7da; color: #721c24;" if not is_correct else ""
-                
-                html_table += f"<tr style='{row_style}'>"
-                for col in df_detail_display.columns:
-                    cell_value = str(row_data[col]) if row_data[col] is not None else ""
-                    html_table += f"<td style='padding: 8px; border: 1px solid #ddd;'>{cell_value}</td>"
-                html_table += "</tr>"
-        
-        html_table += "</tbody></table>"
-        
-        st.markdown(html_table, unsafe_allow_html=True)
-    except Exception as e:
-        st.error(f"❌ Lỗi khi hiển thị bảng: {str(e)}")
-        st.dataframe(df_detail_display, use_container_width=True, hide_index=True)
-        
-else:
-    st.info("Không có dữ liệu chi tiết để hiển thị")
-
-st.markdown("---")
-
-# Tra cứu bộ câu hỏi
-st.markdown("## 🔎 Tra cứu bộ câu hỏi")
-
+# Load master data
+sheeti1 = st.secrets["sheet_name"]["input_1"]
 sheeti8 = st.secrets["sheet_name"]["input_8"]
-df_config = load_sheet_by_name(sheeti8, "Sheet 2")
+sheeto11 = st.secrets["sheet_name"]["output_11"]
 
-if len(df_config) > 0 and 'Tên bộ câu hỏi' in df_config.columns:
-    all_made = df_config['Tên bộ câu hỏi'].unique().tolist()
-    
-    if len(all_made) > 0:
-        selected_made = st.selectbox("Chọn bộ câu hỏi", all_made, key="lookup_made")
+du_lieu_input1 = load_data_full(sheeti1)
+du_lieu_input8 = load_sheet_specific(sheeti8, "Sheet 1")
+du_lieu_output_full = load_data_full(sheeto11)
+
+danh_sach_khoa = du_lieu_input1["Khoa"].unique().tolist()
+danh_sach_nhan_vien = du_lieu_input1["Nhân viên"].unique().tolist()
+danh_sach_loai_bch = du_lieu_input8["Loại bộ câu hỏi"].unique().tolist()
+
+now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+md = date(2026, 1, 1)
+
+tab1, tab2 = st.tabs(["Thống kê kết quả", "Tra cứu bộ câu hỏi"])
+
+with tab1:
+    with st.form("filter_form"):
+        cot1, cot2 = st.columns(2)
+        with cot1:
+            ngay_bat_dau = st.date_input(
+                label="Ngày bắt đầu",
+                value=now_vn.date(),
+                min_value=md,
+                max_value=now_vn.date(),
+                format="DD/MM/YYYY",
+            )
+        with cot2:
+            ngay_ket_thuc = st.date_input(
+                label="Ngày kết thúc",
+                value=now_vn.date(),
+                min_value=md,
+                max_value=now_vn.date(),
+                format="DD/MM/YYYY",
+            )
         
-        if selected_made:
-            # Load questions
-            df_questions = load_sheet_by_name(sheeti8, "Sheet 3")
+        khoa_duoc_chon = st.multiselect(
+            label="Khoa",
+            options=sorted(danh_sach_khoa),
+            default=None,
+            key="khoa_select"
+        )
+        
+        # Lọc nhân viên theo khoa đã chọn
+        if khoa_duoc_chon:
+            nhan_vien_loc = du_lieu_input1[du_lieu_input1["Khoa"].isin(khoa_duoc_chon)]["Nhân viên"].unique().tolist()
+        else:
+            nhan_vien_loc = danh_sach_nhan_vien
+        
+        nhan_vien_duoc_chon = st.multiselect(
+            label="Nhân viên thực hiện",
+            options=sorted(nhan_vien_loc),
+            default=None,
+            key="nhan_vien_select"
+        )
+        
+        chon_loai_bch = st.multiselect(
+            label="Loại bộ câu hỏi",
+            options=danh_sach_loai_bch,
+            default=None,
+            key="loai_bch_select"
+        )
+
+        nut_loc = st.form_submit_button("OK", type="primary")
+
+    if nut_loc:
+        if ngay_ket_thuc < ngay_bat_dau:
+            st.error("❌ Lỗi: Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại!")
+        else:
+            bo_loc_khoa = khoa_duoc_chon if khoa_duoc_chon and len(khoa_duoc_chon) > 0 else danh_sach_khoa
+            bo_loc_nhan_vien = nhan_vien_duoc_chon if nhan_vien_duoc_chon and len(nhan_vien_duoc_chon) > 0 else None
+            bo_loc_loai_bch = chon_loai_bch if chon_loai_bch and len(chon_loai_bch) > 0 else None
             
-            if len(df_questions) > 0 and 'Tên bộ câu hỏi' in df_questions.columns:
-                # Filter by selected ma_de
-                questions = df_questions[df_questions['Tên bộ câu hỏi'] == selected_made]
-                
-                if len(questions) == 0:
-                    st.info("Không tìm thấy câu hỏi cho bộ đề này")
-                else:
-                    # Group by STT to avoid duplicates
-                    if 'STT câu hỏi' in questions.columns:
-                        unique_questions = questions.drop_duplicates(subset=['STT câu hỏi'])
-                        
-                        st.markdown(f"### Danh sách câu hỏi: {selected_made}")
-                        
-                        for idx, row in unique_questions.iterrows():
-                            try:
-                                stt = row['STT câu hỏi']
-                                question = row['Câu hỏi']
-                                q_type = row['Loại câu hỏi']
-                                answers = row['Câu trả lời']
-                                results = row['Kết quả']
-                                
-                                st.markdown(f"#### Câu {stt}: {question}")
-                                st.write(f"**Loại:** {q_type}")
-                                
-                                # Parse answers
-                                answer_list = [ans.strip() for ans in str(answers).split('\n') if ans.strip()]
-                                result_list = [res.strip() for res in str(results).split('\n') if res.strip()]
-                                
-                                if q_type == "Trắc nghiệm":
-                                    st.write("**Các đáp án:**")
-                                    for ans, res in zip(answer_list, result_list):
-                                        if res == "Đúng":
-                                            st.markdown(f"<p class='highlight-correct'>✓ {ans} (Đáp án đúng)</p>", 
-                                                      unsafe_allow_html=True)
-                                        else:
-                                            st.write(f"  {ans}")
-                                
-                                elif q_type == "Đúng/Sai":
-                                    st.write("**Các câu:**")
-                                    for i, (ans, res) in enumerate(zip(answer_list, result_list)):
-                                        if res == "Đúng":
-                                            st.markdown(f"<p class='highlight-correct'>{i+1}. {ans} - Đúng ✓</p>", 
-                                                      unsafe_allow_html=True)
-                                        else:
-                                            st.write(f"{i+1}. {ans} - Sai")
-                                
-                                st.markdown("---")
-                            except Exception as e:
-                                st.error(f"Lỗi khi hiển thị câu hỏi: {str(e)}")
-                                continue
-                    else:
-                        st.error("Không tìm thấy cột 'STT câu hỏi' trong dữ liệu")
+            du_lieu_output = load_data_filtered(sheeto11, ngay_bat_dau, ngay_ket_thuc, bo_loc_khoa, bo_loc_nhan_vien, bo_loc_loai_bch)
+            
+            if du_lieu_output.empty:
+                st.warning("⚠️ Không tìm thấy dữ liệu phù hợp với bộ lọc đã chọn.")
             else:
-                st.warning("Không tìm thấy dữ liệu câu hỏi trong Sheet 3 hoặc thiếu cột 'Tên bộ câu hỏi'")
-    else:
-        st.info("Chưa có bộ câu hỏi nào trong hệ thống")
-else:
-    st.warning("Không tìm thấy danh sách bộ câu hỏi trong Sheet 2 hoặc thiếu cột 'Tên bộ câu hỏi'")
+                st.markdown("---")
+                with st.expander("**:blue[Thống kê chung]**", expanded=True):
+                    bang_thong_ke_chung = thong_ke_chung(du_lieu_output)
+                    bang_thong_ke_styled = bang_thong_ke_chung.style.format({
+                        'Điểm quy đổi': '{:.2f}'
+                    })
+                    st.dataframe(bang_thong_ke_styled, use_container_width=True, hide_index=True)
+                
+                st.markdown("---")
+                with st.expander("**:blue[Thống kê chi tiết]**", expanded=True):
+                    st.markdown("""
+                        <p style="color:#f21f3f;font-size:15px;text-align:left"><i>
+                            Chú thích Cột "Kết quả":<br>
+                                <span style="margin-left:20px;">Đối với loại câu hỏi Trắc nghiệm: Đánh dấu "✗" hoặc "✓"; </span><br>
+                                <span style="margin-left:20px;">Đối với loại câu hỏi Đúng/Sai: Tỉ lệ số câu trả lời đúng/số câu trả lời.</span>
+                        </i>
+                        </p>
+                    """, unsafe_allow_html=True)
+                    bang_thong_ke_chi_tiet = thong_ke_chi_tiet(du_lieu_output, du_lieu_input8)
+                    
+                    if not bang_thong_ke_chi_tiet.empty:
+                        bang_co_mau = bang_thong_ke_chi_tiet.style.apply(to_mau_ket_qua_sai, axis=1)
+                        st.dataframe(bang_co_mau, use_container_width=True, height=400, hide_index=True)
+                    else:
+                        st.info("Không có dữ liệu chi tiết.")
+
+with tab2:
+    bang_tra_cuu(du_lieu_input8)

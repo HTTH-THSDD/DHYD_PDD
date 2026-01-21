@@ -117,20 +117,41 @@ def check_existing_submission(ma_de, user, khoa, ngay):
         data = sheet.get_all_values()
         
         if len(data) <= 1:
-            return False
-            
+            return False    
         df = pd.DataFrame(data[1:], columns=data[0])
-        
         existing = df[
-            (df['Mã đề'] == ma_de) & 
-            (df['Nhân viên'] == user) & 
-            (df['Khoa'] == khoa) & 
-            (df['Ngày thực hiện'] == ngay)
+            (df['Mã đề'].astype(str).str.strip() == str(ma_de).strip()) & 
+            (df['Nhân viên'].astype(str).str.strip() == str(user).strip()) & 
+            (df['Khoa'].astype(str).str.strip() == str(khoa).strip()) & 
+            (df['Ngày thực hiện'].astype(str).str.strip() == str(ngay).strip())
         ]
-        
-        return len(existing) > 0
-    except:
+        # Nếu có bản ghi đã tồn tại, không cho nộp lại
+        if len(existing) > 0:
+            return True
         return False
+    except Exception as e:
+        st.error(f"❌ Lỗi kiểm tra: {str(e)}")
+        return False
+
+def get_next_stt(sheeto):
+    """Lấy STT tiếp theo liên tục"""
+    try:
+        credentials = load_credentials()
+        gc = gspread.authorize(credentials)
+        sheet = gc.open(sheeto).sheet1
+        data = sheet.get_all_values()
+        if len(data) <= 1:
+            return 1    
+        # Lấy STT cuối cùng từ cột A (index 0)
+        df = pd.DataFrame(data[1:], columns=data[0])     
+        try:
+            last_stt = int(df['STT'].iloc[-1])
+            return last_stt + 1
+        except:
+            return len(data)  
+    except Exception as e:
+        st.error(f"❌ Lỗi lấy STT: {str(e)}")
+        return len(data) if len(data) > 0 else 1
 
 def thong_tin_hanh_chinh():
     sheeti1 = st.secrets["sheet_name"]["input_1"]
@@ -197,7 +218,6 @@ def hien_thi_cau_hoi_trac_nghiem(stt, question, answers_text, results_text):
     )
     
     if selected:
-        # Lưu cả đáp án và kết quả
         for pair in pairs:
             if pair[0] == selected:
                 st.session_state.answers[stt] = {
@@ -208,13 +228,8 @@ def hien_thi_cau_hoi_trac_nghiem(stt, question, answers_text, results_text):
 
 def hien_thi_cau_hoi_dung_sai(stt, question, answers_text, results_text):
     st.markdown(f"### Câu {stt}: {question}")
-    
     answer_statements = [ans.strip() for ans in answers_text.split('\n') if ans.strip()]
     correct_results = [res.strip() for res in results_text.split('\n') if res.strip()]
-    
-    # st.markdown("""<p style="font-size: 15px; color: #024d4d;; font-weight: bold;">
-    #             Chọn đáp án Đúng hoặc Sai cho mỗi câu sau:</p>""", unsafe_allow_html=True)
-    
     if stt not in st.session_state.answers:
         st.session_state.answers[stt] = {}
     
@@ -263,7 +278,7 @@ def tinh_diem_va_ket_qua(exam_questions):
                 
                 result_string += f"{stt}|{user_answer}#"
             else:
-                result_string += f"{stt}|Chưa trả lời#"
+                result_string += f"{stt}|#"
             
         elif question_type == "Đúng/Sai":
             answer_statements = [ans.strip() for ans in answers_text.split('\n') if ans.strip()]
@@ -276,10 +291,8 @@ def tinh_diem_va_ket_qua(exam_questions):
                 if i in user_data:
                     ans_data = user_data[i]
                     user_choice = ans_data.get('answer', '')
-                    correct_choice = ans_data.get('correct', '')
-                    
-                    user_answer_list.append(user_choice)
-                    
+                    correct_choice = ans_data.get('correct', '') 
+                    user_answer_list.append(user_choice)       
                     # So sánh đáp án người dùng với đáp án đúng
                     if user_choice == correct_choice:
                         correct_count += 1
@@ -287,9 +300,9 @@ def tinh_diem_va_ket_qua(exam_questions):
                     user_answer_list.append("Chưa trả lời")
             
             # Tính điểm = số câu đúng / tổng số câu
-            score = round(correct_count / len(answer_statements), 2) if len(answer_statements) > 0 else 0
-            total_score += score
-            
+            #score = round(correct_count / len(answer_statements), 2) if len(answer_statements) > 0 else 0
+            #total_score += score
+            total_score += correct_count
             result_string += f"{stt}|{'-'.join(user_answer_list)}#"
     
     result_string = result_string.rstrip('#')
@@ -533,30 +546,42 @@ if st.session_state.submitted:
     df_config = load_sheet_by_name(sheeti8, "Sheet 2")
     
     max_score = 10
+    loai_bo_cau_hoi = "N/A"
     if len(df_config) > 0:
-        exam_config = df_config[df_config["Tên bộ câu hỏi"] == ma_de]
+        exam_config = df_config[df_config["Tên bộ câu hỏi"].astype(str).str.strip() == str(ma_de).strip()]
         if len(exam_config) > 0:
             max_score = int(exam_config.iloc[0]["Điểm số tối đa"])
-    
+            # Lấy loại bộ câu hỏi từ exam_config
+            for cot in exam_config.columns:
+                if 'loại' in cot.lower() or 'type' in cot.lower():
+                    loai_bo_cau_hoi = str(exam_config.iloc[0][cot]).strip()
+                    break
     total_score, result_string = tinh_diem_va_ket_qua(exam_questions)
     
     # Tính số câu hỏi unique
     num_questions = len(exam_questions.drop_duplicates(subset=['STT câu hỏi']))
-    scaled_score = round((total_score / num_questions) * max_score, 2)
+
+    # Cột H: "Số câu đúng" - format: số_đúng/tổng_số
+    so_cau_dung = f"{int(total_score)}/{num_questions}"
     
+    # Cột I: "Điểm quy đổi" - tính từ tỉ lệ * max_score
+    diem_quy_doi = round((total_score / num_questions) * max_score, 2) if num_questions > 0 else 0
+    
+
     st.markdown(f"### Kết quả của bạn")
     col1, col2 = st.columns(2)
     with col1:
         st.metric("Tổng số câu đúng", f"{total_score:.0f}/{num_questions}")
     with col2:
-        st.metric("Điểm quy đổi", f"{scaled_score:.0f}/{max_score}")
+        st.metric("Điểm quy đổi", f"{diem_quy_doi:.1f}/{max_score}")
     
     timestamp = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
     ngay_thuc_hien = st.session_state.ngay_kiem_tra.strftime("%Y-%m-%d")
     
     sheeto = st.secrets["sheet_name"]["output_11"]
     current_data = load_sheet_data(sheeto, 0)
-    stt_moi = len(current_data) + 1 if len(current_data) > 0 else 1
+    # Lấy STT tiếp theo liên tục
+    stt_moi = get_next_stt(sheeto)
     
     result_row = [
         str(stt_moi),
@@ -564,10 +589,11 @@ if st.session_state.submitted:
         ngay_thuc_hien,
         st.session_state.khoa_THI,
         st.session_state.username,
+        loai_bo_cau_hoi,
         ma_de,
         result_string,
-        f"{total_score:.2f}",
-        f"{scaled_score:.2f}"
+        so_cau_dung,
+        f"{diem_quy_doi:.2f}"
     ]
     
     try:
