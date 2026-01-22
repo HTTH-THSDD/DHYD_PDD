@@ -119,14 +119,24 @@ def check_existing_submission(ma_de, user, khoa, ngay):
         if len(data) <= 1:
             return False    
         df = pd.DataFrame(data[1:], columns=data[0])
+        # Tìm tên cột chính xác cho mã đề
+        ma_de_col = None
+        for col in df.columns:
+            if 'mã' in col.lower() and 'đề' in col.lower():
+                ma_de_col = col
+                break
+        if ma_de_col is None:
+            ma_de_col = 'Mã đề'  # fallback
+        
         existing = df[
-            (df['Mã đề'].astype(str).str.strip() == str(ma_de).strip()) & 
+            (df[ma_de_col].astype(str).str.strip() == str(ma_de).strip()) & 
             (df['Nhân viên'].astype(str).str.strip() == str(user).strip()) & 
             (df['Khoa'].astype(str).str.strip() == str(khoa).strip()) & 
             (df['Ngày thực hiện'].astype(str).str.strip() == str(ngay).strip())
         ]
         # Nếu có bản ghi đã tồn tại, không cho nộp lại
         if len(existing) > 0:
+            st.warning(f"⚠️ Phát hiện submission trùng lặp! Bạn đã nộp bài này rồi.")
             return True
         return False
     except Exception as e:
@@ -514,16 +524,18 @@ if st.session_state.exam_started and not st.session_state.submitted:
         
         st.markdown("---")
     
-    if st.button("📝 Nộp bài", type="primary", use_container_width=True):
-        if not kiem_tra_hoan_thanh(exam_questions):
-            st.warning("⚠️ Bạn cần trả lời hết câu hỏi để có thể nộp bài!")
-            # Nút xác nhận nộp bài chưa chạy được
-            # if st.button("✅ Xác nhận nộp bài", type="secondary"):
-            #     st.session_state.submitted = True
-            #     st.rerun()
+    st.button("📝 Nộp bài", type="primary", use_container_width=True)
+    if not kiem_tra_hoan_thanh(exam_questions):
+        st.warning("⚠️ Bạn cần trả lời hết câu hỏi để có thể nộp bài!")
+    else:
+        # Double-check trước khi submit
+        ngay_str = st.session_state.ngay_kiem_tra.strftime("%Y-%m-%d")
+        if check_existing_submission(st.session_state.ma_de, st.session_state.username, 
+                                    st.session_state.khoa_THI, ngay_str):
+            st.error("⚠️ Bạn đã nộp bài rồi, không thể thi lại!")
         else:
             st.session_state.submitted = True
-            st.rerun()
+            st.rerun()       
 
 # Trang kết quả
 if st.session_state.submitted:

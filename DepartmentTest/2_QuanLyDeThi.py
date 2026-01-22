@@ -215,9 +215,9 @@ with tab2:
     st.subheader("Thông tin bộ đề")
     col1, col2= st.columns(2)
     with col1:
-        loai_bo_cau_hoi = st.text_input("Loại bộ câu hỏi *", key="loai_bo_cau_hoi")
+        loai_bo_cau_hoi = st.text_input("Loại bộ câu hỏi *", key="loai_bo_cau_hoi",placeholder="Ví dụ: An toàn người bệnh")
     with col2:
-        ten_bo_cau_hoi = st.text_input("Tên bộ câu hỏi *", key="ten_bo_cau_hoi")
+        ten_bo_cau_hoi = st.text_input("Tên bộ câu hỏi *", key="ten_bo_cau_hoi",placeholder="Ví dụ: ATNB2026_NL01")
     
     col3, col4 = st.columns(2)
     with col3:
@@ -391,11 +391,11 @@ with tab2:
                         
                         st.success(f"✅ Đã lưu bộ đề '{ten_bo_cau_hoi}' thành công!")
                         st.info(f"ℹ️ Tổng số câu hỏi: {len(st.session_state.questions)}")
-                        st.balloons()
+                        st.snow()
                         
-                        # Reset form sau 2 giây
+                        # Reset form sau 1 giây
                         import time
-                        time.sleep(2)
+                        time.sleep(1)
                         st.session_state.questions = []
                         st.rerun()
                         

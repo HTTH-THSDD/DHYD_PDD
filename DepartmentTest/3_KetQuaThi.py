@@ -336,6 +336,52 @@ def to_mau_ket_qua_sai(dong):
             pass
     return [''] * len(dong)
 
+def load_tra_cuu_css():
+    """Load CSS cho giao diện tra cứu"""
+    st.markdown("""
+    <style>
+    .tra_cuu_container {
+        width: 100%;
+        overflow-x: auto;
+    }
+    .tra_cuu_card {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        font-size: 14px;
+    }
+    .tra_cuu_card h4 {
+        margin: 0 0 8px 0;
+        color: #0066cc;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    .tra_cuu_card p {
+        margin: 6px 0;
+        line-height: 1.6;
+    }
+    .tra_cuu_label {
+        font-weight: bold;
+        color: #333;
+        display: inline-block;
+        min-width: 120px;
+    }
+    .tra_cuu_value {
+        color: #555;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    }
+    .tra_cuu_answer {
+        background-color: white;
+        padding: 8px;
+        margin: 4px 0;
+        border-left: 3px solid #0066cc;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 def bang_tra_cuu(du_lieu_input8):
     ten_cot_ma_de = next((c for c in du_lieu_input8.columns if 'đề' in c.lower() or 'de' in c.lower()), du_lieu_input8.columns[0])
     cac_bo_cau_hoi = du_lieu_input8[ten_cot_ma_de].unique().tolist() 
@@ -349,7 +395,7 @@ def bang_tra_cuu(du_lieu_input8):
             )
         with cot2:
             if bo_cau_hoi_duoc_chon:
-                cac_cau_hoi = du_lieu_input8[du_lieu_input8[ten_cot_ma_de] == bo_cau_hoi_duoc_chon]['STT câu hỏi'].unique().tolist()
+                cac_cau_hoi = sorted(du_lieu_input8[du_lieu_input8[ten_cot_ma_de] == bo_cau_hoi_duoc_chon]['STT câu hỏi'].unique().tolist())
                 cau_hoi_duoc_chon = st.selectbox(
                     "STT câu hỏi",
                     options=["Tất cả"] + cac_cau_hoi,
@@ -357,38 +403,55 @@ def bang_tra_cuu(du_lieu_input8):
                 )
             else:
                 cau_hoi_duoc_chon = None
-        
-        nut_tra_cuu = st.form_submit_button("Tra cứu")
+        nut_tra_cuu = st.form_submit_button("Tra cứu", use_container_width=True)
     
     if nut_tra_cuu and bo_cau_hoi_duoc_chon:
         du_lieu_loc = du_lieu_input8[du_lieu_input8[ten_cot_ma_de] == bo_cau_hoi_duoc_chon].copy()
         if cau_hoi_duoc_chon and cau_hoi_duoc_chon != "Tất cả":
             du_lieu_loc = du_lieu_loc[du_lieu_loc['STT câu hỏi'] == cau_hoi_duoc_chon] 
-        du_lieu_hien_thi = []
-        for _, dong in du_lieu_loc.iterrows():
-            danh_sach_tra_loi = str(dong['Câu trả lời']).split('\n')
-            danh_sach_dung = str(dong['Kết quả']).split('\n')
-            
-            cac_tra_loi_dinh_dang = []
-            for i, tra_loi in enumerate(danh_sach_tra_loi):
-                if i < len(danh_sach_dung) and danh_sach_dung[i].strip().lower() == "đúng":
-                    cac_tra_loi_dinh_dang.append(f"✅ {tra_loi.strip()}")
-                else:
-                    cac_tra_loi_dinh_dang.append(f"❌ {tra_loi.strip()}")
-            
-            du_lieu_hien_thi.append({
-                'Tên bộ câu hỏi': dong[ten_cot_ma_de],
-                'STT câu hỏi': dong['STT câu hỏi'],
-                'Loại câu hỏi': dong.get('Loại câu hỏi', ''),
-                'Câu hỏi': dong['Câu hỏi'],
-                'Các câu trả lời': '\n'.join(cac_tra_loi_dinh_dang),
-            })
-        bang_hien_thi = pd.DataFrame(du_lieu_hien_thi) 
-        st.dataframe(bang_hien_thi, 
-                     use_container_width=True, 
-                     height=450,
-                     hide_index=True
-                    )
+        
+        load_tra_cuu_css()
+        
+        if not du_lieu_loc.empty:
+            for idx, (_, dong) in enumerate(du_lieu_loc.iterrows()):
+                danh_sach_tra_loi = str(dong['Câu trả lời']).split('\n')
+                danh_sach_dung = str(dong['Kết quả']).split('\n')
+                
+                cac_tra_loi_dinh_dang = []
+                for i, tra_loi in enumerate(danh_sach_tra_loi):
+                    if i < len(danh_sach_dung) and danh_sach_dung[i].strip().lower() == "đúng":
+                        cac_tra_loi_dinh_dang.append(f"✅ {tra_loi.strip()}")
+                    else:
+                        cac_tra_loi_dinh_dang.append(f"❌ {tra_loi.strip()}")
+                
+                # Hiển thị dạng card thay vì dataframe
+                stt_cau = dong.get('STT câu hỏi', 'N/A')
+                loai_cau = dong.get('Loại câu hỏi', '')
+                cau_hoi = dong.get('Câu hỏi', '')
+                
+                html_content = f"""
+                <div class="tra_cuu_container">
+                    <div class="tra_cuu_card">
+                        <h4>Câu {stt_cau} - {loai_cau}</h4>
+                        <p>
+                            <span class="tra_cuu_label">Câu hỏi:</span><br>
+                            <span class="tra_cuu_value">{cau_hoi}</span>
+                        </p>
+                        <p style="margin-top: 12px;">
+                            <span class="tra_cuu_label">Các câu trả lời:</span>
+                        </p>
+                """
+                
+                for tra_loi in cac_tra_loi_dinh_dang:
+                    html_content += f'<div class="tra_cuu_answer">{tra_loi}</div>'
+                html_content += """
+                    </div>
+                </div>
+                """
+                st.markdown(html_content, unsafe_allow_html=True)
+        else:
+            st.info("ℹ️ Không tìm thấy dữ liệu")        
+
 
 ##################################### Main Section ###############################################
 load_css(css_path)
