@@ -192,6 +192,8 @@ def gui_email_qtkt(receiver_email,data):
     st.markdown(html_table, unsafe_allow_html=True)
     
     tltt = float(st.session_state.tltt)*100
+    tltt_formatted = f"{tltt:.2f}"
+
     # Tạo nội dung email dạng HTML, bạn có thể tùy chỉnh style thêm nếu muốn
     body = f"""
     <html>
@@ -232,7 +234,7 @@ def gui_email_qtkt(receiver_email,data):
             <p><strong>Tên quy trình kỹ thuật:</strong> {st.session_state.ten_quy_trinh}</p>       
             <p><strong>Nhân viên giám sát:</strong> {st.session_state.username}</p>
             <p><strong>Thời gian giám sát:</strong> {timestamp}</p>
-            <p><strong>Tỉ lệ tuân thủ:</strong> {tltt}%</p>
+            <p><strong>Tỉ lệ tuân thủ:</strong> {tltt_formatted}%</p>
             </div>
 
             <p><strong>Bảng chi tiết kết quả giám sát:</strong></p>
@@ -296,14 +298,91 @@ def precheck_table():
     precheck_table = pd.DataFrame(k)
     return precheck_table
 
-def clear_session_state():
-    keys_to_clear = [
-        "khoa_GSQT", "nv_thuchien_GSQT", "vtgs_GSQT", "quy_trinh"
-    ]
-    for key in keys_to_clear:
+def clear_all_selections():
+    """Xóa tất cả các lựa chọn của người dùng"""
+    quy_trinh = st.session_state.get("quy_trinh")
+    if quy_trinh is not None:
+        # Xóa tất cả radio buttons
+        for i in range(len(quy_trinh)):
+            keys_to_delete = [f"radio_{i}", f"text_{i}"]
+            for key in keys_to_delete:
+                if key in st.session_state:
+                    del st.session_state[key]
+    # Xóa các nhân viên bổ sung
+    for key in ["nv2", "nv3", "email2", "email3", "precheck"]:
         if key in st.session_state:
             del st.session_state[key]
-    st.rerun()
+
+    # Xóa thông tin quy trình
+    for key in ["quy_trinh", "ten_quy_trinh", "loaiqt", "sttqt", 
+                "ds_buocantoan", "ds_buocNDNB", "ma_quy_trinh", "tltt"]:
+        if key in st.session_state:
+            del st.session_state[key]
+
+
+def check_duplicate_submission(column_khoa, column_nvth, column_nvgs, column_vtndg, column_qt, column_data):
+    """
+    Kiểm tra xem bản ghi này đã được submit trước đó hay chưa
+    So sánh: ngày (không tính giờ), khoa, tên người thực hiện, tên người đánh giá, 
+    vị trí người đánh giá, tên quy trình, data
+    """
+    try:
+        credentials = load_credentials()
+        gc = gspread.authorize(credentials)
+        sheeto1 = st.secrets["sheet_name"]["output_1"]
+        sheet = gc.open(sheeto1).sheet1
+        
+        all_data = sheet.get_all_values()
+        
+        if len(all_data) <= 1:  # Chỉ có header
+            return False, None
+        
+        # Lấy ngày hôm nay (không tính giờ phút giây)
+        now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+        today_date = now_vn.strftime("%Y-%m-%d")
+        
+        # Duyệt qua tất cả các dòng dữ liệu (bỏ qua header)
+        for row_idx in range(1, len(all_data)):
+            row = all_data[row_idx]
+            
+            if len(row) < 8:  # Đảm bảo dòng có đủ dữ liệu
+                continue
+            # Trích xuất các trường từ dòng (đối chiếu với cấu trúc sheet)
+            # STT (0), Timestamp (1), Khoa (2), Tên người thực hiện (3), 
+            # Tên người đánh giá (4), Vị trí người đánh giá (5), 
+            # Tên quy trình (6), Data (7)
+            row_timestamp = row[1] if len(row) > 1 else ""
+            row_khoa = row[2].strip() if len(row) > 2 else ""
+            row_nvth = row[3].strip() if len(row) > 3 else ""
+            row_nvgs = row[4].strip() if len(row) > 4 else ""
+            row_vtndg = row[5].strip() if len(row) > 5 else ""
+            row_qt = row[6].strip() if len(row) > 6 else ""
+            row_data = row[7].strip() if len(row) > 7 else ""
+            
+            # Lấy ngày từ timestamp (format: YYYY-MM-DD HH:MM:SS)
+            try:
+                row_date = row_timestamp.split(" ")[0] if row_timestamp else ""
+            except:
+                row_date = ""
+            
+            # So sánh tất cả các trường
+            if (row_date == today_date and
+                row_khoa == column_khoa.strip() and
+                row_nvth == column_nvth.strip() and
+                row_nvgs == column_nvgs.strip() and
+                row_vtndg == column_vtndg.strip() and
+                row_qt == column_qt.strip() and
+                row_data == column_data.strip()):
+                
+                # Tìm thấy bản ghi trùng lặp
+                return True, row_idx
+        
+        # Không tìm thấy bản ghi trùng lặp
+        return False, None
+        
+    except Exception as e:
+        st.error(f"❌ Lỗi kiểm tra trùng lặp: {str(e)}")
+        return False, None
 
 def upload_data_GS(data):
     credentials = load_credentials()
@@ -365,8 +444,34 @@ def upload_data_GS(data):
     column_ghichu2 = ""
     if "nv3" in st.session_state and st.session_state.nv3:
         column_ghichu2 = str(st.session_state.nv3)
-    sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt,tlan,tlnd,column_ghichu1,column_ghichu2,])
-    warning(4,2)
+
+    # ✅ Kiểm tra trùng lặp trước khi upload
+    is_duplicate, duplicate_row = check_duplicate_submission(
+        column_khoa, column_nvth, column_nvgs, column_vtndg, 
+        column_qt, column_data
+    )
+    if is_duplicate:
+        st.success("⚠️ Bạn đã gửi kết quả này rồi!")
+        return False
+    # Upload dữ liệu
+    sheet.append_row([
+        column_index,
+        column_timestamp,
+        column_khoa,
+        column_nvth,
+        column_nvgs,
+        column_vtndg,
+        column_qt,
+        column_data,
+        column_mqt,
+        tltt,
+        tlan,
+        tlnd,
+        column_ghichu1,
+        column_ghichu2,
+    ])
+    #warning(4, 2)
+    return True
     
 @st.dialog("Thông báo")
 def warning(x,y):
@@ -488,14 +593,17 @@ if (
                 buoc_chua_dien.append(f"{quy_trinh.iloc[j,6]}")
         buoc_chua_dien_str = ", ".join(buoc_chua_dien)
         if buoc_chua_dien_str == "":
-                prechecktable = precheck_table()         
-                upload_data_GS(prechecktable)
-                gui_email_qtkt(st.session_state.email_nvthqt, prechecktable)
-                clear_session_state()
+                prechecktable = precheck_table()
+                upload_success = upload_data_GS(prechecktable)         
+                if upload_success:
+                    warning(4, 2)
+                    gui_email_qtkt(st.session_state.email_nvthqt, prechecktable)
+                    import time
+                    time.sleep(1)
+                    clear_all_selections()
+                    st.rerun()
         else:
             warning(1,buoc_chua_dien_str)
-  
-        
 else:
     st.warning("Vui lòng chọn đầy đủ các mục")
 

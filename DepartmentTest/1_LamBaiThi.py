@@ -136,7 +136,6 @@ def check_existing_submission(ma_de, user, khoa, ngay):
         ]
         # Nếu có bản ghi đã tồn tại, không cho nộp lại
         if len(existing) > 0:
-            st.warning(f"⚠️ Phát hiện submission trùng lặp! Bạn đã nộp bài này rồi.")
             return True
         return False
     except Exception as e:
@@ -347,6 +346,8 @@ if 'answers' not in st.session_state:
     st.session_state.answers = {}
 if 'submitted' not in st.session_state:
     st.session_state.submitted = False
+if 'result_saved' not in st.session_state:  # Thêm flag để track lưu dữ liệu
+    st.session_state.result_saved = False
 
 # CSS cho fixed timer
 st.markdown("""
@@ -524,18 +525,18 @@ if st.session_state.exam_started and not st.session_state.submitted:
         
         st.markdown("---")
     
-    st.button("📝 Nộp bài", type="primary", use_container_width=True)
-    if not kiem_tra_hoan_thanh(exam_questions):
-        st.warning("⚠️ Bạn cần trả lời hết câu hỏi để có thể nộp bài!")
-    else:
-        # Double-check trước khi submit
-        ngay_str = st.session_state.ngay_kiem_tra.strftime("%Y-%m-%d")
-        if check_existing_submission(st.session_state.ma_de, st.session_state.username, 
-                                    st.session_state.khoa_THI, ngay_str):
-            st.error("⚠️ Bạn đã nộp bài rồi, không thể thi lại!")
+    if st.button("📝 Nộp bài", type="primary", use_container_width=True):
+        if not kiem_tra_hoan_thanh(exam_questions):
+            st.warning("⚠️ Bạn cần trả lời hết câu hỏi để có thể nộp bài!")
         else:
-            st.session_state.submitted = True
-            st.rerun()       
+            # Double-check trước khi submit
+            ngay_str = st.session_state.ngay_kiem_tra.strftime("%Y-%m-%d")
+            if check_existing_submission(st.session_state.ma_de, st.session_state.username, 
+                                        st.session_state.khoa_THI, ngay_str):
+                st.error("⚠️ Bạn đã nộp bài rồi, không thể thi lại!")
+            else:
+                st.session_state.submitted = True
+                st.rerun()       
 
 # Trang kết quả
 if st.session_state.submitted:
@@ -607,12 +608,28 @@ if st.session_state.submitted:
         so_cau_dung,
         f"{diem_quy_doi:.2f}"
     ]
-    
-    try:
-        save_result_to_sheet(result_row)
-        st.success("💾 Kết quả đã được lưu vào hệ thống!")
-    except Exception as e:
-        st.error(f"❌ Lỗi khi lưu kết quả: {str(e)}")
+    # ✅ Chỉ lưu 1 lần duy nhất
+    if not st.session_state.result_saved:
+        try:
+            # Double-check lần cuối trước khi lưu
+            ngay_str = st.session_state.ngay_kiem_tra.strftime("%Y-%m-%d")
+            if check_existing_submission(ma_de, st.session_state.username, 
+                                        st.session_state.khoa_THI, ngay_str):
+                st.warning("⚠️ Phát hiện dữ liệu đã được lưu từ trước! Không lưu lại.")
+                st.session_state.result_saved = True
+            else:
+                save_result_to_sheet(result_row)
+                st.success("💾 Kết quả đã được lưu vào hệ thống!")
+                st.session_state.result_saved = True
+        except Exception as e:
+            st.error(f"❌ Lỗi khi lưu kết quả: {str(e)}")
+            st.session_state.result_saved = False    
+
+    # try:
+    #     save_result_to_sheet(result_row)
+    #     st.success("💾 Kết quả đã được lưu vào hệ thống!")
+    # except Exception as e:
+    #     st.error(f"❌ Lỗi khi lưu kết quả: {str(e)}")
     
     if st.button("🔄 Làm bài thi mới", use_container_width=True):
         keys_to_delete = [
@@ -620,6 +637,7 @@ if st.session_state.submitted:
             "start_time",
             "answers",
             "submitted",
+            "result_saved",
             "ma_de",
             "ma_de_valid",
             "ma_de_input",
