@@ -151,6 +151,19 @@ def bang_kiem_quy_trinh():
         if "quy_trinh" in st.session_state:
             del st.session_state["quy_trinh"]
 
+@st.dialog("Thông báo")
+def warning(x,y):
+    if x == 1:
+        st.warning(f"Các bước chưa đánh giá: {y}")
+    if x == 2:
+        st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
+    if x == 3:
+        st.warning("Lỗi nhập kết quả không hợp lí: tất cả các bước KHÔNG ÁP DỤNG") 
+    if x == 4:
+        st.success("Đã lưu thành công. Kết quả giám sát đã được gửi qua email nhân viên thực hiện kỹ thuật.")
+    if x == 5:
+        st.warning("⚠️ Bạn đã gửi kết quả này rồi!")
+
 def gui_email_qtkt(receiver_email,data):
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
     timestamp = now_vn.strftime('%H:%M %d-%m-%Y')
@@ -300,25 +313,28 @@ def precheck_table():
 
 def clear_all_selections():
     """Xóa tất cả các lựa chọn của người dùng"""
-    quy_trinh = st.session_state.get("quy_trinh")
-    if quy_trinh is not None:
-        # Xóa tất cả radio buttons
+    if "quy_trinh" in st.session_state:
+        quy_trinh = st.session_state["quy_trinh"]
         for i in range(len(quy_trinh)):
-            keys_to_delete = [f"radio_{i}", f"text_{i}"]
-            for key in keys_to_delete:
-                if key in st.session_state:
-                    del st.session_state[key]
+            # Xóa radio buttons
+            if f"radio_{i}" in st.session_state:
+                del st.session_state[f"radio_{i}"]
+            # Xóa text inputs
+            if f"text_{i}" in st.session_state:
+                del st.session_state[f"text_{i}"]
+
     # Xóa các nhân viên bổ sung
-    for key in ["nv2", "nv3", "email2", "email3", "precheck"]:
+    for key in ["nv2", "nv3", "email2", "email3", "precheck","luu"]:
         if key in st.session_state:
             del st.session_state[key]
 
     # Xóa thông tin quy trình
     for key in ["quy_trinh", "ten_quy_trinh", "loaiqt", "sttqt", 
-                "ds_buocantoan", "ds_buocNDNB", "ma_quy_trinh", "tltt"]:
+                "ds_buocantoan", "ds_buocNDNB", "ma_quy_trinh", "tltt",
+                "khoa_GSQT", "nv_thuchien_GSQT", "email_nvthqt", "vtgs_GSQT"]:
         if key in st.session_state:
             del st.session_state[key]
-
+    st.session_state["form_cleared"] = True
 
 def check_duplicate_submission(column_khoa, column_nvth, column_nvgs, column_vtndg, column_qt, column_data):
     """
@@ -451,7 +467,7 @@ def upload_data_GS(data):
         column_qt, column_data
     )
     if is_duplicate:
-        st.success("⚠️ Bạn đã gửi kết quả này rồi!")
+        warning(5, 2)
         return False
     # Upload dữ liệu
     sheet.append_row([
@@ -470,19 +486,8 @@ def upload_data_GS(data):
         column_ghichu1,
         column_ghichu2,
     ])
-    #warning(4, 2)
     return True
     
-@st.dialog("Thông báo")
-def warning(x,y):
-    if x == 1:
-        st.warning(f"Các bước chưa đánh giá: {y}")
-    if x == 2:
-        st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
-    if x == 3:
-        st.warning("Lỗi nhập kết quả không hợp lí: tất cả các bước KHÔNG ÁP DỤNG") 
-    if x == 4:
-        st.success("Đã lưu thành công")
 
 # Main Section ####################################################################################
 if st.session_state.get("loi_KAD", False):
@@ -518,6 +523,12 @@ vitrigs()
 thong_tin_hanh_chinh()
 st.divider()
 bang_kiem_quy_trinh()
+
+# ✅ Nếu form vừa được clear, hiển thị message và return
+if st.session_state.get("form_cleared", False):
+    st.session_state["form_cleared"] = False
+    st.stop()
+
 luachon = ["Thực hiện đúng, đủ","Thực hiện đúng nhưng chưa đủ","Thực hiện chưa đúng, KHÔNG thực hiện","KHÔNG ÁP DỤNG"]
 if (
     "khoa_GSQT" in st.session_state and st.session_state["khoa_GSQT"] 
@@ -599,9 +610,8 @@ if (
                     warning(4, 2)
                     gui_email_qtkt(st.session_state.email_nvthqt, prechecktable)
                     import time
-                    time.sleep(1)
+                    time.sleep(0.5)
                     clear_all_selections()
-                    st.rerun()
         else:
             warning(1,buoc_chua_dien_str)
 else:
