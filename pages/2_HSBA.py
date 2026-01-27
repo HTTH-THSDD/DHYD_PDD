@@ -82,150 +82,163 @@ def vitri_hsba():
         if "vtgs_HSBA" in st.session_state:
             del st.session_state["vtgs_HSBA"]
 
+@st.dialog("Thông báo")
+def warning(x,y):
+    if x == 1:
+        st.warning(f"Vui lòng kiểm tra lại các bước sau: {y}")
+    if x == 2:
+        st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
+    if x == 3:
+        st.success("Đã lưu thành công")    
+    if x == 4:
+        st.warning(f"Số vào viện không hợp lệ. Vui lòng nhập lại VD: 25-1234567")
+    if x == 5:
+        st.warning("⚠️ Bạn đã gửi kết quả này rồi!")
 
-def remove_duplicate_rows(sheet, new_row_data):
+
+def check_duplicate_submission(column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data):
     try:
-        all_values = sheet.get_all_values()
-        if len(all_values) <= 1:
-            return 0
-        new_data_to_compare = [str(x) for x in new_row_data[2:10]]  # Chuyển tất cả sang string
-        rows_to_delete = []
-        for i in range(len(all_values) - 1, 0, -1):
-            existing_row = all_values[i]
-            if len(existing_row) < 10: # Đảm bảo dòng có đủ cột để so sánh
+        credentials = load_credentials()
+        gc = gspread.authorize(credentials)
+        sheeto1 = st.secrets["sheet_name"]["output_2"]
+        sheet = gc.open(sheeto1).sheet1
+        
+        all_data = sheet.get_all_values()
+        
+        if len(all_data) <= 1:  # Chỉ có header
+            return False, None
+        
+        # Lấy ngày hôm nay (không tính giờ phút giây)
+        now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+        today_date = now_vn.strftime("%Y-%m-%d")
+        
+        # Duyệt qua tất cả các dòng dữ liệu (bỏ qua header)
+        for row_idx in range(1, len(all_data)):
+            row = all_data[row_idx]
+            
+            if len(row) < 8:  # Đảm bảo dòng có đủ dữ liệu
                 continue
-            existing_data_to_compare = [str(x) for x in existing_row[2:10]]
-            st.write("=" * 50)
-            st.write(f"**Kiểm tra dòng {i+1}:**")
-            st.write(f"Dữ liệu hiện có: {existing_data_to_compare}")
-            st.write(f"Dữ liệu mới: {new_data_to_compare}")
-            st.write(f"Có trùng không? {existing_data_to_compare == new_data_to_compare}")
-            # So sánh
-            if existing_data_to_compare == new_data_to_compare:
-                rows_to_delete.append(i + 1)  # +1 vì sheet index bắt đầu từ 1
-                st.info(f"Tìm thấy dòng trùng lặp tại dòng {i + 1}")
-        # Xóa các dòng trùng lặp (từ dưới lên)
-        deleted_count = 0
-        for row_index in sorted(rows_to_delete, reverse=True):
+            row_timestamp = row[1] if len(row) > 1 else ""
+            row_khoa = row[2].strip() if len(row) > 2 else ""
+            row_svv = row[3].strip() if len(row) > 3 else ""
+            row_yob_nb = row[4].strip() if len(row) > 4 else ""
+            row_vtndg = row[5].strip() if len(row) > 5 else ""
+            row_nv_gs = row[6].strip() if len(row) > 6 else ""
+            row_data = row[7].strip() if len(row) > 7 else ""
+            
+            # Lấy ngày từ timestamp (format: YYYY-MM-DD HH:MM:SS)
             try:
-                sheet.delete_rows(row_index)
-                deleted_count += 1
-                st.success(f"Đã xóa dòng trùng lặp {row_index}")
-            except Exception as e:
-                st.warning(f"Không thể xóa dòng {row_index}: {str(e)}")
-        return deleted_count
+                row_date = row_timestamp.split(" ")[0] if row_timestamp else ""
+            except:
+                row_date = ""
+            
+            # So sánh tất cả các trường
+            if (row_date == today_date and
+                row_khoa == column_khoa.strip() and
+                row_svv == column_svv.strip() and
+                row_yob_nb == column_yob_nb.strip() and
+                row_vtndg == column_vtndg.strip() and
+                row_nv_gs == column_nv_gs.strip() and
+                row_data == column_data.strip()):
+                
+                # Tìm thấy bản ghi trùng lặp
+                return True, row_idx
+        
+        # Không tìm thấy bản ghi trùng lặp
+        return False, None
         
     except Exception as e:
-        st.error(f"Lỗi khi kiểm tra trùng lặp: {str(e)}")
-        import traceback
-        st.code(traceback.format_exc())
-        return 0
+        st.error(f"❌ Lỗi kiểm tra trùng lặp: {str(e)}")
+        return False, None
 
 def upload_data_HSBA(len_data):
-    try:
-        creds_info = {
-            "type": st.secrets["google_service_account"]["type"],
-            "project_id": st.secrets["google_service_account"]["project_id"],
-            "private_key_id": st.secrets["google_service_account"]["private_key_id"],
-            "private_key": st.secrets["google_service_account"]["private_key"],
-            "client_email": st.secrets["google_service_account"]["client_email"],
-            "client_id": st.secrets["google_service_account"]["client_id"],
-            "auth_uri": st.secrets["google_service_account"]["auth_uri"],
-            "token_uri": st.secrets["google_service_account"]["token_uri"],
-            "auth_provider_x509_cert_url": st.secrets["google_service_account"]["auth_provider_x509_cert_url"],
-            "client_x509_cert_url": st.secrets["google_service_account"]["client_x509_cert_url"],
-            "universe_domain": st.secrets["google_service_account"]["universe_domain"],
-        }
-        credentials = Credentials.from_service_account_info(
-            creds_info,
-            scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-        )
-        gc = gspread.authorize(credentials)
-        sheeto2 = st.secrets["sheet_name"]["output_2"]
-        sheet = gc.open(sheeto2).sheet1
-        now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-        column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
-        column_khoa = str(st.session_state.khoa_HSBA)
-        column_svv = str(st.session_state.svv_HSBA)
-        column_yob_nb = str(st.session_state.yob_HSBA)
-        column_vtndg = str(st.session_state.vtgs_HSBA)
-        column_nv_gs = str(st.session_state.username)
-        column_data=""
-        so_buoc_dung_du = 0
-        so_buoc_dung_nhung_chua_du = 0
-        so_buoc_Khong_thuc_hien = 0
-        tong_so_buoc_tru_KAD = int(len_data)
-        for i in range (0, int(len_data)):
-            buoc = f"B{i+1}" 
-            ketqua = str(st.session_state[f"hsbaradio_{i}"])  
-            tondong = str(st.session_state[f"hsbatext_{i}"]) 
-            if tondong == "":
-                column_data += buoc + "|" + ketqua + "|#"
-            else:
-                column_data += buoc + "|" + ketqua + "|" + tondong + "#"
-            if ketqua == "Thực hiện đúng, đủ":
-                so_buoc_dung_du +=1
-            elif ketqua == "Thực hiện đúng nhưng chưa đủ":
-                so_buoc_dung_nhung_chua_du +=1
-            elif ketqua == "KHÔNG thực hiện, hoặc ghi sai":
-                so_buoc_Khong_thuc_hien +=1
-            else:
-                tong_so_buoc_tru_KAD -=1
-        
-        if tong_so_buoc_tru_KAD > 0:
-            column_tl_dung_du = round(so_buoc_dung_du / tong_so_buoc_tru_KAD, 4)
-            column_tl_dung_nhung_chua_du = round(so_buoc_dung_nhung_chua_du / tong_so_buoc_tru_KAD, 4)
-            column_tl_Khong_thuc_hien = round(so_buoc_Khong_thuc_hien / tong_so_buoc_tru_KAD, 4)
+    creds_info = {
+        "type": st.secrets["google_service_account"]["type"],
+        "project_id": st.secrets["google_service_account"]["project_id"],
+        "private_key_id": st.secrets["google_service_account"]["private_key_id"],
+        "private_key": st.secrets["google_service_account"]["private_key"],
+        "client_email": st.secrets["google_service_account"]["client_email"],
+        "client_id": st.secrets["google_service_account"]["client_id"],
+        "auth_uri": st.secrets["google_service_account"]["auth_uri"],
+        "token_uri": st.secrets["google_service_account"]["token_uri"],
+        "auth_provider_x509_cert_url": st.secrets["google_service_account"]["auth_provider_x509_cert_url"],
+        "client_x509_cert_url": st.secrets["google_service_account"]["client_x509_cert_url"],
+        "universe_domain": st.secrets["google_service_account"]["universe_domain"],
+    }
+    credentials = Credentials.from_service_account_info(
+        creds_info,
+        scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    )
+    gc = gspread.authorize(credentials)
+    sheeto2 = st.secrets["sheet_name"]["output_2"]
+    sheet = gc.open(sheeto2).sheet1
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+    column_index = len(sheet.get_all_values())    
+    column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
+    column_khoa = str(st.session_state.khoa_HSBA)
+    column_svv = str(st.session_state.svv_HSBA)
+    column_yob_nb = str(st.session_state.yob_HSBA)
+    column_vtndg = str(st.session_state.vtgs_HSBA)
+    column_nv_gs = str(st.session_state.username)
+    column_data=""
+    so_buoc_dung_du = 0
+    so_buoc_dung_nhung_chua_du = 0
+    so_buoc_Khong_thuc_hien = 0
+    tong_so_buoc_tru_KAD = int(len_data)
+    for i in range (0, int(len_data)):
+        buoc = f"B{i+1}" 
+        ketqua = str(st.session_state[f"hsbaradio_{i}"])  
+        tondong = str(st.session_state[f"hsbatext_{i}"]) 
+        if tondong == "":
+            column_data += buoc + "|" + ketqua + "|#"
         else:
-            column_tl_dung_du = 0
-            column_tl_dung_nhung_chua_du = 0
-            column_tl_Khong_thuc_hien = 0
-
-        column_data=column_data.rstrip("#")
-        new_row = [
-            0, 
-            column_timestamp, 
-            column_khoa, 
-            column_svv, 
-            column_yob_nb, 
-            column_vtndg, 
-            column_nv_gs, 
-            column_data,
-            column_tl_dung_du,
-            column_tl_dung_nhung_chua_du,
-            column_tl_Khong_thuc_hien
-        ]
-
-        # ===== KIỂM TRA VÀ XÓA TRÙNG LẶP =====
-        st.info("Đang kiểm tra dữ liệu trùng lặp...")
-        deleted_count = remove_duplicate_rows(sheet, new_row)
-        if deleted_count > 0:
-            st.success(f"Đã xóa {deleted_count} dòng trùng lặp")
-            
-            # Cập nhật lại STT sau khi xóa
-        all_values_updated = sheet.get_all_values()
-        if len(all_values_updated) <= 1:
-            new_row[0] = 1
+            column_data += buoc + "|" + ketqua + "|" + tondong + "#"
+        if ketqua == "Thực hiện đúng, đủ":
+            so_buoc_dung_du +=1
+        elif ketqua == "Thực hiện đúng nhưng chưa đủ":
+            so_buoc_dung_nhung_chua_du +=1
+        elif ketqua == "KHÔNG thực hiện, hoặc ghi sai":
+            so_buoc_Khong_thuc_hien +=1
         else:
-            try:
-                last_stt = int(all_values_updated[-1][0])
-                new_row[0] = last_stt + 1
-            except (ValueError, IndexError):
-                new_row[0] = len(all_values_updated)   
-    # ===== THÊM DÒNG MỚI =====
-        sheet.append_row(new_row, value_input_option='USER_ENTERED')
-        st.cache_data.clear()
-        st.success("✅ Dữ liệu đã được lưu thành công")
-        
-        import time
-        time.sleep(0.5)
-        st.rerun()
-        
-    except Exception as e:
-        st.error(f"❌ Lỗi khi lưu dữ liệu: {str(e)}")
-        import traceback
-        st.code(traceback.format_exc())
+            tong_so_buoc_tru_KAD -=1
+    
+    if tong_so_buoc_tru_KAD > 0:
+        column_tl_dung_du = round(so_buoc_dung_du / tong_so_buoc_tru_KAD, 4)
+        column_tl_dung_nhung_chua_du = round(so_buoc_dung_nhung_chua_du / tong_so_buoc_tru_KAD, 4)
+        column_tl_Khong_thuc_hien = round(so_buoc_Khong_thuc_hien / tong_so_buoc_tru_KAD, 4)
+    else:
+        column_tl_dung_du = 0
+        column_tl_dung_nhung_chua_du = 0
+        column_tl_Khong_thuc_hien = 0
 
+    column_data=column_data.rstrip("#")
+
+    # ✅ Kiểm tra trùng lặp trước khi upload
+    is_duplicate,duplicate_row = check_duplicate_submission(
+        column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs,  
+        column_data
+    )
+    if is_duplicate:
+        warning(5, 2)
+        return False
+    
+    # Upload dữ liệu
+    sheet.append_row([
+        column_index, 
+        column_timestamp, 
+        column_khoa, 
+        column_svv, 
+        column_yob_nb, 
+        column_vtndg, 
+        column_nv_gs, 
+        column_data,
+        column_tl_dung_du,
+        column_tl_dung_nhung_chua_du,
+        column_tl_Khong_thuc_hien
+    ], value_input_option='USER_ENTERED')
+    
+    st.cache_data.clear()
+    return True
 
 def kiemtra_svv():
     match = re.match(r"^\d{2}-\d{7}$",st.session_state.svv_HSBA)
@@ -241,16 +254,6 @@ def clear_session_state():
             del st.session_state[key]
     st.rerun()
 
-@st.dialog("Thông báo")
-def warning(x,y):
-    if x == 1:
-        st.warning(f"Vui lòng kiểm tra lại các bước sau: {y}")
-    if x == 2:
-        st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
-    if x == 3:
-        st.success("Đã lưu thành công")    
-    if x == 4:
-        st.warning(f"Số vào viện không hợp lệ. Vui lòng nhập lại VD: 25-1234567")
 
 # Main ####################################################################################
 img = get_img_as_base64("pages/img/logo.png")
@@ -323,8 +326,10 @@ if "khoa_HSBA" in st.session_state and st.session_state["khoa_HSBA"] and "vtgs_H
                             buoc_chua_dien.append(f"Bước {j+1}")
                     buoc_chua_dien_str = ", ".join(buoc_chua_dien)
                     if buoc_chua_dien_str == "":
-                        upload_data_HSBA(len(data_hsba))
-                        clear_session_state()
+                        upload_success = upload_data_HSBA(len(data_hsba))
+                        if upload_success:
+                            warning(3, 3)
+                            clear_session_state()
                     else:
                         warning(1,buoc_chua_dien_str)
             else:
