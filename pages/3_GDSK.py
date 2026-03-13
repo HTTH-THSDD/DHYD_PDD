@@ -83,6 +83,19 @@ def vitri_gdsk():
         if "vtgs_GDSK" in st.session_state:
             del st.session_state["vtgs_GDSK"]
 
+@st.dialog("Thông báo")
+def warning(x):
+    if x == 1:
+        st.warning("Các bước chưa đánh giá được liệt kê bên dưới")
+    if x == 2:
+        st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
+    if x == 3:
+        st.success("Đã lưu thành công")
+    if x == 4:
+        st.warning("Số vào viện không hợp lệ. Vui lòng nhập lại VD: 25-1234567")
+    if x == 5:
+        st.warning("⚠️ Bạn đã gửi kết quả này rồi!")
+
 # def precheck_table_gdsk(data):
 #     buoc = []
 #     nd = []
@@ -107,6 +120,57 @@ def vitri_gdsk():
 #     precheck_table = pd.DataFrame(k)
 #     return precheck_table
 
+def check_duplicate_submission(column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data):
+    try:
+        credentials = load_credentials()
+        gc = gspread.authorize(credentials)
+        sheeto3 = st.secrets["sheet_name"]["output_3"]
+        sheet = gc.open(sheeto3).sheet1
+        all_data = sheet.get_all_values()
+        if len(all_data) <= 1:  # Chỉ có header
+            return False, None 
+        # Lấy ngày hôm nay (không tính giờ phút giây)
+        now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+        today_date = now_vn.strftime("%Y-%m-%d")
+        
+        # Duyệt qua tất cả các dòng dữ liệu (bỏ qua header)
+        for row_idx in range(1, len(all_data)):
+            row = all_data[row_idx]
+            
+            if len(row) < 8:  # Đảm bảo dòng có đủ dữ liệu
+                continue
+            row_timestamp = row[1] if len(row) > 1 else ""
+            row_khoa = row[2].strip() if len(row) > 2 else ""
+            row_svv = row[3].strip() if len(row) > 3 else ""
+            row_yob_nb = row[4].strip() if len(row) > 4 else ""
+            row_vtndg = row[5].strip() if len(row) > 5 else ""
+            row_nv_gs = row[6].strip() if len(row) > 6 else ""
+            row_data = row[7].strip() if len(row) > 7 else ""
+            
+            # Lấy ngày từ timestamp (format: YYYY-MM-DD HH:MM:SS)
+            try:
+                row_date = row_timestamp.split(" ")[0] if row_timestamp else ""
+            except:
+                row_date = ""
+            
+            # So sánh tất cả các trường
+            if (row_date == today_date and
+                row_khoa == column_khoa.strip() and
+                row_svv == column_svv.strip() and
+                row_yob_nb == column_yob_nb.strip() and
+                row_vtndg == column_vtndg.strip() and
+                row_nv_gs == column_nv_gs.strip() and
+                row_data == column_data.strip()):
+                
+                # Tìm thấy bản ghi trùng lặp
+                return True, row_idx
+        
+        # Không tìm thấy bản ghi trùng lặp
+        return False, None    
+    except Exception as e:
+        st.error(f"❌ Lỗi kiểm tra trùng lặp: {str(e)}")
+        return False, None
+    
 def upload_data_GDSK(len_data):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
@@ -145,6 +209,15 @@ def upload_data_GDSK(len_data):
         column_tl_buoc_biet = round(so_buoc_biet/tong_so_buoc_tru_KAD,4)
         column_tl_khong_biet = round(so_buoc_khong_biet/tong_so_buoc_tru_KAD,4)
     column_data=column_data.rstrip("#")
+    
+        # ✅ Kiểm tra trùng lặp trước khi upload
+    is_duplicate,duplicate_row = check_duplicate_submission(
+        column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs,  
+        column_data
+    )
+    if is_duplicate:
+        warning(5)
+        return False
     sheet.append_row([column_index, column_timestamp, column_khoa, column_svv, column_yob_nb, column_vtndg, column_nv_gs, column_data,column_tl_hieu,column_tl_buoc_biet,column_tl_khong_biet])
     warning(3)
 
@@ -162,16 +235,7 @@ def clear_session_state():
             del st.session_state[key]
     st.rerun()
 
-@st.dialog("Thông báo")
-def warning(x):
-    if x == 1:
-        st.warning("Các bước chưa đánh giá được liệt kê bên dưới")
-    if x == 2:
-        st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
-    if x == 3:
-        st.success("Đã lưu thành công")
-    if x == 4:
-        st.warning("Số vào viện không hợp lệ. Vui lòng nhập lại VD: 25-1234567")
+
 
 
 ############################ Main section ##################
@@ -245,8 +309,10 @@ if "khoa_GDSK" in st.session_state and st.session_state["khoa_GDSK"] and "vtgs_G
                             buoc_chua_dien.append(f"Nội dung {data_gdsk.iloc[j,0]}")
                     buoc_chua_dien_str = ", ".join(buoc_chua_dien)
                     if buoc_chua_dien_str == "":
-                        upload_data_GDSK(len(data_gdsk))
-                        clear_session_state()
+                        upload_success = upload_data_GDSK(len(data_gdsk))
+                        if upload_success:
+                            warning(3)
+                            clear_session_state()
                     else:
                         warning(4)
                         st.info(f"Các bước chưa chọn kết quả: {buoc_chua_dien_str}", icon="ℹ️")

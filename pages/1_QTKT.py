@@ -400,13 +400,29 @@ def check_duplicate_submission(column_khoa, column_nvth, column_nvgs, column_vtn
         st.error(f"❌ Lỗi kiểm tra trùng lặp: {str(e)}")
         return False, None
 
+def append_row_safe(sheet, row_data, retries=3):
+    for i in range(retries):
+        try:
+            last_row = len(sheet.col_values(1))
+            next_row = last_row + 1
+            if next_row > sheet.row_count:
+                sheet.add_rows(1000)
+            range_name = f"A{next_row}:N{next_row}"
+            sheet.update(range_name, [row_data])
+            return True
+        except Exception as e:
+            if i < retries - 1:
+                time.sleep(1)
+            else:
+                raise e
+
 def upload_data_GS(data):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
     sheeto1 = st.secrets["sheet_name"]["output_1"]
     sheet = gc.open(sheeto1).sheet1
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-    column_index = len(sheet.get_all_values())    
+    column_index = len(sheet.col_values(1)) 
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_GSQT)
     column_nvgs = str(st.session_state.username)
@@ -470,7 +486,7 @@ def upload_data_GS(data):
         warning(5, 2)
         return False
     # Upload dữ liệu
-    sheet.append_row([
+    row_data = [
         column_index,
         column_timestamp,
         column_khoa,
@@ -485,7 +501,8 @@ def upload_data_GS(data):
         tlnd,
         column_ghichu1,
         column_ghichu2,
-    ])
+    ]
+    append_row_safe(sheet, row_data)
     return True
     
 
@@ -604,14 +621,14 @@ if (
                 buoc_chua_dien.append(f"{quy_trinh.iloc[j,6]}")
         buoc_chua_dien_str = ", ".join(buoc_chua_dien)
         if buoc_chua_dien_str == "":
-                prechecktable = precheck_table()
-                upload_success = upload_data_GS(prechecktable)         
-                if upload_success:
-                    warning(4, 2)
-                    gui_email_qtkt(st.session_state.email_nvthqt, prechecktable)
-                    import time
-                    time.sleep(0.5)
-                    clear_all_selections()
+            prechecktable = precheck_table()
+            upload_success = upload_data_GS(prechecktable)         
+            if upload_success:
+                warning(4, 2)
+                #gui_email_qtkt(st.session_state.email_nvthqt, prechecktable)
+                import time
+                time.sleep(0.5)
+                clear_all_selections()
         else:
             warning(1,buoc_chua_dien_str)
 else:

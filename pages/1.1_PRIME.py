@@ -92,6 +92,15 @@ def vitrigs():
         if "vtgs_PRIME" in st.session_state:
             del st.session_state["vtgs_PRIME"]
 
+@st.dialog("Thông báo")
+def warning(x,y):
+    if x == 1:
+        st.warning("Các tiêu chí chưa đánh giá: " + str(y))
+    if x == 3:
+        st.success("Đã gửi thành công")
+    if x == 5:
+        st.warning("⚠️ Bạn đã gửi kết quả này rồi!")
+       
 def bang_kiem_quy_trinh():
     sheeti6 = st.secrets["sheet_name"]["input_6"]
     data_qt6 = load_data(sheeti6)
@@ -118,24 +127,89 @@ def precheck_table():
     precheck_table = pd.DataFrame(k)
     return precheck_table
 
+def check_duplicate_submission(
+                      column_khoa,
+                      column_nvth,
+                      column_nvgs,
+                      column_vtndg,
+                      column_qt,
+                      column_data,
+                      column_thoi_diem_danh_gia):
+    try:
+        credentials = load_credentials()
+        gc = gspread.authorize(credentials)
+        sheeto6 = st.secrets["sheet_name"]["output_6"]
+        sheet = gc.open(sheeto6).sheet1
+        
+        all_data = sheet.get_all_values()
+        
+        if len(all_data) <= 1:  # Chỉ có header
+            return False, None
+        
+        # Lấy ngày hôm nay (không tính giờ phút giây)
+        now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+        today_date = now_vn.strftime("%Y-%m-%d")
+        
+        # Duyệt qua tất cả các dòng dữ liệu (bỏ qua header)
+        for row_idx in range(1, len(all_data)):
+            row = all_data[row_idx]
+            
+            if len(row) < 10:  # Đảm bảo dòng có đủ dữ liệu
+                continue
+            row_timestamp = row[1] if len(row) > 1 else ""
+            row_khoa = row[2].strip() if len(row) > 2 else ""
+            row_nvth = row[3].strip() if len(row) > 3 else ""
+            row_nvgs = row[4].strip() if len(row) > 4 else ""
+            row_vtndg = row[5].strip() if len(row) > 5 else ""
+            row_qt = row[6].strip() if len(row) > 6 else ""
+            row_data = row[7].strip() if len(row) > 7 else ""
+            row_thoi_diem_danh_gia = row[9].strip() if len(row) > 9 else ""
+            
+            # Lấy ngày từ timestamp (format: YYYY-MM-DD HH:MM:SS)
+            try:
+                row_date = row_timestamp.split(" ")[0] if row_timestamp else ""
+            except:
+                row_date = ""
+            
+            # So sánh tất cả các trường
+            if (row_date == today_date and
+                row_khoa == column_khoa.strip() and
+                row_nvth == column_nvth.strip() and
+                row_nvgs == column_nvgs.strip() and
+                row_vtndg == column_vtndg.strip() and
+                row_qt == column_qt.strip() and
+                row_data == column_data.strip() and
+                row_thoi_diem_danh_gia == column_thoi_diem_danh_gia.strip()
+                ):
+                
+                # Tìm thấy bản ghi trùng lặp
+                return True, row_idx
+        
+        # Không tìm thấy bản ghi trùng lặp
+        return False, None
+        
+    except Exception as e:
+        st.error(f"❌ Lỗi kiểm tra trùng lặp: {str(e)}")
+        return False, None
+
 def upload_data_GS(data):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
-    sheeto1 = st.secrets["sheet_name"]["output_6"]
-    sheet = gc.open(sheeto1).sheet1
+    sheeto6 = st.secrets["sheet_name"]["output_6"]
+    sheet = gc.open(sheeto6).sheet1
     sheet = gc.open("Output-st-PRIME").sheet1
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")) 
     column_index = len(sheet.get_all_values())   
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_PRIME)
-    column_nvgs = str(st.session_state.username)
     column_nvth = str(st.session_state.nv_thuchien_PRIME)
+    column_nvgs = str(st.session_state.username)
     column_vtndg = str(st.session_state.vtgs_PRIME)
     column_qt = "PRIME duy trì"
     column_data=""
     so_buoc_dat = 0
     tong_so_buoc = len(data)
-    column_thoigiandanhgia = str(st.session_state.thoi_diem_danh_gia)
+    column_thoi_diem_danh_gia = str(st.session_state.thoi_diem_danh_gia)
     for i in range (0, len(data)):
         tieu_chi = str(data.iloc[i]["Tiêu chí"])  
         ketqua = str(data.iloc[i]["Kết quả"])  
@@ -148,8 +222,27 @@ def upload_data_GS(data):
             column_data += tieu_chi + "|" + ketqua + "|" + tondong + "#"
     tltt = round(so_buoc_dat/tong_so_buoc,4)
 
-    sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,tltt,column_thoigiandanhgia])
-    warning(3,3)
+    # ✅ Kiểm tra trùng lặp trước khi upload
+    is_duplicate,duplicate_row = check_duplicate_submission(
+        column_khoa, column_nvth, column_nvgs, column_vtndg, column_qt,  
+        column_data, column_thoi_diem_danh_gia
+    )
+    if is_duplicate:
+        warning(5, 2)
+        return False
+    sheet.append_row([column_index,
+                      column_timestamp,
+                      column_khoa,
+                      column_nvth,
+                      column_nvgs,
+                      column_vtndg,
+                      column_qt,
+                      column_data,
+                      tltt,
+                      column_thoi_diem_danh_gia])
+    
+    st.cache_data.clear()
+    return True
 
 def clear_session_state():
     keys_to_clear = [
@@ -159,13 +252,6 @@ def clear_session_state():
         if key in st.session_state:
             del st.session_state[key]
     st.rerun()
-
-@st.dialog("Thông báo")
-def warning(x,y):
-    if x == 1:
-        st.warning("Các tiêu chí chưa đánh giá: " + str(y))
-    if x == 3:
-        st.success("Gửi thành công")
 
 
 # Main Section ####################################################################################
@@ -249,8 +335,10 @@ if (
         buoc_chua_dien_str = ", ".join(buoc_chua_dien)
         if buoc_chua_dien_str == "":
                 prechecktable = precheck_table()         
-                upload_data_GS(prechecktable)
-                clear_session_state()
+                upload_success = upload_data_GS(prechecktable)
+                if upload_success:
+                    warning(3,3)
+                    clear_session_state()
         else:
             warning(1,buoc_chua_dien_str)
 

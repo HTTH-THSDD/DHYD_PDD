@@ -91,7 +91,7 @@ def warning(x,y):
     if x == 3:
         st.success("Đã lưu thành công")    
     if x == 4:
-        st.warning(f"Số vào viện không hợp lệ. Vui lòng nhập lại VD: 25-1234567")
+        st.warning("Số vào viện không hợp lệ. Vui lòng nhập lại VD: 25-1234567")
     if x == 5:
         st.warning("⚠️ Bạn đã gửi kết quả này rồi!")
 
@@ -100,8 +100,8 @@ def check_duplicate_submission(column_khoa, column_svv, column_yob_nb, column_vt
     try:
         credentials = load_credentials()
         gc = gspread.authorize(credentials)
-        sheeto1 = st.secrets["sheet_name"]["output_2"]
-        sheet = gc.open(sheeto1).sheet1
+        sheeto2 = st.secrets["sheet_name"]["output_2"]
+        sheet = gc.open(sheeto2).sheet1
         
         all_data = sheet.get_all_values()
         

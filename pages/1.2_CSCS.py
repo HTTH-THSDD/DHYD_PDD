@@ -115,7 +115,18 @@ def bang_kiem_quy_trinh():
         if "quy_trinh" in st.session_state:
             del st.session_state["quy_trinh"]
 
-
+@st.dialog("Thông báo")
+def warning(x,y):
+    if x == 1:
+        st.warning(f"Các bước chưa đánh giá: {y}")
+    if x == 2:
+        st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
+    if x == 3:
+        st.warning("Lỗi nhập kết quả không hợp lí: tất cả các bước KHÔNG ÁP DỤNG") 
+    if x == 4:
+        st.success("Đã lưu thành công")
+    if x == 5:
+        st.warning("⚠️ Bạn đã gửi kết quả này rồi!")
 
 def precheck_table():
     buoc = []
@@ -138,6 +149,64 @@ def precheck_table():
     precheck_table = pd.DataFrame(k)
     return precheck_table
 
+def check_duplicate_submission(column_khoa, 
+                               column_nvth, 
+                               column_nvgs, 
+                               column_vtndg, 
+                               column_qt, 
+                               column_data):
+    try:
+        credentials = load_credentials()
+        gc = gspread.authorize(credentials)
+        sheeto7 = st.secrets["sheet_name"]["output_7"]
+        sheet = gc.open(sheeto7).sheet1
+        all_data = sheet.get_all_values()
+        if len(all_data) <= 1:  # Chỉ có header
+            return False, None
+        
+        # Lấy ngày hôm nay (không tính giờ phút giây)
+        now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+        today_date = now_vn.strftime("%Y-%m-%d")
+        
+        # Duyệt qua tất cả các dòng dữ liệu (bỏ qua header)
+        for row_idx in range(1, len(all_data)):
+            row = all_data[row_idx]
+            
+            if len(row) < 8:  # Đảm bảo dòng có đủ dữ liệu
+                continue
+            row_timestamp = row[1] if len(row) > 1 else ""
+            row_khoa = row[2].strip() if len(row) > 2 else ""
+            row_nvth = row[3].strip() if len(row) > 3 else ""
+            row_nvgs = row[4].strip() if len(row) > 4 else ""
+            row_vtndg = row[5].strip() if len(row) > 5 else ""
+            row_qt = row[6].strip() if len(row) > 6 else ""
+            row_data = row[7].strip() if len(row) > 7 else ""
+            
+            # Lấy ngày từ timestamp (format: YYYY-MM-DD HH:MM:SS)
+            try:
+                row_date = row_timestamp.split(" ")[0] if row_timestamp else ""
+            except:
+                row_date = ""
+            
+            # So sánh tất cả các trường
+            if (row_date == today_date and
+                row_khoa == column_khoa.strip() and
+                row_nvth == column_nvth.strip() and
+                row_nvgs == column_nvgs.strip() and
+                row_vtndg == column_vtndg.strip() and
+                row_qt == column_qt.strip() and
+                row_data == column_data.strip()):
+                
+                # Tìm thấy bản ghi trùng lặp
+                return True, row_idx
+        
+        # Không tìm thấy bản ghi trùng lặp
+        return False, None
+        
+    except Exception as e:
+        st.error(f"❌ Lỗi kiểm tra trùng lặp: {str(e)}")
+        return False, None
+
 def upload_data_GS(data):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)
@@ -147,8 +216,8 @@ def upload_data_GS(data):
     column_index = len(sheet.get_all_values())    
     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
     column_khoa = str(st.session_state.khoa_GSQT)
-    column_nvgs = str(st.session_state.username)
     column_nvth = str(st.session_state.nv_thuchien_GSQT)
+    column_nvgs = str(st.session_state.username)
     column_vtndg = str(st.session_state.vtgs_GSQT)
     column_qt = str(st.session_state.ten_quy_trinh)
     column_data=""
@@ -174,7 +243,26 @@ def upload_data_GS(data):
         st.session_state.tltt = tltt
         column_data=column_data.rstrip("#")
         column_mqt = st.session_state.ma_quy_trinh
-        sheet.append_row([column_index,column_timestamp,column_khoa,column_nvth,column_nvgs,column_vtndg,column_qt,column_data,column_mqt,tltt])
+        
+        # ✅ Kiểm tra trùng lặp trước khi upload
+        is_duplicate, duplicate_row = check_duplicate_submission(
+            column_khoa, column_nvth, column_nvgs, column_vtndg, 
+            column_qt, column_data
+        )
+        if is_duplicate:
+            warning(5, 2)
+            return False
+        
+        sheet.append_row([column_index,
+                          column_timestamp,
+                          column_khoa,
+                          column_nvth,
+                          column_nvgs,
+                          column_vtndg,
+                          column_qt,
+                          column_data,
+                          column_mqt,
+                          tltt])
         warning(4,2)
 
 
@@ -237,17 +325,6 @@ def clear_session_state():
             del st.session_state[key]
     st.rerun()
 
-
-@st.dialog("Thông báo")
-def warning(x,y):
-    if x == 1:
-        st.warning(f"Các bước chưa đánh giá: {y}")
-    if x == 2:
-        st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
-    if x == 3:
-        st.warning("Lỗi nhập kết quả không hợp lí: tất cả các bước KHÔNG ÁP DỤNG") 
-    if x == 4:
-        st.success("Đã lưu thành công")
 
 # Main Section ####################################################################################
 css_path = pathlib.Path("asset/style.css")
@@ -320,9 +397,11 @@ if (
         buoc_chua_dien_str = ", ".join(buoc_chua_dien)
         if buoc_chua_dien_str == "":
             prechecktable = precheck_table()         
-            upload_data_GS(prechecktable)
-            gui_email_cscs(st.session_state.email_nvthqt, prechecktable)
-            clear_session_state()
+            upload_success =upload_data_GS(prechecktable)
+            if upload_success:
+                warning(4, 2)
+                gui_email_cscs(st.session_state.email_nvthqt, prechecktable)
+                clear_session_state()
         else:
             warning(1,buoc_chua_dien_str)
 else:
