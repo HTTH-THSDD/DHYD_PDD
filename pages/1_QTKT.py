@@ -371,7 +371,7 @@ def check_duplicate_submission(column_khoa, column_nvth, column_nvgs, column_vtn
             row_khoa = row[2].strip() if len(row) > 2 else ""
             row_nvth = row[3].strip() if len(row) > 3 else ""
             row_nvgs = row[4].strip() if len(row) > 4 else ""
-            row_vtndg = row[5].strip() if len(row) > 5 else ""
+            #row_vtndg = row[5].strip() if len(row) > 5 else ""
             row_qt = row[6].strip() if len(row) > 6 else ""
             row_data = row[7].strip() if len(row) > 7 else ""
             
@@ -386,7 +386,7 @@ def check_duplicate_submission(column_khoa, column_nvth, column_nvgs, column_vtn
                 row_khoa == column_khoa.strip() and
                 row_nvth == column_nvth.strip() and
                 row_nvgs == column_nvgs.strip() and
-                row_vtndg == column_vtndg.strip() and
+                #row_vtndg == column_vtndg.strip() and
                 row_qt == column_qt.strip() and
                 row_data == column_data.strip()):
                 

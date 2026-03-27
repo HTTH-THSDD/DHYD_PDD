@@ -231,6 +231,10 @@ QLDD_HDCM = st.Page("pages/8_QLDD_HDCM.py",
                 title="10. Quản lý điều dưỡng",
                 icon="💎"
 )
+PCNL = st.Page("pages/9_PCNL.py",
+                title="11. TEST",
+                icon="💎"
+)
 
 BC_QTKT = st.Page("reports/1_rp_QTKT.py", title="TK Giám sát quy trình kỹ thuật",  icon="🔹")
 BC_CSCS = st.Page("reports/1.2_rp_CSCS.py", title="TK Chỉ số chăm sóc ", icon="🔹")

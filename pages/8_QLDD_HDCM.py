@@ -154,6 +154,6 @@ bang_kiem()
 st.divider()
 if "chon_bang_kiem" in st.session_state is not None:
     st.markdown('''
-    <h4><span style="color:#003b62">Phần đánh giá hồ sơ bệnh án
+    <h4><span style="color:#003b62">Phần nhập điểm đánh giá
                 </span></h4>
 ''',unsafe_allow_html=True)
