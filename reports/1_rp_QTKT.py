@@ -204,51 +204,33 @@ def highlight_total_row(row):
     return [''] * len(row)
 
 def chon_khoa(khoa):
-    placeholder1 = st.empty()
     if st.session_state.phan_quyen in ["1","2","3"]:
-        if st.checkbox("Chọn tất cả khoa"):
-            placeholder1.empty()
-            khoa_select = "Chọn tất cả khoa"
-        else:
-            with placeholder1:
-                khoa_select = st.multiselect(label="Chọn khoa",
-                                                  options= khoa.unique())
-            st.write("Hãy chọn khoa xem thống kê")
+        khoa_select = st.multiselect(label="Chọn khoa",
+                                            options=khoa.unique(),
+                                            default=None)
         return khoa_select
     else:
         if st.session_state.username == st.secrets["user_special"]["u1"]:
-            if st.checkbox("Cả 3 khoa"):
-                placeholder1.empty()
-                khoa_select = "Chọn tất cả khoa"
-            else:
-                with placeholder1:
-                    khoa_select = st.multiselect(label="Chọn khoa",
-                                         options= [
-                            st.secrets["user_special"]["u1_khoa1"],
+            khoa_options = [st.secrets["user_special"]["u1_khoa1"],
                             st.secrets["user_special"]["u1_khoa2"],
-                            st.secrets["user_special"]["u1_khoa3"],])
+                            st.secrets["user_special"]["u1_khoa3"]]
+            khoa_select = st.multiselect(label="Chọn khoa",
+                                        options=khoa_options,
+                                        default=None)
             return khoa_select
         elif st.session_state.username == st.secrets["user_special"]["u2"]:
-            if st.checkbox("Cả 2 khoa"):
-                placeholder1.empty()
-                khoa_select = "Chọn tất cả khoa"
-            else:
-                with placeholder1:
-                    khoa_select = st.multiselect(label="Chọn khoa",
-                                         options= [
-                            st.secrets["user_special"]["u2_khoa1"],
-                            st.secrets["user_special"]["u2_khoa2"],])
+            khoa_options = [st.secrets["user_special"]["u2_khoa1"],
+                            st.secrets["user_special"]["u2_khoa2"]]
+            khoa_select = st.multiselect(label="Chọn khoa",
+                                        options=khoa_options,
+                                        default=None)
             return khoa_select
         elif st.session_state.username == st.secrets["user_special"]["u3"]:
-            if st.checkbox("Cả 2 khoa"):
-                placeholder1.empty()
-                khoa_select = "Chọn tất cả khoa"
-            else:
-                with placeholder1:
-                    khoa_select = st.multiselect(label="Chọn khoa",
-                                         options= [
-                            st.secrets["user_special"]["u3_khoa1"],
-                            st.secrets["user_special"]["u3_khoa2"]])
+            khoa_options = [st.secrets["user_special"]["u3_khoa1"],
+                            st.secrets["user_special"]["u3_khoa2"]]
+            khoa_select = st.multiselect(label="Chọn khoa",
+                                        options=khoa_options,
+                                        default=None)
             return khoa_select
         else:
             khoa_select = st.session_state.khoa
@@ -333,7 +315,7 @@ st.markdown(f"""
             </div>
         </div>
         <div class="header-subtext">
-        <p style="color:green">THỐNG KÊ GIÁM SÁT QUY TRÌNH KỸ THUẬT</p>
+        <p style="color:green">THỐNG KÊ GIÁM SÁT QUY TRÌNH</p>
         </div>
     </div>
     <div class="header-underline"></div>
@@ -345,8 +327,9 @@ sheeti1 = st.secrets["sheet_name"]["input_1"]
 data = load_data1(sheeti1)
 khoa = data["Khoa"]
 loai_qtkt = {  "All":"Tất cả",
-              "QTCB":"Quy trình cơ bản",
-              "QTCK":"Quy trình chuyên khoa",
+              "QTCB":"Quy trình kỹ thuật cơ bản",
+              "QTCK":"Quy trình kỹ thuật chuyên khoa",
+              "QTHC":"Quy trình hành chính chuyên môn",
               }
 now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
 md = date(2025, 1, 1)
@@ -368,7 +351,7 @@ with st.form("Thời gian"):
         max_value=now_vn.date(), 
         format="DD/MM/YYYY",
         )
-    chon_loai_qtkt = st.radio(label="Loại quy trình kỹ thuật",
+    chon_loai_qtkt = st.radio(label="Loại quy trình",
             options=list(loai_qtkt.values()),
             index=0,             
             )
@@ -377,7 +360,7 @@ with st.form("Thời gian"):
     submit_thoigian = st.form_submit_button("OK")
 if submit_thoigian:
     if ed < sd:
-        st.error("Lỗi ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")  
+        st.error("Lỗi ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại")
     else:
         loc_loai_qt = get_key_from_value(loai_qtkt, chon_loai_qtkt)
         sheeto1 = st.secrets["sheet_name"]["output_1"]
@@ -403,12 +386,12 @@ if submit_thoigian:
                 with col3:
                     st.metric("**:red[Số điều dưỡng]**", metrics['so_dieu_duong'],border=True)
                 with col4:
-                    st.metric("**:red[Số QTKT]**", metrics['so_qtkt'],border=True)
+                    st.metric("**:red[Số quy trình]**", metrics['so_qtkt'],border=True)
                 
                 col5, col6, col7, col8 = st.columns(4)
                 with col5:
                     if metrics['tl_tuan_thu'] != 100:
-                        st.metric("**:red[Tỉ lệ tuân thủ QTKT]**", f"{metrics['tl_tuan_thu']:.2f}%",border=True)
+                        st.metric("**:red[Tỉ lệ tuân thủ QT]**", f"{metrics['tl_tuan_thu']:.2f}%",border=True)
                     else:
                         st.metric("**:red[Tỉ lệ tuân thủ QTKT]**", f"{metrics['tl_tuan_thu']:.0f}%",border=True)
                 with col6:
@@ -452,8 +435,3 @@ if submit_thoigian:
                                     })
 powerbi_url = "https://app.powerbi.com/groups/fbea42ac-f40a-4ada-bdbe-95cd1dc34b62/reports/e4d93ac2-150f-4e45-9932-e93fc32666e8/ReportSection?experience=power-bi"
 st.markdown(f"[📊 Xem báo cáo chi tiết tại Power BI]({powerbi_url})", unsafe_allow_html=True)
-
-
-    
-
-

@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import gspread
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -11,391 +10,273 @@ import smtplib
 from email.mime.text import MIMEText
 import time
 from bs4 import BeautifulSoup
-# FS
+
+# ======================== UTILS ========================
 
 @st.cache_data(ttl=3600)
 def get_img_as_base64(file):
     with open(file, "rb") as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
+        return base64.b64encode(f.read()).decode()
 
 def load_css(file_path):
+    encoding = "utf-8"
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding=encoding) as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     except UnicodeDecodeError:
-        # Fallback to different encoding if UTF-8 fails
-        with open(file_path, 'r', encoding='latin-1') as f:
+        with open(file_path, "r", encoding="latin-1") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 @st.cache_data(ttl=3600)
 def load_credentials():
-    creds_info = {
-    "type": st.secrets["google_service_account"]["type"],
-    "project_id": st.secrets["google_service_account"]["project_id"],
-    "private_key_id": st.secrets["google_service_account"]["private_key_id"],
-    "private_key": st.secrets["google_service_account"]["private_key"],
-    "client_email": st.secrets["google_service_account"]["client_email"],
-    "client_id": st.secrets["google_service_account"]["client_id"],
-    "auth_uri": st.secrets["google_service_account"]["auth_uri"],
-    "token_uri": st.secrets["google_service_account"]["token_uri"],
-    "auth_provider_x509_cert_url": st.secrets["google_service_account"]["auth_provider_x509_cert_url"],
-    "client_x509_cert_url": st.secrets["google_service_account"]["client_x509_cert_url"],
-    "universe_domain": st.secrets["google_service_account"]["universe_domain"],
-    }
-    # Dùng để kết nối Google APIs
-    credentials = Credentials.from_service_account_info(
+    creds_info = {k: st.secrets["google_service_account"][k] for k in [
+        "type", "project_id", "private_key_id", "private_key", "client_email",
+        "client_id", "auth_uri", "token_uri",
+        "auth_provider_x509_cert_url", "client_x509_cert_url", "universe_domain",
+    ]}
+    return Credentials.from_service_account_info(
         creds_info,
-        scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+        scopes=["https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive"],
     )
-    return credentials
 
 @st.cache_data(ttl=3600)
 def load_data(x):
-    credentials = load_credentials()
-    gc = gspread.authorize(credentials)
-    sheet = gc.open(x).sheet1
-    data = sheet.get_all_values()
-    header = data[0]
-    values = data[1:]
-    data_final = pd.DataFrame(values, columns=header)
-    return data_final
+    gc = gspread.authorize(load_credentials())
+    data = gc.open(x).sheet1.get_all_values()
+    return pd.DataFrame(data[1:], columns=data[0])
+
+# ======================== UI COMPONENTS ========================
 
 def thong_tin_hanh_chinh():
-    sheeti1 = st.secrets["sheet_name"]["input_1"]
-    data_nv = load_data(sheeti1)
-    chon_khoa = st.selectbox("Khoa/Đơn vị ",
+    fv = st.session_state.get("form_version", 0)
+    data_nv = load_data(st.secrets["sheet_name"]["input_1"])
+    chon_khoa = st.selectbox("Khoa/Đơn vị",
                              options=data_nv["Khoa"].unique(),
-                             index=None,
-                             placeholder=""
-                             )
-    if chon_khoa:
-        st.session_state.khoa_GSQT = chon_khoa
-        data_nv1=data_nv.loc[data_nv["Khoa"]==f"{chon_khoa}"]
-        chon_nhanvien = st.selectbox(label="Nhân viên thực hiện quy trình",
-                                    options=data_nv1["Nhân viên"],
-                                    index=None,
-                                    placeholder="")
-        
-        if chon_nhanvien:
-            st.session_state.nv_thuchien_GSQT = chon_nhanvien
-            st.session_state.email_nvthqt = data_nv1.loc[data_nv1["Nhân viên"]==chon_nhanvien, "Email"].values[0]
-        else:
-            if "nv_thuchien_GSQT" in st.session_state:
-                del st.session_state["nv_thuchien_GSQT"]
+                             index=None, placeholder="",
+                             key=f"khoa_select_{fv}")
+    if not chon_khoa:
+        st.session_state.pop("khoa_GSQT", None)
+        return
+
+    st.session_state.khoa_GSQT = chon_khoa
+    data_nv1 = data_nv.loc[data_nv["Khoa"] == chon_khoa]
+
+    if chon_khoa == "Khoa Khám bệnh":
+        chon_nhanvien = st.selectbox("Nhân viên thực hiện quy trình",
+                                     options=data_nv1["Nhân viên"],
+                                     index=None, placeholder="",
+                                     key=f"nhanvien_select_{fv}")
+        st.radio(label="Đối tượng được giám sát",
+                 options=["Nhân viên bàn điều phối", "Nhân viên bàn khám"],
+                 index=None, horizontal=True, key=f"doituong_duocgiamsat_{fv}")
+        # Đồng bộ sang key cố định để upload_data_GS đọc được
+        st.session_state["doituong_duocgiamsat"] = st.session_state.get(f"doituong_duocgiamsat_{fv}")
     else:
-        if "khoa_GSQT" in st.session_state:
-            del st.session_state["khoa_GSQT"]
+        chon_nhanvien = st.selectbox("Nhân viên thực hiện quy trình",
+                                     options=data_nv1["Nhân viên"],
+                                     index=None, placeholder="",
+                                     key=f"nhanvien_select_{fv}")
+
+    if chon_nhanvien:
+        st.session_state.nv_thuchien_GSQT = chon_nhanvien
+        st.session_state.email_nvthqt = data_nv1.loc[
+            data_nv1["Nhân viên"] == chon_nhanvien, "Email"].values[0]
+    else:
+        st.session_state.pop("nv_thuchien_GSQT", None)
 
 def vitrigs():
-    vitri_gsv=["Điều dưỡng trưởng tại khoa lâm sàng", "Điều dưỡng trưởng giám sát chéo", "Điều dưỡng trưởng phiên", "Điều dưỡng phụ trách quy trình","Điều dưỡng viên giám sát chéo", "Nhân viên Phòng Điều dưỡng"]
-    vitri = st.radio(label="Vị trí nhân viên giám sát",
-                 options=vitri_gsv,
-                 index=None)
+    fv = st.session_state.get("form_version", 0)
+    vitri_gsv = [
+        "Điều dưỡng trưởng tại khoa lâm sàng",
+        "Điều dưỡng trưởng giám sát chéo",
+        "Điều dưỡng trưởng phiên",
+        "Điều dưỡng phụ trách quy trình",
+        "Điều dưỡng viên giám sát chéo",
+        "Nhân viên Phòng Điều dưỡng",
+    ]
+    vitri = st.radio(label="Vị trí nhân viên giám sát", options=vitri_gsv,
+                     index=None, key=f"vitri_radio_{fv}")
     if vitri:
         st.session_state.vtgs_GSQT = vitri
     else:
-        if "vtgs_GSQT" in st.session_state:
-            del st.session_state["vtgs_GSQT"]
+        st.session_state.pop("vtgs_GSQT", None)
 
 def bang_kiem_quy_trinh():
-    loaiquytrinh = st.radio(label="Loại quy trình kỹ thuật",
-             options=["Quy trình kỹ thuật cơ bản","Quy trình kỹ thuật chuyên khoa"],
-             index=None,
-             key="loai_quy_trinh",
-             horizontal=True,
-             )
-    sheeti2 = st.secrets["sheet_name"]["input_2"]
-    data_qt2 = load_data(sheeti2)
-    if loaiquytrinh == "Quy trình kỹ thuật cơ bản":
-        chon_qt = st.selectbox("Tên quy trình kỹ thuật",
-                                options=data_qt2["Tên quy trình"].loc[data_qt2["Mã bước QT"].str[:4] == "QTCB"].unique(),
-                                index=None,
-                                placeholder="",
-                                )
-    else:
-        chon_qt = st.selectbox("Tên quy trình kỹ thuật",
-                                options=data_qt2["Tên quy trình"].loc[data_qt2["Mã bước QT"].str[:4] == "QTCK"].unique(),
-                                index=None,
-                                placeholder="",
-                                )
-    if chon_qt:
-        st.session_state.loaiqt = chon_qt
-        qtx = data_qt2.loc[data_qt2["Tên quy trình"]==chon_qt]
-        st.session_state.quy_trinh = qtx
-        st.session_state.ten_quy_trinh =  qtx["Tên quy trình"].iloc[0]
-        ma_quy_trinh = qtx["Mã bước QT"].iloc[0]
-        st.session_state.sttqt = qtx["STT QT"].iloc[0]
-        danh_sach_buoc_an_toan = []
-        for i in range(0,len(qtx)):
-            if qtx["Chỉ số an toàn"].iloc[i] == "x":
-                danh_sach_buoc_an_toan.append(int(qtx["Bước"].iloc[i]))
-        st.session_state.ds_buocantoan = danh_sach_buoc_an_toan
-        st.session_state.ma_quy_trinh = ma_quy_trinh[:4]
-    else:
-        if "quy_trinh" in st.session_state:
-            del st.session_state["quy_trinh"]
+    fv = st.session_state.get("form_version", 0)
+    loaiquytrinh = st.radio(
+        label="Loại quy trình kỹ thuật",
+        options=["QTKT cơ bản", "QTKT chuyên khoa", "QT hành chính chuyên môn"],
+        index=None, key=f"loai_quy_trinh_{fv}", horizontal=True,
+    )
+    prefix_map = {"QTKT cơ bản": "QTCB", "QTKT chuyên khoa": "QTCK"}
+    prefix = prefix_map.get(loaiquytrinh, "QTHC")
 
-    if chon_qt:
-        qtx = data_qt2.loc[data_qt2["Tên quy trình"]==chon_qt]
-        st.session_state.quy_trinh = qtx
-        st.session_state.ten_quy_trinh =  qtx["Tên quy trình"].iloc[0]
-        ma_quy_trinh = qtx["Mã bước QT"].iloc[0]    
-        danh_sach_buoc_nhan_dang = []
-        for i in range(0,len(qtx)):
-            if qtx["Nhận dạng"].iloc[i] == "x":
-                danh_sach_buoc_nhan_dang.append(int(qtx["Bước"].iloc[i]))
-        st.session_state.ds_buocNDNB = danh_sach_buoc_nhan_dang
-        st.session_state.ma_quy_trinh = ma_quy_trinh[:4]
-    else:
-        if "quy_trinh" in st.session_state:
-            del st.session_state["quy_trinh"]
+    data_qt2 = load_data(st.secrets["sheet_name"]["input_2"])
+    options = data_qt2.loc[data_qt2["Mã bước QT"].str[:4] == prefix, "Tên quy trình"].unique()
+    chon_qt = st.selectbox("Tên quy trình kỹ thuật", options=options, index=None, placeholder="",
+                           key=f"chon_qt_{fv}")
+
+    if not chon_qt:
+        st.session_state.pop("quy_trinh", None)
+        return
+
+    qtx = data_qt2.loc[data_qt2["Tên quy trình"] == chon_qt]
+    st.session_state.quy_trinh = qtx
+    st.session_state.ten_quy_trinh = qtx["Tên quy trình"].iloc[0]
+    st.session_state.sttqt = qtx["STT QT"].iloc[0]
+    st.session_state.ma_quy_trinh = qtx["Mã bước QT"].iloc[0][:4]
+
+    ds_buocantoan, ds_buocNDNB = [], []
+    for i, row in qtx.iterrows():
+        buoc = int(row["Bước"])
+        if row["Chỉ số an toàn"] == "x":
+            ds_buocantoan.append(buoc)
+        if row["Nhận dạng"] == "x":
+            ds_buocNDNB.append(buoc)
+    st.session_state.ds_buocantoan = ds_buocantoan
+    st.session_state.ds_buocNDNB = ds_buocNDNB
+
+# ======================== DIALOGS ========================
 
 @st.dialog("Thông báo")
-def warning(x,y):
-    if x == 1:
-        st.warning(f"Các bước chưa đánh giá: {y}")
-    if x == 2:
-        st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh")
-    if x == 3:
-        st.warning("Lỗi nhập kết quả không hợp lí: tất cả các bước KHÔNG ÁP DỤNG") 
-    if x == 4:
-        st.success("Đã lưu thành công. Kết quả giám sát đã được gửi qua email nhân viên thực hiện kỹ thuật.")
-    if x == 5:
-        st.warning("⚠️ Bạn đã gửi kết quả này rồi!")
+def warning(x, y):
+    messages = {
+        1: lambda: st.warning(f"Các bước chưa đánh giá: {y}"),
+        2: lambda: st.warning("Vui lòng điền đầy đủ số vào viện và năm sinh người bệnh"),
+        3: lambda: st.warning("Lỗi nhập kết quả không hợp lí: tất cả các bước KHÔNG ÁP DỤNG"),
+        4: lambda: st.success("Đã lưu thành công."),
+        5: lambda: st.warning("⚠️ Bạn đã gửi kết quả này rồi!"),
+    }
+    messages.get(x, lambda: None)()
 
-def gui_email_qtkt(receiver_email,data):
+# ======================== EMAIL ========================
+
+def gui_email_qtkt(receiver_email, data):
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-    timestamp = now_vn.strftime('%H:%M %d-%m-%Y')
+    timestamp = now_vn.strftime("%H:%M %d-%m-%Y")
     subject = f"KẾT QUẢ GIÁM SÁT QUY TRÌNH KỸ THUẬT - {timestamp}"
 
-    html_table = data.to_html(index=False, border=1, justify='left')
+    html_table = data.to_html(index=False, border=1, justify="left")
     soup = BeautifulSoup(html_table, "html.parser")
-
-    # Tỉ lệ cột: 1:5:3:3 (tổng 12 phần => 8.33%, 41.67%, 25%, 25%)
     widths = ["8.33%", "41.67%", "25%", "25%"]
-
-    # Tô màu dòng tiêu đề
+    base_td_style = (
+        "padding:8px 12px;border:1px solid #cfcfcf;"
+        "text-align:left;font-family:Arial,sans-serif;font-size:14px;"
+    )
     for i, th in enumerate(soup.find_all("th")):
-        th["style"] = (
-            f"padding:8px 12px;"
-            f"border:1px solid #cfcfcf;"
-            f"text-align:left;"
-            f"font-family:Arial,sans-serif;"
-            f"font-size:14px;"
-            f"width:{widths[i]};"
-            f"background-color:#2c25b3;"
-            f"color:#fff;"
-        )
-
-    # Style cho từng ô dữ liệu
+        th["style"] = base_td_style + f"width:{widths[i]};background-color:#2c25b3;color:#fff;"
     for row in soup.find_all("tr"):
         for i, td in enumerate(row.find_all("td")):
-            td["style"] = (
-                f"padding:8px 12px;"
-                f"border:1px solid #cfcfcf;"
-                f"text-align:left;"
-                f"font-family:Arial,sans-serif;"
-                f"font-size:14px;"
-                f"width:{widths[i]};"
-            )
-
+            td["style"] = base_td_style + f"width:{widths[i]};"
     html_table = str(soup)
-    # Khi gửi email hoặc hiển thị trên Streamlit:
-    st.markdown(html_table, unsafe_allow_html=True)
-    
-    tltt = float(st.session_state.tltt)*100
-    tltt_formatted = f"{tltt:.2f}"
 
-    # Tạo nội dung email dạng HTML, bạn có thể tùy chỉnh style thêm nếu muốn
+    st.markdown(html_table, unsafe_allow_html=True)
+
+    tltt_formatted = f"{float(st.session_state.tltt) * 100:.2f}"
     body = f"""
     <html>
-        <head>
-            <style>
-                .hospital-info {{
-                    display: flex;
-                    grid-template-columns: min-content 1fr;
-                    gap:30px;
-                    align-items:left;
-                }}
-                .hospital-info img {{
-                    height: 30px;
-                    width: 30px;
-                    align-items:left;
-                    padding-right:5px;
-                    object-fit: contain;
-                }}
-                .hospital-text {{
-                    flex: 1;
-                }}
-                .hospital-text h5 {{
-                    margin: 0;
-                    color: DodgerBlue;
-                    font-size: 12.5px;
-                    line-height: 1.25;
-                }}
-            </style>
-        </head>
-        <body>
-            <h4 style="color:DodgerBlue;">&nbsp;&nbsp;&nbsp; Kính gửi Điều dưỡng: {st.session_state.nv_thuchien_GSQT} - {st.session_state.khoa_GSQT}</h4>
-            <p>
-            &nbsp;&nbsp;&nbsp; Căn cứ theo kế hoạch giám sát thường quy/ đột xuất của Phòng Điều dưỡng và các Khoa/Đơn vị lâm sàng,
-            Phòng Điều dưỡng kính gửi kết quả giám sát quy trình kỹ thuật vừa thực hiện của Quý Anh/Chị như sau:
-            </p>
-
-            <div class="highlight">
-            <p><strong>Tên quy trình kỹ thuật:</strong> {st.session_state.ten_quy_trinh}</p>       
-            <p><strong>Nhân viên giám sát:</strong> {st.session_state.username}</p>
-            <p><strong>Thời gian giám sát:</strong> {timestamp}</p>
-            <p><strong>Tỉ lệ tuân thủ:</strong> {tltt_formatted}%</p>
+      <head><style>
+        .hospital-info {{display:flex;gap:30px;align-items:left;}}
+        .hospital-info img {{height:30px;width:30px;padding-right:5px;object-fit:contain;}}
+        .hospital-text h5 {{margin:0;color:DodgerBlue;font-size:12.5px;line-height:1.25;}}
+      </style></head>
+      <body>
+        <h4 style="color:DodgerBlue;">&nbsp;&nbsp;&nbsp; Kính gửi Điều dưỡng: {st.session_state.nv_thuchien_GSQT} - {st.session_state.khoa_GSQT}</h4>
+        <p>&nbsp;&nbsp;&nbsp; Căn cứ theo kế hoạch giám sát thường quy/ đột xuất của Phòng Điều dưỡng và các Khoa/Đơn vị lâm sàng,
+        Phòng Điều dưỡng kính gửi kết quả giám sát quy trình kỹ thuật vừa thực hiện của Quý Anh/Chị như sau:</p>
+        <div class="highlight">
+          <p><strong>Tên quy trình kỹ thuật:</strong> {st.session_state.ten_quy_trinh}</p>
+          <p><strong>Nhân viên giám sát:</strong> {st.session_state.username}</p>
+          <p><strong>Thời gian giám sát:</strong> {timestamp}</p>
+          <p><strong>Tỉ lệ tuân thủ:</strong> {tltt_formatted}%</p>
+        </div>
+        <p><strong>Bảng chi tiết kết quả giám sát:</strong></p>
+        {html_table}
+        <br><br>
+        <p class="footer">
+          <b><i>&nbsp;&nbsp;&nbsp;Trân trọng./.</i></b><br><br><br>
+          <div class="hospital-info">
+            <img src="data:image/png;base64,{img}" alt="logo">
+            <div class="hospital-text">
+              <h5>PHÒNG ĐIỀU DƯỠNG<br>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH &#174;</h5>
             </div>
+          </div>
+        </p>
+      </body>
+    </html>"""
 
-            <p><strong>Bảng chi tiết kết quả giám sát:</strong></p>
-            {html_table}
-            <br><br>
-            <p class="footer">
-            <b><i>&nbsp;&nbsp;&nbsp;Trân trọng./.</i></b>
-            <br><br><br />
-            
-             <div class="hospital-info">
-                <img src="data:image/png;base64,{img}" alt="logo">
-                <div class="hospital-text">
-                    <h5>PHÒNG ĐIỀU DƯỠNG<br>
-                    BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH &#174;</h5>
-                </div>
-            </div>
-            </p>
-        </body>
-    </html>
-    """
-
-
-    # Thiết lập thông tin email
     sender_email = st.secrets["email_info"]["sender_email"]
     sender_password = st.secrets["email_info"]["sender_password"]
-
     msg = MIMEText(body, "html", "utf-8")
     msg["Subject"] = subject
     msg["From"] = sender_email
-    msg["To"] = receiver_email
 
-    # Gửi email
+    recipients = [receiver_email]
+    for key in ["email2", "email3"]:
+        if st.session_state.get(key):
+            recipients.append(st.session_state[key])
+
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(sender_email, sender_password)
-        server.sendmail(sender_email, receiver_email, msg.as_string())
-    if "email2" in st.session_state and st.session_state.email2:
-        msg["To"] = st.session_state.email2
-        server.sendmail(sender_email, st.session_state.email2, msg.as_string())
-    if "email3" in st.session_state and st.session_state.email3:
-        msg["To"] = st.session_state.email3
-        server.sendmail(sender_email, st.session_state.email3, msg.as_string())
+        for recipient in recipients:
+            msg.replace_header("To", recipient) if "To" in msg else msg.__setitem__("To", recipient)
+            server.sendmail(sender_email, recipient, msg.as_string())
+
+# ======================== DATA HELPERS ========================
 
 def precheck_table():
-    buoc = []
-    nd = []
-    ketqua = []
-    tondong = []
-    for i in range(0, len(st.session_state.quy_trinh)):
-        buoc.append(st.session_state.quy_trinh.iloc[i, 6])
-        nd.append(st.session_state.quy_trinh.iloc[i, 7])
-        ketqua.append(st.session_state[f"radio_{i}"])
-        if f"text_{i}" in st.session_state:
-            tondong.append(st.session_state[f"text_{i}"])
-        else:
-            tondong.append("")
-    k = {"Bước": pd.Series(buoc),
-                "Nội dung": pd.Series(nd),
-                "Kết quả": pd.Series(ketqua),
-                "Tồn đọng": pd.Series(tondong),
-                }
-    precheck_table = pd.DataFrame(k)
-    return precheck_table
+    fv = st.session_state.get("form_version", 0)
+    quy_trinh = st.session_state.quy_trinh
+    rows = [
+        {
+            "Bước": quy_trinh.iloc[i, 6],
+            "Nội dung": quy_trinh.iloc[i, 7],
+            "Kết quả": st.session_state.get(f"radio_{i}_{fv}", ""),
+            "Tồn đọng": st.session_state.get(f"text_{i}_{fv}", ""),
+        }
+        for i in range(len(quy_trinh))
+    ]
+    return pd.DataFrame(rows)
 
 def clear_all_selections():
-    """Xóa tất cả các lựa chọn của người dùng"""
-    if "quy_trinh" in st.session_state:
-        quy_trinh = st.session_state["quy_trinh"]
+    fv = st.session_state.get("form_version", 0)
+    quy_trinh = st.session_state.get("quy_trinh")
+    if quy_trinh is not None:
         for i in range(len(quy_trinh)):
-            # Xóa radio buttons
-            if f"radio_{i}" in st.session_state:
-                del st.session_state[f"radio_{i}"]
-            # Xóa text inputs
-            if f"text_{i}" in st.session_state:
-                del st.session_state[f"text_{i}"]
-
-    # Xóa các nhân viên bổ sung
-    for key in ["nv2", "nv3", "email2", "email3", "precheck","luu"]:
-        if key in st.session_state:
-            del st.session_state[key]
-
-    # Xóa thông tin quy trình
-    for key in ["quy_trinh", "ten_quy_trinh", "loaiqt", "sttqt", 
+            st.session_state.pop(f"radio_{i}_{fv}", None)
+            st.session_state.pop(f"text_{i}_{fv}", None)
+    for key in ["nv2", "nv3", "email2", "email3", "precheck", "luu",
+                "quy_trinh", "ten_quy_trinh", "loaiqt", "sttqt",
                 "ds_buocantoan", "ds_buocNDNB", "ma_quy_trinh", "tltt",
-                "khoa_GSQT", "nv_thuchien_GSQT", "email_nvthqt", "vtgs_GSQT"]:
-        if key in st.session_state:
-            del st.session_state[key]
+                "khoa_GSQT", "nv_thuchien_GSQT", "email_nvthqt", "vtgs_GSQT",
+                "doituong_duocgiamsat"]:
+        st.session_state.pop(key, None)
+    # Tăng version → toàn bộ widget key thay đổi → Streamlit render widget trắng
+    st.session_state["form_version"] = fv + 1
     st.session_state["form_cleared"] = True
 
 def check_duplicate_submission(column_khoa, column_nvth, column_nvgs, column_vtndg, column_qt, column_data):
-    """
-    Kiểm tra xem bản ghi này đã được submit trước đó hay chưa
-    So sánh: ngày (không tính giờ), khoa, tên người thực hiện, tên người đánh giá, 
-    vị trí người đánh giá, tên quy trình, data
-    """
     try:
-        credentials = load_credentials()
-        gc = gspread.authorize(credentials)
-        sheeto1 = st.secrets["sheet_name"]["output_1"]
-        sheet = gc.open(sheeto1).sheet1
-        
+        gc = gspread.authorize(load_credentials())
+        sheet = gc.open(st.secrets["sheet_name"]["output_1"]).sheet1
         all_data = sheet.get_all_values()
-        
-        if len(all_data) <= 1:  # Chỉ có header
+        if len(all_data) <= 1:
             return False, None
-        
-        # Lấy ngày hôm nay (không tính giờ phút giây)
-        now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-        today_date = now_vn.strftime("%Y-%m-%d")
-        
-        # Duyệt qua tất cả các dòng dữ liệu (bỏ qua header)
-        for row_idx in range(1, len(all_data)):
-            row = all_data[row_idx]
-            
-            if len(row) < 8:  # Đảm bảo dòng có đủ dữ liệu
+
+        today_date = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).strftime("%Y-%m-%d")
+        for row_idx, row in enumerate(all_data[1:], start=1):
+            if len(row) < 8:
                 continue
-            # Trích xuất các trường từ dòng (đối chiếu với cấu trúc sheet)
-            # STT (0), Timestamp (1), Khoa (2), Tên người thực hiện (3), 
-            # Tên người đánh giá (4), Vị trí người đánh giá (5), 
-            # Tên quy trình (6), Data (7)
-            row_timestamp = row[1] if len(row) > 1 else ""
-            row_khoa = row[2].strip() if len(row) > 2 else ""
-            row_nvth = row[3].strip() if len(row) > 3 else ""
-            row_nvgs = row[4].strip() if len(row) > 4 else ""
-            #row_vtndg = row[5].strip() if len(row) > 5 else ""
-            row_qt = row[6].strip() if len(row) > 6 else ""
-            row_data = row[7].strip() if len(row) > 7 else ""
-            
-            # Lấy ngày từ timestamp (format: YYYY-MM-DD HH:MM:SS)
-            try:
-                row_date = row_timestamp.split(" ")[0] if row_timestamp else ""
-            except:
-                row_date = ""
-            
-            # So sánh tất cả các trường
-            if (row_date == today_date and
-                row_khoa == column_khoa.strip() and
-                row_nvth == column_nvth.strip() and
-                row_nvgs == column_nvgs.strip() and
-                #row_vtndg == column_vtndg.strip() and
-                row_qt == column_qt.strip() and
-                row_data == column_data.strip()):
-                
-                # Tìm thấy bản ghi trùng lặp
+            row_date = row[1].split(" ")[0] if row[1] else ""
+            if (row_date == today_date
+                    and row[2].strip() == column_khoa.strip()
+                    and row[3].strip() == column_nvth.strip()
+                    and row[4].strip() == column_nvgs.strip()
+                    and row[6].strip() == column_qt.strip()
+                    and row[7].strip() == column_data.strip()):
                 return True, row_idx
-        
-        # Không tìm thấy bản ghi trùng lặp
         return False, None
-        
     except Exception as e:
         st.error(f"❌ Lỗi kiểm tra trùng lặp: {str(e)}")
         return False, None
@@ -407,8 +288,7 @@ def append_row_safe(sheet, row_data, retries=3):
             next_row = last_row + 1
             if next_row > sheet.row_count:
                 sheet.add_rows(1000)
-            range_name = f"A{next_row}:N{next_row}"
-            sheet.update(range_name, [row_data])
+            sheet.update(f"A{next_row}:N{next_row}", [row_data])
             return True
         except Exception as e:
             if i < retries - 1:
@@ -417,220 +297,185 @@ def append_row_safe(sheet, row_data, retries=3):
                 raise e
 
 def upload_data_GS(data):
-    credentials = load_credentials()
-    gc = gspread.authorize(credentials)
-    sheeto1 = st.secrets["sheet_name"]["output_1"]
-    sheet = gc.open(sheeto1).sheet1
+    gc = gspread.authorize(load_credentials())
+    sheet = gc.open(st.secrets["sheet_name"]["output_1"]).sheet1
+
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-    column_index = len(sheet.col_values(1)) 
-    column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
-    column_khoa = str(st.session_state.khoa_GSQT)
-    column_nvgs = str(st.session_state.username)
-    column_nvth = str(st.session_state.nv_thuchien_GSQT)
-    column_vtndg = str(st.session_state.vtgs_GSQT)
-    column_qt = str(st.session_state.ten_quy_trinh)
-    column_data=""
-    so_buoc_dung_du = 0
+    ds_buocantoan = st.session_state.ds_buocantoan
+    ds_buocNDNB = st.session_state.ds_buocNDNB
+
+    column_data = ""
+    so_buoc_dung_du = buoc_an_toan_dung_du = buoc_nhan_dang_dung_du = 0
     tong_so_buoc_tru_KAD = len(data)
-    buoc_an_toan_dung_du = 0
-    tong_an_toan_tru_an_toan_va_KAD = len(st.session_state.ds_buocantoan)
-    buoc_nhan_dang_dung_du = 0
-    tong_nhan_dang_tru_nhan_dang_va_KAD = len(st.session_state.ds_buocNDNB)
-    for i in range (0, len(data)):
-        buoc = str(data.iloc[i]["Bước"])  
-        ketqua = str(data.iloc[i]["Kết quả"])  
-        tondong = str(data.iloc[i]["Tồn đọng"])
+    tong_an_toan_tru_an_toan_va_KAD = len(ds_buocantoan)
+    tong_nhan_dang_tru_nhan_dang_va_KAD = len(ds_buocNDNB)
+
+    for i, row in data.iterrows():
+        buoc, ketqua, tondong = str(row["Bước"]), str(row["Kết quả"]), str(row["Tồn đọng"])
+        buoc_int = i + 1
         if ketqua == "Thực hiện đúng, đủ":
-            so_buoc_dung_du +=1
-            if i+1 in st.session_state.ds_buocantoan:
-               buoc_an_toan_dung_du +=1
-            if i+1 in st.session_state.ds_buocNDNB:
-               buoc_nhan_dang_dung_du +=1  
+            so_buoc_dung_du += 1
+            if buoc_int in ds_buocantoan:
+                buoc_an_toan_dung_du += 1
+            if buoc_int in ds_buocNDNB:
+                buoc_nhan_dang_dung_du += 1
         if ketqua == "KHÔNG ÁP DỤNG":
-            tong_so_buoc_tru_KAD -=1
-            if i+1 in st.session_state.ds_buocantoan:
-                tong_an_toan_tru_an_toan_va_KAD -=1 
-            if i+1 in st.session_state.ds_buocNDNB:
-                tong_nhan_dang_tru_nhan_dang_va_KAD -=1
+            tong_so_buoc_tru_KAD -= 1
+            if buoc_int in ds_buocantoan:
+                tong_an_toan_tru_an_toan_va_KAD -= 1
+            if buoc_int in ds_buocNDNB:
+                tong_nhan_dang_tru_nhan_dang_va_KAD -= 1
             if tong_so_buoc_tru_KAD == 0:
                 st.session_state.loi_KAD = True
                 st.session_state.loi_KADtime = time.time()
                 st.rerun()
-        if tondong in ["Chưa điền",""]:
-            column_data += buoc + "|" + ketqua + "|#"
-        else:
-            column_data += buoc + "|" + ketqua + "|" + tondong + "#"
-    tltt = round(so_buoc_dung_du/tong_so_buoc_tru_KAD,4)
-    st.session_state.tltt = tltt
-    tlan = ""
-    tlnd = ""
-    if tong_an_toan_tru_an_toan_va_KAD != 0:
-        tlan = round(buoc_an_toan_dung_du/tong_an_toan_tru_an_toan_va_KAD,4)
-    if tong_nhan_dang_tru_nhan_dang_va_KAD != 0:
-        tlnd = round(buoc_nhan_dang_dung_du/tong_nhan_dang_tru_nhan_dang_va_KAD,4)
-    column_data=column_data.rstrip("#")
-    column_mqt = st.session_state.ma_quy_trinh
-    column_ghichu1 = ""
-    if "nv2" in st.session_state and st.session_state.nv2:
-        column_ghichu1 = str(st.session_state.nv2)
-    column_ghichu2 = ""
-    if "nv3" in st.session_state and st.session_state.nv3:
-        column_ghichu2 = str(st.session_state.nv3)
+        separator = "#" if tondong in ("Chưa điền", "") else tondong + "#"
+        column_data += f"{buoc}|{ketqua}|{'#' if tondong in ('Chưa điền', '') else tondong + '#'}"
 
-    # ✅ Kiểm tra trùng lặp trước khi upload
-    is_duplicate, duplicate_row = check_duplicate_submission(
-        column_khoa, column_nvth, column_nvgs, column_vtndg, 
-        column_qt, column_data
+    tltt = round(so_buoc_dung_du / tong_so_buoc_tru_KAD, 4)
+    st.session_state.tltt = tltt
+    tlan = round(buoc_an_toan_dung_du / tong_an_toan_tru_an_toan_va_KAD, 4) if tong_an_toan_tru_an_toan_va_KAD else ""
+    tlnd = round(buoc_nhan_dang_dung_du / tong_nhan_dang_tru_nhan_dang_va_KAD, 4) if tong_nhan_dang_tru_nhan_dang_va_KAD else ""
+    column_data = column_data.rstrip("#")
+
+    column_ghichu1 = st.session_state.get("nv2") or st.session_state.get("doituong_duocgiamsat") or ""
+    column_ghichu2 = st.session_state.get("nv3") or ""
+
+    is_duplicate, _ = check_duplicate_submission(
+        st.session_state.khoa_GSQT, st.session_state.nv_thuchien_GSQT,
+        st.session_state.username, st.session_state.vtgs_GSQT,
+        st.session_state.ten_quy_trinh, column_data,
     )
     if is_duplicate:
         warning(5, 2)
         return False
-    # Upload dữ liệu
+
     row_data = [
-        column_index,
-        column_timestamp,
-        column_khoa,
-        column_nvth,
-        column_nvgs,
-        column_vtndg,
-        column_qt,
+        len(sheet.col_values(1)),
+        now_vn.strftime("%Y-%m-%d %H:%M:%S"),
+        st.session_state.khoa_GSQT,
+        st.session_state.nv_thuchien_GSQT,
+        st.session_state.username,
+        st.session_state.vtgs_GSQT,
+        st.session_state.ten_quy_trinh,
         column_data,
-        column_mqt,
-        tltt,
-        tlan,
-        tlnd,
-        column_ghichu1,
-        column_ghichu2,
+        st.session_state.ma_quy_trinh,
+        tltt, tlan, tlnd,
+        column_ghichu1, column_ghichu2,
     ]
     append_row_safe(sheet, row_data)
     return True
-    
 
-# Main Section ####################################################################################
+# ======================== MAIN SECTION========================
+
+# form_version là bộ đếm suffix cho tất cả widget key.
+# Mỗi lần clear_all_selections() tăng lên 1 → Streamlit tạo widget mới hoàn toàn,
+# không phục hồi giá trị cũ từ bộ nhớ nội bộ.
+if "form_version" not in st.session_state:
+    st.session_state["form_version"] = 0
+
 if st.session_state.get("loi_KAD", False):
-        if time.time() - st.session_state.get("loi_KADtime", 0) < 2:
-            warning(3,2)
-        else:
-            del st.session_state["loi_KAD"]
-            del st.session_state["loi_KADtime"]
-css_path = pathlib.Path("asset/style.css")
-load_css(css_path)
+    if time.time() - st.session_state.get("loi_KADtime", 0) < 2:
+        warning(3, 2)
+    else:
+        st.session_state.pop("loi_KAD", None)
+        st.session_state.pop("loi_KADtime", None)
+
+load_css(pathlib.Path("asset/style.css"))
 img = get_img_as_base64("pages/img/logo.png")
+
 st.markdown(f"""
     <div class="fixed-header">
         <div class="header-content">
             <img src="data:image/png;base64,{img}" alt="logo">
             <div class="header-text">
                 <h1>BỆNH VIỆN ĐẠI HỌC Y DƯỢC THÀNH PHỐ HỒ CHÍ MINH<span style="vertical-align: super; font-size: 0.6em;">&#174;</span>
-                <br>
-                <span style="color:#c15088">Phòng Điều dưỡng</span></h1>
+                <br><span style="color:#c15088">Phòng Điều dưỡng</span></h1>
             </div>
         </div>
-        <div class="header-subtext">
-        <p>GIÁM SÁT QUY TRÌNH KỸ THUẬT</p>
-        </div>
+        <div class="header-subtext"><p>GIÁM SÁT QUY TRÌNH</p></div>
     </div>
     <div class="header-underline"></div>
+""", unsafe_allow_html=True)
 
- """, unsafe_allow_html=True)
-html_code = f'<p class="demuc"><i>Nhân viên đang giám sát: {st.session_state.username}</i></p>'
-st.html(html_code)
+st.html(f'<p class="demuc"><i>Nhân viên đang giám sát: {st.session_state.username}</i></p>')
 vitrigs()
-#st.html(f'<p class="demuc"><i>Nhân viên thực hiện quy trình</i></p>')
 thong_tin_hanh_chinh()
 st.divider()
 bang_kiem_quy_trinh()
 
-# ✅ Nếu form vừa được clear, hiển thị message và return
 if st.session_state.get("form_cleared", False):
     st.session_state["form_cleared"] = False
     st.stop()
 
-luachon = ["Thực hiện đúng, đủ","Thực hiện đúng nhưng chưa đủ","Thực hiện chưa đúng, KHÔNG thực hiện","KHÔNG ÁP DỤNG"]
-if (
-    "khoa_GSQT" in st.session_state and st.session_state["khoa_GSQT"] 
-    and "nv_thuchien_GSQT" in st.session_state and st.session_state["nv_thuchien_GSQT"] 
-    and "vtgs_GSQT" in st.session_state and st.session_state["vtgs_GSQT"] is not None
-    and "quy_trinh" in st.session_state and st.session_state["quy_trinh"] is not None
-):
+luachon = [
+    "Thực hiện đúng, đủ",
+    "Thực hiện đúng nhưng chưa đủ",
+    "Thực hiện chưa đúng, KHÔNG thực hiện",
+    "KHÔNG ÁP DỤNG",
+]
+
+if all([
+    st.session_state.get("khoa_GSQT"),
+    st.session_state.get("nv_thuchien_GSQT"),
+    st.session_state.get("vtgs_GSQT") is not None,
+    st.session_state.get("quy_trinh") is not None,
+]):
     quy_trinh = st.session_state.quy_trinh
-    if st.session_state.sttqt == "215" or st.session_state.sttqt == "216":
-        sheeti1 = st.secrets["sheet_name"]["input_1"]
-        data_nv = load_data(sheeti1)
-        data_nv1 = data_nv.loc[data_nv["Khoa"].str.contains("Khoa Gây mê hồi sức", case=False)]
-        chon_nv2 = st.selectbox(label="Nhân viên thực hiện quy trình 2",
-                                    options=data_nv1["Nhân viên"],
-                                    index=None,
-                                    placeholder="",
-                                    key="nv2")
-        if chon_nv2 is not None:
-            email_matches = data_nv1.loc[data_nv1["Nhân viên"]==chon_nv2, "Email"]
-            if not email_matches.empty:
-                st.session_state.email2 = email_matches.values[0]
-            else:
-                st.warning("Không tìm thấy email của nhân viên này")
-    if st.session_state.sttqt == "216":
-        sheeti1 = st.secrets["sheet_name"]["input_1"]
-        data_nv = load_data(sheeti1)
-        data_nv1 = data_nv.loc[data_nv["Khoa"].str.contains("Khoa Gây mê hồi sức", case=False)]
-        chon_nv3 = st.selectbox(label="Nhân viên thực hiện quy trình 3",
-                                    options=data_nv1["Nhân viên"],
-                                    index=None,
-                                    placeholder="",
-                                    key="nv3")
-        if chon_nv3 is not None:
-            email_matches = data_nv1.loc[data_nv1["Nhân viên"]==chon_nv3, "Email"]
-            if not email_matches.empty:
-                st.session_state.email3 = email_matches.values[0]
-            else:
-                st.warning("Không tìm thấy email của nhân viên này")
+    fv = st.session_state.get("form_version", 0)
+    data_nv = None  # lazy load chỉ khi cần
+
+    for stt, extra_label in [("215", "Nhân viên thực hiện quy trình 2"), ("216", "Nhân viên thực hiện quy trình 3")]:
+        if st.session_state.sttqt in (stt, "216") if stt == "215" else st.session_state.sttqt == stt:
+            if data_nv is None:
+                data_nv = load_data(st.secrets["sheet_name"]["input_1"])
+            data_nv1 = data_nv.loc[data_nv["Khoa"].str.contains("Khoa Gây mê hồi sức", case=False)]
+            key = "nv2" if stt == "215" else "nv3"
+            email_key = "email2" if stt == "215" else "email3"
+            chon_nv = st.selectbox(label=extra_label, options=data_nv1["Nhân viên"],
+                                   index=None, placeholder="", key=f"{key}_{fv}")
+            if chon_nv:
+                st.session_state[key] = chon_nv
+                matches = data_nv1.loc[data_nv1["Nhân viên"] == chon_nv, "Email"]
+                if not matches.empty:
+                    st.session_state[email_key] = matches.values[0]
+                else:
+                    st.warning("Không tìm thấy email của nhân viên này")
 
     st.divider()
-    for i in range (0,len(quy_trinh)):   
+    for i in range(len(quy_trinh)):
         st.radio(
-        label=f"Bước {quy_trinh.iloc[i, 5]}: {quy_trinh.iloc[i, 7]}",
-        options=luachon,
-        key=f"radio_{i}",
-        index=None,
+            label=f"Bước {quy_trinh.iloc[i, 5]}: {quy_trinh.iloc[i, 7]}",
+            options=luachon,
+            key=f"radio_{i}_{fv}",
+            index=None,
         )
-        if st.session_state.get(f"radio_{i}") != "Thực hiện đúng, đủ" and \
-            st.session_state.get(f"radio_{i}") != "KHÔNG ÁP DỤNG" and \
-            st.session_state.get(f"radio_{i}") != None:
-            
-            st.text_input(
-                label="Tồn đọng",
-                placeholder="Ghi rõ tồn đọng",
-                key=f"text_{i}",
-            )                        
-    precheck = st.checkbox(label="Xem lại kết quả vừa nhập")
+        kq = st.session_state.get(f"radio_{i}_{fv}")
+        if kq not in ("Thực hiện đúng, đủ", "KHÔNG ÁP DỤNG", None):
+            st.text_input(label="Tồn đọng", placeholder="Ghi rõ tồn đọng", key=f"text_{i}_{fv}")
+
+    precheck = st.checkbox(label="Xem lại kết quả vừa nhập", key=f"precheck_{fv}")
     if precheck:
-        buoc_chua_dien = []
-        for j in range (0,len(quy_trinh)):
-            if f"radio_{j}" not in st.session_state or not st.session_state[f"radio_{j}"]:
-                buoc_chua_dien.append(f"{quy_trinh.iloc[j,6]}")
-        buoc_chua_dien_str = ", ".join(buoc_chua_dien)
-        if buoc_chua_dien_str == "":
-            prechecktable = precheck_table()         
-            st.dataframe(prechecktable, hide_index=True)
+        buoc_chua_dien = [quy_trinh.iloc[j, 6]
+                          for j in range(len(quy_trinh))
+                          if not st.session_state.get(f"radio_{j}_{fv}")]
+        if buoc_chua_dien:
+            warning(1, ", ".join(buoc_chua_dien))
         else:
-            warning(1,buoc_chua_dien_str)
-    if st.button("Lưu kết quả",type='primary',key="luu"):
-        buoc_chua_dien = []
-        for j in range (0,len(quy_trinh)):
-            if f"radio_{j}" not in st.session_state or not st.session_state[f"radio_{j}"]:
-                buoc_chua_dien.append(f"{quy_trinh.iloc[j,6]}")
-        buoc_chua_dien_str = ", ".join(buoc_chua_dien)
-        if buoc_chua_dien_str == "":
+            st.dataframe(precheck_table(), hide_index=True)
+
+    if st.button("Lưu kết quả", type="primary", key=f"luu_{fv}"):
+        buoc_chua_dien = [quy_trinh.iloc[j, 6]
+                          for j in range(len(quy_trinh))
+                          if not st.session_state.get(f"radio_{j}_{fv}")]
+        if buoc_chua_dien:
+            warning(1, ", ".join(buoc_chua_dien))
+        else:
             prechecktable = precheck_table()
-            upload_success = upload_data_GS(prechecktable)         
-            if upload_success:
+            if upload_data_GS(prechecktable):
                 warning(4, 2)
                 #gui_email_qtkt(st.session_state.email_nvthqt, prechecktable)
-                import time
                 time.sleep(0.5)
                 clear_all_selections()
-        else:
-            warning(1,buoc_chua_dien_str)
 else:
     st.warning("Vui lòng chọn đầy đủ các mục")
-
