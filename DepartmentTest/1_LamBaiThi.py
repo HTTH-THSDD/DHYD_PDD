@@ -203,6 +203,18 @@ def hien_thi_header():
         html_code = f'<p class="demuc"><i>Nhân viên thực hiện: {st.session_state.username}</i></p>'
         st.html(html_code)
 
+def handle_radio_change_trac_nghiem(stt, pairs):
+    """Callback để xử lý thay đổi đáp án trắc nghiệm"""
+    selected = st.session_state.get(f"question_{stt}")
+    if selected:
+        for pair in pairs:
+            if pair[0] == selected:
+                st.session_state.answers[stt] = {
+                    'answer': selected,
+                    'result': pair[1]
+                }
+                break
+
 def hien_thi_cau_hoi_trac_nghiem(stt, question, answers_text, results_text):
     st.markdown(f"### Câu {stt}: {question}")
     
@@ -219,21 +231,29 @@ def hien_thi_cau_hoi_trac_nghiem(stt, question, answers_text, results_text):
     pairs = st.session_state[f"q_{stt}_mapping"]
     display_options = [pair[0] for pair in pairs]
     
-    selected = st.radio(
+    # Lấy giá trị hiện tại từ session_state
+    current_index = None
+    if stt in st.session_state.answers and st.session_state.answers[stt]:
+        current_answer = st.session_state.answers[stt].get('answer')
+        try:
+            current_index = display_options.index(current_answer)
+        except ValueError:
+            current_index = None
+    
+    st.radio(
         "Chọn đáp án đúng nhất:",
         display_options,
         key=f"question_{stt}",
-        index=None
+        index=current_index,
+        on_change=handle_radio_change_trac_nghiem,
+        args=(stt, pairs)
     )
-    
-    if selected:
-        for pair in pairs:
-            if pair[0] == selected:
-                st.session_state.answers[stt] = {
-                    'answer': selected,
-                    'result': pair[1]
-                }
-                break
+
+def handle_radio_change_dung_sai(stt, i):
+    """Callback để xử lý thay đổi đáp án đúng/sai"""
+    choice = st.session_state.get(f"question_{stt}_sub_{i}")
+    if choice and stt not in st.session_state.answers:
+        st.session_state.answers[stt] = {}
 
 def hien_thi_cau_hoi_dung_sai(stt, question, answers_text, results_text):
     st.markdown(f"### Câu {stt}: {question}")
@@ -245,14 +265,26 @@ def hien_thi_cau_hoi_dung_sai(stt, question, answers_text, results_text):
     for i, statement in enumerate(answer_statements):
         col1, col2 = st.columns([2, 5])
         with col1:
+            # Lấy giá trị hiện tại từ session_state
+            current_index = None
+            if i in st.session_state.answers[stt]:
+                current_choice = st.session_state.answers[stt][i].get('answer')
+                if current_choice == "Đúng":
+                    current_index = 0
+                elif current_choice == "Sai":
+                    current_index = 1
+            
             choice = st.radio(
                 "Chọn:",
                 ["Đúng", "Sai"],
                 key=f"question_{stt}_sub_{i}",
                 horizontal=True,
                 label_visibility="collapsed",
-                index=None
+                index=current_index,
+                on_change=handle_radio_change_dung_sai,
+                args=(stt, i)
             )
+            # Cập nhật trực tiếp khi có lựa chọn
             if choice:
                 st.session_state.answers[stt][i] = {
                     'answer': choice,
@@ -337,7 +369,7 @@ def kiem_tra_hoan_thanh(exam_questions):
                     return False
     return True
 
-# Main ########################################################################
+########################## MAIN SECTION #####################################################
 if 'exam_started' not in st.session_state:
     st.session_state.exam_started = False
 if 'start_time' not in st.session_state:
@@ -666,7 +698,7 @@ if st.session_state.submitted:
         time.sleep(0.5)
         st.rerun()
 
-# Auto-refresh chỉ khi đang thi
+# Auto-refresh chỉ dựa trên thay đổi timer (rerun mỗi 1 giây để cập nhật đồng hồ)
 if st.session_state.exam_started and not st.session_state.submitted:
-    time.sleep(1)
+    time.sleep(5)
     st.rerun()

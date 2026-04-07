@@ -233,7 +233,7 @@ def thong_ke_chung(du_lieu):
     bang_thong_ke = pd.concat([bang_thong_ke, dong_tong], ignore_index=True)
     return bang_thong_ke
 
-def thong_ke_chi_tiet(du_lieu, du_lieu_dap_an):
+def thong_ke_chi_tiet(du_lieu, du_lieu_dap_an, du_lieu_input8=None):
     """Tạo bảng thống kê chi tiết với đối chiếu đáp án chính xác"""
     cac_dong_chi_tiet = []
     
@@ -243,6 +243,52 @@ def thong_ke_chi_tiet(du_lieu, du_lieu_dap_an):
     
     # Tạo từ điển đáp án
     tu_dien_dap_an = tao_tu_dien_dap_an(du_lieu_dap_an)
+    
+    # Tạo từ điển nội dung câu hỏi từ input_8
+    tu_dien_noi_dung_cau_hoi = {}
+    tu_dien_cau_tra_loi_dung = {}
+    if du_lieu_input8 is not None and not du_lieu_input8.empty:
+        ten_cot_ma_de_input8 = next((c for c in du_lieu_input8.columns if 'đề' in c.lower() or 'de' in c.lower()), du_lieu_input8.columns[0])
+        ten_cot_stt_input8 = next((c for c in du_lieu_input8.columns if 'stt' in c.lower() and 'câu' in c.lower()), du_lieu_input8.columns[1])
+        ten_cot_loai_cau_input8 = du_lieu_input8.columns[3] if len(du_lieu_input8.columns) > 3 else None  # Cột D - Loại câu hỏi
+        ten_cot_cau_hoi_trac_nghiem = du_lieu_input8.columns[2]  # Cột C - cho Trắc nghiệm
+        ten_cot_cau_hoi_dung_sai = du_lieu_input8.columns[4] if len(du_lieu_input8.columns) > 4 else du_lieu_input8.columns[2]  # Cột E - cho Đúng/Sai
+        ten_cot_cau_tra_loi_trac_nghiem = du_lieu_input8.columns[4] if len(du_lieu_input8.columns) > 4 else None  # Cột E - Câu trả lời
+        ten_cot_ket_qua_trac_nghiem = du_lieu_input8.columns[5] if len(du_lieu_input8.columns) > 5 else None  # Cột F - Kết quả
+        ten_cot_cau_tra_loi_dung_sai = du_lieu_input8.columns[5] if len(du_lieu_input8.columns) > 5 else None  # Cột F - cho Đúng/Sai
+        
+        for _, row in du_lieu_input8.iterrows():
+            ma_de = str(row[ten_cot_ma_de_input8]).strip()
+            stt = str(row[ten_cot_stt_input8]).strip()
+            loai_cau = str(row[ten_cot_loai_cau_input8]).strip() if ten_cot_loai_cau_input8 else "Trắc nghiệm"
+            
+            # Lấy nội dung câu hỏi tùy theo loại câu hỏi
+            if loai_cau == "Đúng/Sai" and ten_cot_cau_hoi_dung_sai:
+                cau_hoi = str(row[ten_cot_cau_hoi_dung_sai]).strip()
+            else:
+                cau_hoi = str(row[ten_cot_cau_hoi_trac_nghiem]).strip()
+            
+            tu_dien_noi_dung_cau_hoi[(ma_de, stt)] = cau_hoi
+            
+            # Lấy câu trả lời đúng
+            if loai_cau == "Trắc nghiệm" and ten_cot_cau_tra_loi_trac_nghiem and ten_cot_ket_qua_trac_nghiem:
+                # Lấy ý đúng từ cột E (Câu trả lời) và cột F (Kết quả)
+                cac_cau_tra_loi = str(row[ten_cot_cau_tra_loi_trac_nghiem]).split('\n') if pd.notna(row[ten_cot_cau_tra_loi_trac_nghiem]) else []
+                cac_ket_qua = str(row[ten_cot_ket_qua_trac_nghiem]).split('\n') if pd.notna(row[ten_cot_ket_qua_trac_nghiem]) else []
+                
+                cau_tra_loi_dung = "N/A"
+                for i, tra_loi in enumerate(cac_cau_tra_loi):
+                    if i < len(cac_ket_qua) and cac_ket_qua[i].strip().lower() == "đúng":
+                        cau_tra_loi_dung = tra_loi.strip()
+                        break
+                tu_dien_cau_tra_loi_dung[(ma_de, stt)] = cau_tra_loi_dung
+            
+            elif loai_cau == "Đúng/Sai" and ten_cot_cau_tra_loi_dung_sai:
+                # Lấy từ cột F
+                cau_tra_loi_dung = str(row[ten_cot_cau_tra_loi_dung_sai]).strip() if pd.notna(row[ten_cot_cau_tra_loi_dung_sai]) else "N/A"
+                tu_dien_cau_tra_loi_dung[(ma_de, stt)] = cau_tra_loi_dung
+            else:
+                tu_dien_cau_tra_loi_dung[(ma_de, stt)] = "N/A"
     
     for _, dong in du_lieu.iterrows():
         try:
@@ -296,14 +342,22 @@ def thong_ke_chi_tiet(du_lieu, du_lieu_dap_an):
                         else:
                             ket_qua = "?"
                     
+                    # Lấy nội dung câu hỏi
+                    noi_dung_cau_hoi = tu_dien_noi_dung_cau_hoi.get((ma_de, stt), "N/A")
+                    
+                    # Lấy câu trả lời đúng
+                    cau_tra_loi_dung = tu_dien_cau_tra_loi_dung.get((ma_de, stt), "N/A")
+                    
                     cac_dong_chi_tiet.append({
                         'Ngày thực hiện': ngay_thuc_hien_str,
                         'Khoa': dong['Khoa'],
                         'Nhân viên thực hiện': dong['Nhân viên'],
                         'Tên bộ câu hỏi': ma_de,
                         'STT câu hỏi': stt,
+                        'Nội dung câu hỏi': noi_dung_cau_hoi,
                         'Câu trả lời của nhân viên': cau_tra_loi_user if cau_tra_loi_user else "Chưa trả lời",
-                        'Kết quả': ket_qua
+                        'Kết quả': ket_qua,
+                        'Câu trả lời đúng': cau_tra_loi_dung
                     })
                 
                 except Exception as e:
@@ -542,14 +596,34 @@ with tab1:
 
         nut_loc = st.form_submit_button("OK", type="primary")
 
-    if nut_loc:
-        if ngay_ket_thuc < ngay_bat_dau:
-            st.error("❌ Lỗi: Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại!")
+    # Kiểm tra xem filter đã được apply trước đó hay không
+    if nut_loc or st.session_state.get('filter_applied', False):
+        if nut_loc:
+            # Nút submit mới được nhấn
+            if ngay_ket_thuc < ngay_bat_dau:
+                st.error("❌ Lỗi: Ngày kết thúc đến trước ngày bắt đầu. Vui lòng chọn lại!")
+                st.session_state.filter_applied = False
+            else:
+                bo_loc_khoa = khoa_duoc_chon if khoa_duoc_chon and len(khoa_duoc_chon) > 0 else danh_sach_khoa
+                bo_loc_nhan_vien = nhan_vien_duoc_chon if nhan_vien_duoc_chon and len(nhan_vien_duoc_chon) > 0 else None
+                bo_loc_loai_bch = chon_loai_bch if chon_loai_bch and len(chon_loai_bch) > 0 else None
+                
+                # Lưu trạng thái filter vào session_state
+                st.session_state.filter_applied = True
+                st.session_state.ngay_bat_dau = ngay_bat_dau
+                st.session_state.ngay_ket_thuc = ngay_ket_thuc
+                st.session_state.bo_loc_khoa = bo_loc_khoa
+                st.session_state.bo_loc_nhan_vien = bo_loc_nhan_vien
+                st.session_state.bo_loc_loai_bch = bo_loc_loai_bch
         else:
-            bo_loc_khoa = khoa_duoc_chon if khoa_duoc_chon and len(khoa_duoc_chon) > 0 else danh_sach_khoa
-            bo_loc_nhan_vien = nhan_vien_duoc_chon if nhan_vien_duoc_chon and len(nhan_vien_duoc_chon) > 0 else None
-            bo_loc_loai_bch = chon_loai_bch if chon_loai_bch and len(chon_loai_bch) > 0 else None
-            
+            # Lấy dữ liệu từ session_state
+            ngay_bat_dau = st.session_state.ngay_bat_dau
+            ngay_ket_thuc = st.session_state.ngay_ket_thuc
+            bo_loc_khoa = st.session_state.bo_loc_khoa
+            bo_loc_nhan_vien = st.session_state.bo_loc_nhan_vien
+            bo_loc_loai_bch = st.session_state.bo_loc_loai_bch
+        
+        if st.session_state.filter_applied:
             du_lieu_output = load_data_filtered(sheeto11, ngay_bat_dau, ngay_ket_thuc, bo_loc_khoa, bo_loc_nhan_vien, bo_loc_loai_bch)
             
             if du_lieu_output.empty:
@@ -573,13 +647,29 @@ with tab1:
                         </i>
                         </p>
                     """, unsafe_allow_html=True)
-                    bang_thong_ke_chi_tiet = thong_ke_chi_tiet(du_lieu_output, du_lieu_input8)
+                    hien_thi_chi_tiet = st.radio("Hiển thị kết quả chi tiết theo:", options=["Tất cả", "Chỉ câu trả lời sai"], index=0, horizontal=True, key="hien_thi_chi_tiet")
+                    bang_thong_ke_chi_tiet = thong_ke_chi_tiet(du_lieu_output, du_lieu_input8, du_lieu_input8)
                     
                     if not bang_thong_ke_chi_tiet.empty:
-                        bang_co_mau = bang_thong_ke_chi_tiet.style.apply(to_mau_ket_qua_sai, axis=1)
-                        st.dataframe(bang_co_mau, use_container_width=True, height=400, hide_index=True)
-                    else:
-                        st.info("Không có dữ liệu chi tiết.")
+                        # Lọc dữ liệu dựa trên lựa chọn của người dùng
+                        if hien_thi_chi_tiet == "Chỉ câu trả lời sai":
+                            # Lọc chỉ những câu trả lời sai
+                            bang_chi_sai = bang_thong_ke_chi_tiet[
+                                (bang_thong_ke_chi_tiet['Kết quả'] == '✗') |
+                                (bang_thong_ke_chi_tiet['Kết quả'] == 'Chưa trả lời') |
+                                ((bang_thong_ke_chi_tiet['Kết quả'].str.contains('/')) & 
+                                 (~bang_thong_ke_chi_tiet['Kết quả'].apply(lambda x: x.split('/')[0] == x.split('/')[1] if '/' in str(x) else False)))
+                            ].copy()
+                            
+                            if not bang_chi_sai.empty:
+                                bang_co_mau = bang_chi_sai.style.apply(to_mau_ket_qua_sai, axis=1)
+                                st.dataframe(bang_co_mau, use_container_width=True, height=400, hide_index=True)
+                            else:
+                                st.success("✅ Không có câu trả lời sai nào!")
+                        else:
+                            # Hiển thị tất cả
+                            bang_co_mau = bang_thong_ke_chi_tiet.style.apply(to_mau_ket_qua_sai, axis=1)
+                            st.dataframe(bang_co_mau, use_container_width=True, height=400, hide_index=True)
 
 with tab2:
     bang_tra_cuu(du_lieu_input8)
