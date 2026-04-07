@@ -223,8 +223,8 @@ st.markdown(f"""
  """, unsafe_allow_html=True)
 html_code = f'<p class="demuc"><i>Nhân viên: {st.session_state.username}</i></p>'
 st.html(html_code)
-khoa = ["Đơn vị Gây mê hồi sức Phẫu thuật tim mạch",
-        "Đơn vị Hồi sức Ngoại Thần kinh",
+khoa = ["Đơn nguyên Gây mê hồi sức Phẫu thuật tim mạch",
+        "Đơn nguyên Hồi sức Ngoại Thần kinh",
         "Khoa Hô hấp",
         "Khoa Hồi sức tích cực",
         "Khoa Thần kinh",
