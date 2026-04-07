@@ -72,7 +72,7 @@ def thong_tin_hanh_chinh():
             del st.session_state["khoa_GDSK"]
 
 def vitri_gdsk():
-    vitri_gsv=["Điều dưỡng trưởng tại khoa lâm sàng", "Điều dưỡng trưởng đánh giá chéo", "Điều dưỡng trưởng phiên","Điều dưỡng viên đánh giá chéo", "Nhân viên Phòng Điều dưỡng"]
+    vitri_gsv=["Điều dưỡng trưởng tại khoa phụ trách", "Điều dưỡng trưởng đánh giá chéo", "Điều dưỡng trưởng phiên","Điều dưỡng viên đánh giá chéo", "Nhân viên Phòng Điều dưỡng"]
     vitri = st.radio(label="Vị trí nhân viên đánh giá",
                  options=vitri_gsv,
                  index=None,

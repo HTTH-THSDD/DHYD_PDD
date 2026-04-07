@@ -258,9 +258,9 @@ st.markdown("""
     <hr style="border: 1.325px solid #195e83; margin: 15px 0;">
     <p style="font-size: 13.5px; color: #333;">
         <i>Các yêu cầu thông thường sẽ được giải quyết trong vòng 72 giờ. Sau thời gian này nếu yêu cầu của Quý Anh/Chị chưa được giải quyết hoặc có những thắc mắc khác, Quý Anh/Chị vui lòng liên hệ:
-        <span style="color: #042f66; font-weight: bold;">CNĐD. Huỳnh Thị Thanh Hằng (5379)</span> 
+        <span style="color: #042f66; font-weight: bold;">ThSĐD. Huỳnh Thị Thanh Hằng (5379)</span> 
         hoặc 
-        <span style="color: #042f66; font-weight: bold;">CNĐD. Võ Thị Cẩm Nhung (5624)</span>
+        <span style="color: #042f66; font-weight: bold;">ThSĐD. Võ Thị Cẩm Nhung (5624)</span>
         <br> Xin cảm ơn Quý Anh/Chị!
         </i>
     </p>

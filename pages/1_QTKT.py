@@ -88,7 +88,7 @@ def thong_tin_hanh_chinh():
 def vitrigs():
     fv = st.session_state.get("form_version", 0)
     vitri_gsv = [
-        "Điều dưỡng trưởng tại khoa lâm sàng",
+        "Điều dưỡng trưởng tại khoa phụ trách",
         "Điều dưỡng trưởng giám sát chéo",
         "Điều dưỡng trưởng phiên",
         "Điều dưỡng phụ trách quy trình",
@@ -109,11 +109,14 @@ def bang_kiem_quy_trinh():
         options=["QTKT cơ bản", "QTKT chuyên khoa", "QT hành chính chuyên môn"],
         index=None, key=f"loai_quy_trinh_{fv}", horizontal=True,
     )
-    prefix_map = {"QTKT cơ bản": "QTCB", "QTKT chuyên khoa": "QTCK"}
-    prefix = prefix_map.get(loaiquytrinh, "QTHC")
+    prefix_map = {"QTKT cơ bản": "QTCB", "QTKT chuyên khoa": "QTCK", "QT hành chính chuyên môn": "QTHC"}
 
     data_qt2 = load_data(st.secrets["sheet_name"]["input_2"])
-    options = data_qt2.loc[data_qt2["Mã bước QT"].str[:4] == prefix, "Tên quy trình"].unique()
+    if loaiquytrinh is None:
+        options = data_qt2["Tên quy trình"].unique()
+    else:
+        prefix = prefix_map.get(loaiquytrinh)
+        options = data_qt2.loc[data_qt2["Mã bước QT"].str[:4] == prefix, "Tên quy trình"].unique()
     chon_qt = st.selectbox("Tên quy trình kỹ thuật", options=options, index=None, placeholder="",
                            key=f"chon_qt_{fv}")
 

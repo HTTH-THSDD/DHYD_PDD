@@ -88,6 +88,7 @@ def chon_khoa(khoa):
                                                 options= khoa)
     return khoa_select
 
+
 def khoa_chua_bao_cao(khoa,sd,ed):
     credentials = load_credentials()
     gc = gspread.authorize(credentials)

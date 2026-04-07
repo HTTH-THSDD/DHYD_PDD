@@ -55,84 +55,87 @@ def load_data(x):
     data_final = pd.DataFrame(values, columns=header)
     return data_final
 
-@st.cache_data(ttl=20)
-def load_data_GSheet(name):
-    credentials = load_credentials()
-    gc = gspread.authorize(credentials)
-    sheet = gc.open(name).sheet1
-    data = sheet.get_all_records()
-    df = pd.DataFrame(data)
-    if "Nhân viên yêu cầu" in df.columns:
-        username = st.session_state.username
-        df = df[df["Nhân viên yêu cầu"] == username]
-        index = []
-        ngay_yc = []
-        loai_yc = []
-        nd_yc = []
-        tt = []
-        for i in range (0,len(df)):
-            index.append(int(i+1))
-            ngay_yc.append(df.iloc[i,1])
-            loai_yc.append(df.iloc[i,5])
-            nd_yc.append(df.iloc[i,6]) 
-            # nd_yc.append(df.iloc[i,5][:40]+"...") #40 kí tự chữ đầu
-            if df.iloc[i,7] == "" or df.iloc[i,7] == None:
-                tt.append("Đang chờ")
-            else:
-                if df.iloc[i,8] == "" or df.iloc[i,8] == None:
-                    tt.append("Đang cập nhât")
-                elif df.iloc[i,8] == 1:
-                    tt.append("Hoàn thành")
-                elif df.iloc[i,8] == 0:
-                    tt.append("Từ chối")
-        k = {"STT": pd.Series(index),
-            "Ngày gửi yêu cầu": pd.Series(ngay_yc),
-                "Tình trạng": pd.Series(tt),
-                "Loại yêu cầu": pd.Series(loai_yc),
-                "Nội dung": pd.Series(nd_yc),
-                }
-        df_yc = pd.DataFrame(k)
+# @st.cache_data(ttl=20)
+# def load_data_GSheet(name):
+#     credentials = load_credentials()
+#     gc = gspread.authorize(credentials)
+#     sheet = gc.open(name).sheet1
+#     data = sheet.get_all_records()
+#     df = pd.DataFrame(data)
+#     if "Nhân viên yêu cầu" in df.columns:
+#         username = st.session_state.username
+#         df = df[df["Nhân viên yêu cầu"] == username]
+#         index = []
+#         ngay_yc = []
+#         loai_yc = []
+#         nd_yc = []
+#         tt = []
+#         for i in range (0,len(df)):
+#             index.append(int(i+1))
+#             ngay_yc.append(df.iloc[i,1])
+#             loai_yc.append(df.iloc[i,5])
+#             nd_yc.append(df.iloc[i,6]) 
+#             # nd_yc.append(df.iloc[i,5][:40]+"...") #40 kí tự chữ đầu
+#             if df.iloc[i,7] == "" or df.iloc[i,7] == None:
+#                 tt.append("Đang chờ")
+#             else:
+#                 if df.iloc[i,8] == "" or df.iloc[i,8] == None:
+#                     tt.append("Đang cập nhât")
+#                 elif df.iloc[i,8] == 1:
+#                     tt.append("Hoàn thành")
+#                 elif df.iloc[i,8] == 0:
+#                     tt.append("Từ chối")
+#         k = {"STT": pd.Series(index),
+#             "Ngày gửi yêu cầu": pd.Series(ngay_yc),
+#                 "Tình trạng": pd.Series(tt),
+#                 "Loại yêu cầu": pd.Series(loai_yc),
+#                 "Nội dung": pd.Series(nd_yc),
+#                 }
+#         df_yc = pd.DataFrame(k)
 
-        return df_yc
-    else:
-        return pd.DataFrame()
+#         return df_yc
+#     else:
+#         return pd.DataFrame()
     
-@st.cache_data(ttl=3600)
-def highlight_status(val):
-    if val == "Hoàn thành":
-        color = "green"
-    elif val == "Đang cập nhât":
-        color = "orange"
-    elif val == "Từ chối":
-        color = "red"
-    else:
-        color = "black"
-    return f"color: {color}"
+# @st.cache_data(ttl=3600)
+# def highlight_status(val):
+#     if val == "Hoàn thành":
+#         color = "green"
+#     elif val == "Đang cập nhât":
+#         color = "orange"
+#     elif val == "Từ chối":
+#         color = "red"
+#     else:
+#         color = "black"
+#     return f"color: {color}"
 
-def upload_data_yc():
-    credentials = load_credentials()
-    gc = gspread.authorize(credentials)
-    sheeto4 = st.secrets["sheet_name"]["output_4"]
-    sheet = gc.open(sheeto4).sheet1
-    column_index = len(sheet.get_all_values())
-    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
-    column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
-    column_khoa = str(st.session_state.khoa_YC)
-    column_nvyc = str(st.session_state.username)
-    column_ttlh = str(st.session_state.ttlh)
-    column_loaiyc = str(st.session_state.lyc)
-    column_ndyc = str(st.session_state.ndyc)
-    sheet.append_row([  column_index,
-                        column_timestamp,
-                        column_khoa,
-                        column_nvyc,
-                        column_ttlh,
-                        column_loaiyc,
-                        column_ndyc,
-                     ])
-    st.toast("Yêu cầu đã được gửi!")
+# def upload_data_yc():
+#     credentials = load_credentials()
+#     gc = gspread.authorize(credentials)
+#     sheeto4 = st.secrets["sheet_name"]["output_4"]
+#     sheet = gc.open(sheeto4).sheet1
+#     column_index = len(sheet.get_all_values())
+#     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))  
+#     column_timestamp = now_vn.strftime('%Y-%m-%d %H:%M:%S')
+#     column_khoa = str(st.session_state.khoa_YC)
+#     column_nvyc = str(st.session_state.username)
+#     column_ttlh = str(st.session_state.ttlh)
+#     column_loaiyc = str(st.session_state.lyc)
+#     column_ndyc = str(st.session_state.ndyc)
+#     sheet.append_row([  column_index,
+#                         column_timestamp,
+#                         column_khoa,
+#                         column_nvyc,
+#                         column_ttlh,
+#                         column_loaiyc,
+#                         column_ndyc,
+#                      ])
+#     st.toast("Yêu cầu đã được gửi!")
 
 def xuli(data,a,ten_ma,sd,ed):
+    # Chỉ lấy cột A đến N (14 cột)
+    data = data.iloc[:, :14] if len(data.columns) > 14 else data
+    
     data = data.loc[data[a] == st.session_state.username]
     data['Timestamp'] = pd.to_datetime(data['Timestamp'], errors='coerce')
     start_date = sd
@@ -145,8 +148,23 @@ def xuli(data,a,ten_ma,sd,ed):
             st.warning("Không có dữ liệu được giám sát trong khoảng thời gian yêu cầu")
     else:
         data.insert(0, 'ID', range(1, len(data) + 1))
-        data['Tỉ lệ tuân thủ'] = data['Tỉ lệ tuân thủ'].str.slice(0, 4)
-        data['Tỉ lệ an toàn'] = data['Tỉ lệ an toàn'].str.slice(0, 4)
+        # Format các cột Tỉ lệ thành phần trăm (XX.XX%)
+        def format_percentage(val):
+            try:
+                if val == "" or val is None:
+                    return ""
+                num = float(val)
+                return f"{num * 100:.1f}%"
+            except:
+                return val
+        
+        if 'Tỉ lệ tuân thủ' in data.columns:
+            data['Tỉ lệ tuân thủ'] = data['Tỉ lệ tuân thủ'].apply(format_percentage)
+        if 'Tỉ lệ an toàn' in data.columns:
+            data['Tỉ lệ an toàn'] = data['Tỉ lệ an toàn'].apply(format_percentage)
+        if 'Tỉ lệ nhận dạng NB' in data.columns:
+            data['Tỉ lệ nhận dạng NB'] = data['Tỉ lệ nhận dạng NB'].apply(format_percentage)
+        
         data = data.drop([a,"STT"], axis=1)
         data["Data"] = data["Data"].str.replace("#", "\n")
         data["Data"] = data["Data"].str.replace("|", "  ")

@@ -171,8 +171,8 @@ st.markdown(f"""
 html_code = f'<p class="demuc"><i>Nhân viên báo cáo: {st.session_state.username}</i></p>'
 st.html(html_code)
 chon_khoa = st.selectbox("Khoa/Đơn vị báo cáo",
-                             options=["Đơn vị Gây mê hồi sức Phẫu thuật tim mạch",
-                                      "Đơn vị Hồi sức Ngoại Thần kinh",
+                             options=["Đơn nguyên Gây mê hồi sức Phẫu thuật tim mạch",
+                                      "Đơn nguyên Hồi sức Ngoại Thần kinh",
                                       "Khoa Hô hấp",
                                       "Khoa Hồi sức tích cực",
                                       "Khoa Thần kinh",

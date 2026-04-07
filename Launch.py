@@ -253,8 +253,8 @@ THI_manage = st.Page("DepartmentTest/2_QuanLyDeThi.py", title="Quản lý đề 
 THI_result = st.Page("DepartmentTest/3_KetQuaThi.py", title="Xem kết quả thi",  icon="📈")
 
 
-khoa = ["Đơn vị Gây mê hồi sức Phẫu thuật tim mạch",
-        "Đơn vị Hồi sức Ngoại Thần kinh",
+khoa = ["Đơn nguyên Gây mê hồi sức Phẫu thuật tim mạch",
+        "Đơn nguyên Hồi sức Ngoại Thần kinh",
         "Khoa Hô hấp",
         "Khoa Hồi sức tích cực",
         "Khoa Thần kinh",
@@ -270,7 +270,7 @@ if "username" in st.session_state:
             {
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                 "Trắc nghiệm": [THI_test, THI_manage, THI_result],
-                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS, KSNK, TTD_TN, QLDD_HDCM, PCNL],
+                "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS, KSNK, TTD_TN, QLDD_HDCM],
                 "Thống kê báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_HSBA, 
                                      BC_GDSK, BC_VTTB, BC_PCCS, BC_KSNK, BC_TTD_TN,
                                      BC_QLDD_HDCM],

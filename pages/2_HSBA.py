@@ -71,7 +71,7 @@ def thong_tin_hanh_chinh():
             del st.session_state["khoa_HSBA"]
 
 def vitri_hsba():
-    vitri_gsv=["Điều dưỡng trưởng khoa lâm sàng", "Điều dưỡng trưởng phiên", "Điều dưỡng phụ trách ghi chép hồ sơ", "Điều dưỡng viên đánh giá chéo", "Nhân viên Phòng Điều dưỡng"]
+    vitri_gsv=["Điều dưỡng trưởng khoa phụ trách", "Điều dưỡng trưởng phiên", "Điều dưỡng phụ trách ghi chép hồ sơ", "Điều dưỡng viên đánh giá chéo", "Nhân viên Phòng Điều dưỡng"]
     vitri = st.radio(label="Vị trí nhân viên đánh giá",
                  options=vitri_gsv,
                  index=None,
