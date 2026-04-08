@@ -700,5 +700,5 @@ if st.session_state.submitted:
 
 # Auto-refresh chỉ dựa trên thay đổi timer (rerun mỗi 1 giây để cập nhật đồng hồ)
 if st.session_state.exam_started and not st.session_state.submitted:
-    time.sleep(5)
+    time.sleep(60)
     st.rerun()
