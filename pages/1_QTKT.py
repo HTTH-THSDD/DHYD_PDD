@@ -477,7 +477,7 @@ if all([
             prechecktable = precheck_table()
             if upload_data_GS(prechecktable):
                 warning(4, 2)
-                #gui_email_qtkt(st.session_state.email_nvthqt, prechecktable)
+                gui_email_qtkt(st.session_state.email_nvthqt, prechecktable)
                 time.sleep(0.5)
                 clear_all_selections()
 else:
