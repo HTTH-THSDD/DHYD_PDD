@@ -433,7 +433,8 @@ if "username" in st.session_state:
                 },
             expanded=False,
             )
-    else: ##### 10: ĐD viên bình thường ########
+    ##### 10: ĐD viên bình thường khối lâm sàng ########
+    elif st.session_state.phan_quyen in ["10"]:
         if st.session_state.khoa and st.session_state.khoa in khoa:
            pg = st.navigation(
                 {
@@ -450,6 +451,45 @@ if "username" in st.session_state:
                         "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                         "Trắc nghiệm": [THI_test],
                         "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
+                    },
+            expanded=False,
+            )
+     ##### 11: ĐD viên bình thường khối CLS ########
+    elif st.session_state.phan_quyen in ["11"]:
+        if st.session_state.khoa and st.session_state.khoa in khoa:
+           pg = st.navigation(
+                {
+                    "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                    "Trắc nghiệm": [THI_test],
+                    "Nhập kết quả": [QTKT],
+                },
+        expanded=False,
+        )
+        else:
+            pg = st.navigation(
+                    {
+                        "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                        "Trắc nghiệm": [THI_test],
+                        "Nhập kết quả": [QTKT],
+                    },
+            expanded=False,
+            )
+    else: #### còn lại ########
+        if st.session_state.khoa and st.session_state.khoa in khoa:
+           pg = st.navigation(
+                {
+                    "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                    "Trắc nghiệm": [THI_test],
+                    "Nhập kết quả": [QTKT],
+                },
+        expanded=False,
+        )
+        else:
+            pg = st.navigation(
+                    {
+                        "Thông tin tài khoản": [ logout_page,PD,PS, YC],
+                        "Trắc nghiệm": [THI_test],
+                        "Nhập kết quả": [QTKT],
                     },
             expanded=False,
             )
