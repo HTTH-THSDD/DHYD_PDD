@@ -10,6 +10,7 @@ import smtplib
 from email.mime.text import MIMEText
 import time
 from bs4 import BeautifulSoup
+import threading
 
 # ======================== UTILS ========================
 
@@ -155,11 +156,11 @@ def warning(x, y):
 
 # ======================== EMAIL ========================
 
-def gui_email_qtkt(receiver_email, data):
-    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-    timestamp = now_vn.strftime("%H:%M %d-%m-%Y")
-    subject = f"KẾT QUẢ GIÁM SÁT QUY TRÌNH KỸ THUẬT - {timestamp}"
-
+def build_email_content(data, img):
+    """Xây dựng HTML table và body email (KHÔNG chứa lệnh Streamlit)
+    Hàm này có thể chạy trong thread hoặc main thread"""
+    tltt_formatted = f"{float(st.session_state.tltt) * 100:.1f}"
+    
     html_table = data.to_html(index=False, border=1, justify="left")
     soup = BeautifulSoup(html_table, "html.parser")
     widths = ["8.33%", "41.67%", "25%", "25%"]
@@ -173,10 +174,10 @@ def gui_email_qtkt(receiver_email, data):
         for i, td in enumerate(row.find_all("td")):
             td["style"] = base_td_style + f"width:{widths[i]};"
     html_table = str(soup)
-
-    st.markdown(html_table, unsafe_allow_html=True)
-
-    tltt_formatted = f"{float(st.session_state.tltt) * 100:.2f}"
+    
+    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+    timestamp = now_vn.strftime("%H:%M:%S %d-%m-%Y")
+    
     body = f"""
     <html>
       <head><style>
@@ -185,11 +186,11 @@ def gui_email_qtkt(receiver_email, data):
         .hospital-text h5 {{margin:0;color:DodgerBlue;font-size:12.5px;line-height:1.25;}}
       </style></head>
       <body>
-        <h4 style="color:DodgerBlue;">&nbsp;&nbsp;&nbsp; Kính gửi Điều dưỡng: {st.session_state.nv_thuchien_GSQT} - {st.session_state.khoa_GSQT}</h4>
-        <p>&nbsp;&nbsp;&nbsp; Căn cứ theo kế hoạch giám sát thường quy/ đột xuất của Phòng Điều dưỡng và các Khoa/Đơn vị lâm sàng,
-        Phòng Điều dưỡng kính gửi kết quả giám sát quy trình kỹ thuật vừa thực hiện của Quý Anh/Chị như sau:</p>
+        <h4 style="color:DodgerBlue;">&nbsp;&nbsp;&nbsp; Kính gửi Nhân viên: {st.session_state.nv_thuchien_GSQT} - {st.session_state.khoa_GSQT}</h4>
+        <p>&nbsp;&nbsp;&nbsp; Căn cứ theo kế hoạch giám sát thường quy/ đột xuất của Phòng Điều dưỡng và các Khoa/Đơn vị,
+        Phòng Điều dưỡng kính gửi kết quả giám sát quy trình vừa thực hiện của Quý Anh/Chị như sau:</p>
         <div class="highlight">
-          <p><strong>Tên quy trình kỹ thuật:</strong> {st.session_state.ten_quy_trinh}</p>
+          <p><strong>Tên quy trình:</strong> {st.session_state.ten_quy_trinh}</p>
           <p><strong>Nhân viên giám sát:</strong> {st.session_state.username}</p>
           <p><strong>Thời gian giám sát:</strong> {timestamp}</p>
           <p><strong>Tỉ lệ tuân thủ:</strong> {tltt_formatted}%</p>
@@ -208,23 +209,52 @@ def gui_email_qtkt(receiver_email, data):
         </p>
       </body>
     </html>"""
+    
+    return html_table, body, timestamp
 
-    sender_email = st.secrets["email_info"]["sender_email"]
-    sender_password = st.secrets["email_info"]["sender_password"]
-    msg = MIMEText(body, "html", "utf-8")
-    msg["Subject"] = subject
-    msg["From"] = sender_email
+def send_email_only(receiver_email, body, timestamp):
+    """Gửi email thực tế (chạy trong background thread)
+    Có error handling để catch lỗi SMTP"""
+    try:
+        sender_email = st.secrets["email_info"]["sender_email"]
+        sender_password = st.secrets["email_info"]["sender_password"]
+        subject = f"KẾT QUẢ GIÁM SÁT QUY TRÌNH - Lúc: {timestamp}"
+        
+        msg = MIMEText(body, "html", "utf-8")
+        msg["Subject"] = subject
+        msg["From"] = sender_email
+        
+        recipients = [receiver_email]
+        if st.session_state.get("email2"):
+            recipients.append(st.session_state["email2"])
+        if st.session_state.get("email3"):
+            recipients.append(st.session_state["email3"])
+        
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
+            server.login(sender_email, sender_password)
+            for recipient in recipients:
+                msg.replace_header("To", recipient) if "To" in msg else msg.__setitem__("To", recipient)
+                server.sendmail(sender_email, recipient, msg.as_string())
+    except Exception as e:
+        # Ghi lỗi vào file để debug
+        import traceback
+        error_log = f"[{datetime.now(ZoneInfo('Asia/Ho_Chi_Minh'))}] EMAIL ERROR - {str(e)}\n{traceback.format_exc()}"
+        with open("email_errors.log", "a", encoding="utf-8") as f:
+            f.write(error_log + "\n")
+        print(f"❌ Lỗi gửi email: {str(e)}")  # In ra console để dev thấy
 
-    recipients = [receiver_email]
-    for key in ["email2", "email3"]:
-        if st.session_state.get(key):
-            recipients.append(st.session_state[key])
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(sender_email, sender_password)
-        for recipient in recipients:
-            msg.replace_header("To", recipient) if "To" in msg else msg.__setitem__("To", recipient)
-            server.sendmail(sender_email, recipient, msg.as_string())
+def gui_email_qtkt(receiver_email, data):
+    """Hiển thị HTML table lên UI + gửi email (chạy trong main thread)"""
+    html_table, body, timestamp = build_email_content(data, img)
+    st.markdown(html_table, unsafe_allow_html=True)  # Chỉ render HTML, không gửi email ở đây
+    
+    # Gửi email trong background thread
+    thread = threading.Thread(
+        target=send_email_only,
+        args=(receiver_email, body, timestamp),
+        daemon=True
+    )
+    thread.start()
 
 # ======================== DATA HELPERS ========================
 
@@ -268,7 +298,12 @@ def check_duplicate_submission(column_khoa, column_nvth, column_nvgs, column_vtn
             return False, None
 
         today_date = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).strftime("%Y-%m-%d")
-        for row_idx, row in enumerate(all_data[1:], start=1):
+        # Tối ưu: chỉ kiểm tra 500 hàng gần nhất thay vì toàn bộ
+        # (vì dữ liệu trùng lặp thường là ngày hôm nay hoặc gần đây)
+        start_idx = max(1, len(all_data) - 50)
+        recent_data = all_data[start_idx:]
+        
+        for row_idx, row in enumerate(recent_data, start=start_idx):
             if len(row) < 8:
                 continue
             row_date = row[1].split(" ")[0] if row[1] else ""
@@ -475,10 +510,13 @@ if all([
             warning(1, ", ".join(buoc_chua_dien))
         else:
             prechecktable = precheck_table()
-            if upload_data_GS(prechecktable):
+            with st.spinner("Đang lưu dữ liệu..."):
+                success = upload_data_GS(prechecktable)
+            if success:
                 warning(4, 2)
+                # Gửi email trong background thread
                 gui_email_qtkt(st.session_state.email_nvthqt, prechecktable)
-                time.sleep(0.5)
-                clear_all_selections()
+                time.sleep(0.3)
+                st.rerun()
 else:
     st.warning("Vui lòng chọn đầy đủ các mục")
