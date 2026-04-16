@@ -91,23 +91,6 @@ def to_mau_dong_cuoi(data):
         return [''] * len(row)
     return highlight
 
-# def custom_format(cell, row_idx, is_last_row, col_name=None):
-#     try:
-#         if col_name in ["Tỉ lệ NB/ĐD sáng", "Tỉ lệ NB/ĐD chiều", "Tỉ lệ NB/ĐD tối"]:
-#             if pd.isna(cell) or cell == "":
-#                 return ""
-#             if isinstance(cell, (int, float)):
-#                 return f"{cell:,.2f}"
-#         if isinstance(cell, (int, float)):
-#             if pd.isna(cell):
-#                 return ""
-#             if is_last_row:
-#                 return f"{cell:,.2f}"
-#             else:
-#                 return f"{int(cell):,}" if isinstance(cell, int) or cell == int(cell) else f"{cell:,.0f}"
-#         return str(cell) if cell is not None else ""
-#     except Exception as e:
-#         return str(cell)
 
 def custom_format(cell, row_idx, is_last_row, col_name=None):
     try:
@@ -130,23 +113,6 @@ def custom_format(cell, row_idx, is_last_row, col_name=None):
     except Exception:
         return str(cell)
 
-#Xử lý toàn bộ bảng: áp dụng định dạng theo từng dòng
-# def format_per_row(df):
-#     if df.empty:
-#         return df
-#     last_idx = len(df) - 1
-#     # Convert dataframe to list of lists to avoid dtype assignment issues
-#     data = []
-#     for r_idx, r in df.iterrows():
-#         row_data = []
-#         for c in df.columns:
-#             cell_value = custom_format(r[c], r_idx, r_idx == last_idx, c)
-#             row_data.append(cell_value)
-#         data.append(row_data)
-    
-#     # Rebuild dataframe from list as object dtype
-#     formatted = pd.DataFrame(data, columns=df.columns, dtype=object)
-#     return formatted
 
 def format_per_row(df):
     if df.empty:

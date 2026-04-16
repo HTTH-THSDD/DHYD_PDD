@@ -228,11 +228,12 @@ def custom_format(cell, row_idx, is_last_row):
 # Xử lý toàn bộ bảng: áp dụng định dạng theo từng dòng
 def format_per_row(df):
     last_idx = len(df) - 1
-    formatted = df.copy()
+    formatted = df.copy().astype(object)
     for r in df.index:
         for c in df.columns:
             formatted.at[r, c] = custom_format(df.at[r, c], r, r == last_idx)
     return formatted
+
 
 # Xử lý cột Ngày báo cáo (nếu có)
 def format_date_column(df, col_name="Ngày báo cáo"):
