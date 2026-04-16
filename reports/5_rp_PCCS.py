@@ -204,7 +204,6 @@ def tao_thong_ke(x):
     row_mean = row_mean[[c for c in cols if c in row_mean.columns]]  # Đảm bảo đúng thứ tự cột
     row_mean = row_mean.astype(object)  # Convert to object dtype to match formatted df
     df = pd.concat([df, row_mean], ignore_index=True)
-    df = df.apply(pd.to_numeric, errors="ignore")
     df = format_per_row(df.copy())
     styled_df = (df.style.apply(to_mau_dong_cuoi(df), axis=1))
     st.dataframe(styled_df, use_container_width=True, hide_index=True)
