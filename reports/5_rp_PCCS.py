@@ -91,24 +91,76 @@ def to_mau_dong_cuoi(data):
         return [''] * len(row)
     return highlight
 
-def custom_format(cell, row_idx, is_last_row, col_name=None):
-    if col_name in ["Tỉ lệ NB/ĐD sáng", "Tỉ lệ NB/ĐD chiều", "Tỉ lệ NB/ĐD tối"] and isinstance(cell, (int, float)):
-        return f"{cell:,.2f}"
-    if isinstance(cell, (int, float)):
-        if is_last_row:
-            return f"{cell:,.2f}"
-        else:
-            return f"{int(cell):,}" if isinstance(cell, int) or cell == int(cell) else f"{cell:,.0f}"
-    return cell
+# def custom_format(cell, row_idx, is_last_row, col_name=None):
+#     try:
+#         if col_name in ["Tỉ lệ NB/ĐD sáng", "Tỉ lệ NB/ĐD chiều", "Tỉ lệ NB/ĐD tối"]:
+#             if pd.isna(cell) or cell == "":
+#                 return ""
+#             if isinstance(cell, (int, float)):
+#                 return f"{cell:,.2f}"
+#         if isinstance(cell, (int, float)):
+#             if pd.isna(cell):
+#                 return ""
+#             if is_last_row:
+#                 return f"{cell:,.2f}"
+#             else:
+#                 return f"{int(cell):,}" if isinstance(cell, int) or cell == int(cell) else f"{cell:,.0f}"
+#         return str(cell) if cell is not None else ""
+#     except Exception as e:
+#         return str(cell)
 
-# Xử lý toàn bộ bảng: áp dụng định dạng theo từng dòng
+def custom_format(cell, row_idx, is_last_row, col_name=None):
+    try:
+        if pd.isna(cell) or cell == "":
+            return ""
+        # Nhóm tỉ lệ → luôn 2 chữ số
+        if col_name in ["Tỉ lệ NB/ĐD sáng", "Tỉ lệ NB/ĐD chiều", "Tỉ lệ NB/ĐD tối"]:
+            if isinstance(cell, (int, float)):
+                return f"{float(cell):,.2f}"
+        # Các số khác
+        if isinstance(cell, (int, float)):
+            if is_last_row:
+                return f"{float(cell):,.2f}"
+            else:
+                if float(cell).is_integer():
+                    return f"{int(cell):,}"
+                else:
+                    return f"{float(cell):,.0f}"
+        return str(cell)
+    except Exception:
+        return str(cell)
+
+#Xử lý toàn bộ bảng: áp dụng định dạng theo từng dòng
+# def format_per_row(df):
+#     if df.empty:
+#         return df
+#     last_idx = len(df) - 1
+#     # Convert dataframe to list of lists to avoid dtype assignment issues
+#     data = []
+#     for r_idx, r in df.iterrows():
+#         row_data = []
+#         for c in df.columns:
+#             cell_value = custom_format(r[c], r_idx, r_idx == last_idx, c)
+#             row_data.append(cell_value)
+#         data.append(row_data)
+    
+#     # Rebuild dataframe from list as object dtype
+#     formatted = pd.DataFrame(data, columns=df.columns, dtype=object)
+#     return formatted
+
 def format_per_row(df):
+    if df.empty:
+        return df
     last_idx = len(df) - 1
-    formatted = df.copy()
-    for r in df.index:
+    formatted_data = []
+    for r_idx in range(len(df)):
+        row_data = []
         for c in df.columns:
-            formatted.at[r, c] = custom_format(df.at[r, c], r, r == last_idx, c)
-    return formatted
+            cell = df.iloc[r_idx][c]
+            formatted_cell = custom_format(cell, r_idx, r_idx == last_idx, c)
+            row_data.append(formatted_cell)
+        formatted_data.append(row_data)
+    return pd.DataFrame(formatted_data, columns=df.columns)
 
 def tao_thong_ke(x):
     df = pd.DataFrame(x)
@@ -122,16 +174,20 @@ def tao_thong_ke(x):
         st.secrets["user_special"]["u3"]
     ]:
         df = df.drop("Khoa báo cáo", axis=1)
-    df['Tỉ lệ NB/ĐD sáng'] = df['Tỉ lệ NB/ĐD sáng'].str.replace(',', '.')
-    df['Tỉ lệ NB/ĐD sáng'] = pd.to_numeric(df['Tỉ lệ NB/ĐD sáng'], errors='coerce')
-    df['Tỉ lệ NB/ĐD chiều'] = df['Tỉ lệ NB/ĐD chiều'].str.replace(',', '.')
-    df['Tỉ lệ NB/ĐD chiều'] = pd.to_numeric(df['Tỉ lệ NB/ĐD chiều'], errors='coerce')
-    df['Tỉ lệ NB/ĐD tối'] = df['Tỉ lệ NB/ĐD tối'].str.replace(',', '.')
-    df['Tỉ lệ NB/ĐD tối'] = pd.to_numeric(df['Tỉ lệ NB/ĐD tối'], errors='coerce')
     
-    mean_sang = df["Tỉ lệ NB/ĐD sáng"].mean().round(2)
-    mean_chieu = df["Tỉ lệ NB/ĐD chiều"].mean().round(2)
-    mean_toi = df["Tỉ lệ NB/ĐD tối"].mean().round(2)
+    # Xử lý an toàn cho conversion chuỗi sang số
+    for col in ["Tỉ lệ NB/ĐD sáng", "Tỉ lệ NB/ĐD chiều", "Tỉ lệ NB/ĐD tối"]:
+        if col in df.columns:
+            df[col] = df[col].astype(str).str.replace(',', '.')
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    mean_sang = df["Tỉ lệ NB/ĐD sáng"].mean() if "Tỉ lệ NB/ĐD sáng" in df.columns else 0
+    mean_chieu = df["Tỉ lệ NB/ĐD chiều"].mean() if "Tỉ lệ NB/ĐD chiều" in df.columns else 0
+    mean_toi = df["Tỉ lệ NB/ĐD tối"].mean() if "Tỉ lệ NB/ĐD tối" in df.columns else 0
+    
+    mean_sang = round(mean_sang, 2) if pd.notna(mean_sang) else 0
+    mean_chieu = round(mean_chieu, 2) if pd.notna(mean_chieu) else 0
+    mean_toi = round(mean_toi, 2) if pd.notna(mean_toi) else 0
 
     # Tạo dòng trung bình
     row_mean = pd.DataFrame({
@@ -146,10 +202,13 @@ def tao_thong_ke(x):
     # Ghép dòng trung bình vào cuối bảng
     cols = df.columns
     row_mean = row_mean[[c for c in cols if c in row_mean.columns]]  # Đảm bảo đúng thứ tự cột
+    row_mean = row_mean.astype(object)  # Convert to object dtype to match formatted df
     df = pd.concat([df, row_mean], ignore_index=True)
+    df = df.apply(pd.to_numeric, errors="ignore")
     df = format_per_row(df.copy())
     styled_df = (df.style.apply(to_mau_dong_cuoi(df), axis=1))
     st.dataframe(styled_df, use_container_width=True, hide_index=True)
+
 
 def chon_khoa(khoa):
     placeholder1 = st.empty()

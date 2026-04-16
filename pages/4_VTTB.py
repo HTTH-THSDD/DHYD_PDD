@@ -179,7 +179,8 @@ def upload_data_VTTB():
             ma    = tb["Mã thiết bị"].iloc[i]
             co_so = str(st.session_state.get(f"co_so_{i}", 0))
             if kiem_tra_nhom_bao_cao(ma, nhom_bao_cao):
-                val = int(pd.to_numeric(tb["2025"].iloc[i], errors="coerce") or 0)
+                val_numeric = tb["2025"].iloc[i]
+                val = int(val_numeric) if pd.notnull(val_numeric) else 0
                 dang_su_dung = trong = hu = str(val)
             else:
                 dang_su_dung = str(st.session_state.get(f"dang_su_dung_{i}", 0))
@@ -197,7 +198,7 @@ def upload_data_VTTB():
         # Mượn / cho mượn
         def _build_muon(lst_key, key_khoa, key_sl):
             parts = [
-                f"{st.session_state[f'{key_khoa}{idx}']}:{st.session_state.get(f'{key_sl}{idx}', 0)}"
+                f"{st.session_state[f'{key_khoa}{idx}']}:{str(st.session_state.get(f'{key_sl}{idx}', 0))}"
                 for idx in st.session_state.get(lst_key, [])
                 if st.session_state.get(f"{key_khoa}{idx}") not in (None, "--Chọn khoa--")
                 and str(st.session_state.get(f"{key_sl}{idx}", 0)) != "0"
@@ -221,10 +222,10 @@ def upload_data_VTTB():
 
         next_row = len(all_values) + 1
         sheet.update(
-            f"A{next_row}:I{next_row}",
-            [[new_stt, column_timestamp, column_ngay_bao_cao, column_khoa_bao_cao,
-              column_nguoi_bao_cao, column_tb_thong_thuong, column_SCD_bo_sung,
-              columnn_SCD_muon_khoa_khac, columnn_SCD_cho_khoa_khac_muon]],
+            values=[[str(new_stt), column_timestamp, column_ngay_bao_cao, column_khoa_bao_cao,
+                     column_nguoi_bao_cao, column_tb_thong_thuong, column_SCD_bo_sung,
+                     columnn_SCD_muon_khoa_khac, columnn_SCD_cho_khoa_khac_muon]],
+            range_name=f"A{next_row}:I{next_row}",
             value_input_option="USER_ENTERED",
         )
         st.cache_data.clear()
