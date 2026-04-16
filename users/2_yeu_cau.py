@@ -242,7 +242,7 @@ with tab2:
     if not data_yc.empty:
         st.subheader("Danh sách các yêu cầu của bạn:")
         placeholder = st.empty()
-        styled_df = data_yc.style.applymap(highlight_status, subset=["Tình trạng"])
+        styled_df = data_yc.style.map(highlight_status, subset=["Tình trạng"])
         placeholder.dataframe(styled_df, use_container_width=True, hide_index=True)
         # st.dataframe(data_yc[["STT", "Ngày gửi yêu cầu", "Loại yêu cầu", "Nội dung", "Tình trạng"]],hide_index=True)
     else:
