@@ -82,6 +82,9 @@ def load_sheet_by_name(sheet_name, worksheet_name):
             sheet = spreadsheet.worksheet(worksheet_name)
             data = sheet.get_all_values()
         except gspread.exceptions.WorksheetNotFound:
+            print(f"⚠️ Worksheet '{worksheet_name}' không tìm thấy trong {sheet_name}")
+            print(f"⚠️ Danh sách worksheets: {[ws.title for ws in spreadsheet.worksheets()]}")
+            
             worksheet_map = {
                 "Sheet 0": 0, "Sheet 1": 1, "Sheet 2": 2,
             }
@@ -99,6 +102,9 @@ def load_sheet_by_name(sheet_name, worksheet_name):
             return pd.DataFrame(values, columns=header)
         return pd.DataFrame()
     except Exception as e:
+        print(f"🔴 Lỗi load_sheet_by_name({sheet_name}, {worksheet_name}): {str(e)}")
+        import traceback
+        traceback.print_exc()
         return pd.DataFrame()
 
 def save_result_to_sheet(result_data):
@@ -425,15 +431,26 @@ st.date_input(
 )
 
 sheeti8 = st.secrets["sheet_name"]["input_8"]
+print(f"🔵 sheeti8 = {sheeti8}")
+
 df_config = load_sheet_by_name(sheeti8, "Sheet 2")
-df_questions_all = load_sheet_by_name(sheeti8, "Sheet 3")
+print(f"🔵 df_config loaded: {len(df_config)} rows")
+
+# Load dữ liệu câu hỏi từ Sheet 1 (không phải Sheet 3)
+df_questions_all = load_sheet_by_name(sheeti8, "Sheet 1")
+print(f"🔵 df_questions_all (từ Sheet 1) loaded: {len(df_questions_all)} rows")
+
 ma_de_list = []
 
 if len(df_config) > 0:
     df_config_active = df_config[df_config["Trạng thái"].astype(str).str.upper() == "ON"]
     ma_de_list = df_config_active["Tên bộ câu hỏi"].unique().tolist()
-elif len(df_questions_all) > 0:
+    print(f"🔵 Mã đề từ Config (Sheet 2): {ma_de_list}")
+
+if len(ma_de_list) == 0 and len(df_questions_all) > 0:
+    # Nếu config trống hoặc không có, lấy từ Sheet 1
     ma_de_list = df_questions_all["Tên bộ câu hỏi"].unique().tolist()
+    print(f"🔵 Mã đề từ Sheet 1: {ma_de_list}")
 
 ma_de_input = st.text_input(
     label="Nhập mã đề",
@@ -492,18 +509,40 @@ if st.session_state.exam_started and not st.session_state.submitted:
     
     ma_de = st.session_state.ma_de
     
+    # Debug info
+    print(f"🔵 Đang load câu hỏi từ: sheeti8={sheeti8}, worksheet='Sheet 1'")
+    
     df_questions = load_sheet_by_name(sheeti8, "Sheet 1")
+    print(f"🔵 Kết quả load: {len(df_questions)} rows")
+    
     if len(df_questions) == 0:
-        st.error("❌ Không tìm thấy dữ liệu câu hỏi!")
+        st.error("""❌ Không tìm thấy dữ liệu câu hỏi!
+        
+**Các lý do có thể:**
+- Sheet input_8 chưa được cấu hình trong secrets
+- Worksheet "Sheet 1" không tồn tại
+- Dữ liệu trong Sheet 1 đang trống
+
+**Hãy kiểm tra:**
+1. File secrets.toml có chứa `input_8` không?
+2. Google Sheet có worksheet "Sheet 1" không?
+3. Sheet 1 có dữ liệu không?
+        """)
         if st.button("🔙 Quay lại"):
             st.session_state.exam_started = False
             st.rerun()
         st.stop()
     
+    print(f"🔵 Tìm kiếm câu hỏi với 'Tên bộ câu hỏi' = '{ma_de}'")
+    print(f"🔵 Các bộ câu hỏi có sẵn: {df_questions['Tên bộ câu hỏi'].unique().tolist()}")
+    
     exam_questions = df_questions[df_questions["Tên bộ câu hỏi"] == ma_de]
     
     if len(exam_questions) == 0:
-        st.error(f"❌ Không tìm thấy câu hỏi cho mã đề: {ma_de}")
+        st.error(f"""❌ Không tìm thấy câu hỏi cho mã đề: {ma_de}
+        
+**Các bộ câu hỏi có sẵn:** {df_questions['Tên bộ câu hỏi'].unique().tolist()}
+        """)
         if st.button("🔙 Quay lại"):
             st.session_state.exam_started = False
             st.rerun()
