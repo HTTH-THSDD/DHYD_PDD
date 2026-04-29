@@ -43,29 +43,32 @@ def convert_numeric_columns(data, columns, strip_whitespace=True):
     Returns:
         DataFrame đã được chuyển đổi
     """
-    data = data.copy()
+    data = data.copy().reset_index(drop=True)
     
     for col in columns:
-        if isinstance(col, int):
-            # Chuyển đổi theo chỉ số cột
-            data.iloc[:, col] = (data.iloc[:, col]
-                                .astype(str)
-                                .str.strip() if strip_whitespace else data.iloc[:, col].astype(str))
-            data.iloc[:, col] = data.iloc[:, col].str.replace(',', '.', regex=False)
-            data.iloc[:, col] = data.iloc[:, col].str.replace('−', '-', regex=False)
-            data.iloc[:, col] = data.iloc[:, col].replace('', np.nan)
-            data.iloc[:, col] = data.iloc[:, col].replace('nan', np.nan)
-            data.iloc[:, col] = pd.to_numeric(data.iloc[:, col], errors='coerce')
-        else:
-            # Chuyển đổi theo tên cột
-            data[col] = (data[col]
-                        .astype(str)
-                        .str.strip() if strip_whitespace else data[col].astype(str))
-            data[col] = data[col].str.replace(',', '.', regex=False)
-            data[col] = data[col].str.replace('−', '-', regex=False)
-            data[col] = data[col].replace('', np.nan)
-            data[col] = data[col].replace('nan', np.nan)
-            data[col] = pd.to_numeric(data[col], errors='coerce')
+        try:
+            if isinstance(col, int):
+                # Lấy tên cột từ chỉ số
+                col_name = data.columns[col]
+            else:
+                col_name = col
+            
+            # Xử lý dữ liệu theo tên cột (tránh vấn đề iloc)
+            col_data = data[col_name].astype(str)
+            
+            if strip_whitespace:
+                col_data = col_data.str.strip()
+            
+            col_data = col_data.str.replace(',', '.', regex=False)
+            col_data = col_data.str.replace('−', '-', regex=False)
+            col_data = col_data.replace(['', 'nan', 'None', 'NaN'], np.nan)
+            col_data = pd.to_numeric(col_data, errors='coerce')
+            
+            # Gán lại dữ liệu
+            data[col_name] = col_data
+        except Exception as e:
+            print(f"⚠️ Lỗi xử lý cột {col}: {str(e)}")
+            continue
     
     return data
 
