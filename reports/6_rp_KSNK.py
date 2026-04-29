@@ -8,6 +8,9 @@ import base64
 from google.oauth2.service_account import Credentials
 import numpy as np
 import plotly.graph_objects as go
+import sys
+sys.path.append(str(pathlib.Path(__file__).parent.parent))
+from utils.data_handler import convert_numeric_by_range
 
 @st.cache_data(ttl=3600)
 def get_img_as_base64(file):
@@ -155,9 +158,8 @@ if submit_thoigian:
         else:
             numeric_start_col = 4  # Bắt đầu từ cột thứ 5 (index 4)
             
-            for i in range(numeric_start_col, len(data.columns)):
-                data.iloc[:, i] = data.iloc[:, i].astype(str).str.replace(',', '.', regex=False)               
-                data.iloc[:, i] = pd.to_numeric(data.iloc[:, i], errors='coerce')
+            # Sử dụng hàm utility để chuyển đổi dữ liệu số một cách an toàn
+            data = convert_numeric_by_range(data, numeric_start_col)
             
             cot_phan_nghin = [4, 5, 6, 7, 8]  # Index của các cột cần nhân 1000
             for i in cot_phan_nghin:
@@ -298,7 +300,7 @@ if submit_thoigian:
             
             # Biểu đồ cho bảng 2
             chart2_data = Data_Bang_2.copy()
-            chart2_data['Tháng'] = pd.to_datetime(chart1_data['Thời gian báo cáo']).dt.strftime('%m/%Y')
+            chart2_data['Tháng'] = pd.to_datetime(chart2_data['Thời gian báo cáo']).dt.strftime('%m/%Y')
             chart2_data = chart2_data.dropna(subset=['Tháng'])
             
             fig2 = go.Figure()

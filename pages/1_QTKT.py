@@ -326,7 +326,8 @@ def append_row_safe(sheet, row_data, retries=3):
             next_row = last_row + 1
             if next_row > sheet.row_count:
                 sheet.add_rows(1000)
-            sheet.update(f"A{next_row}:N{next_row}", [row_data])
+            # Sử dụng insert_row() method thay vì update() để tránh deprecation warning
+            sheet.insert_row(row_data, index=next_row)
             return True
         except Exception as e:
             if i < retries - 1:
