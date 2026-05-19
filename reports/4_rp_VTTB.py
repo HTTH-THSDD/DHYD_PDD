@@ -553,8 +553,8 @@ if tab_idx == 0:
 
                     # Hiển thị tổng quan
                     col1, col2 = st.columns(2)
-                    col1.metric("#### Số khoa chưa báo cáo", len(ds_khoa_chua_bao_cao))
-                    col2.metric("#### Số khoa đã báo cáo", len(ds_khoa_da_bao_cao))
+                    col1.metric("**:red[Số khoa chưa báo cáo]**", len(ds_khoa_chua_bao_cao))
+                    col2.metric("**:green[Số khoa đã báo cáo]**", len(ds_khoa_da_bao_cao))
                     st.divider()
                     # Hiển thị danh sách khoa chưa báo cáo
                     st.markdown("#### ❌ Danh sách khoa chưa báo cáo")
