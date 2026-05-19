@@ -331,7 +331,7 @@ if "username" in st.session_state:
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                 "Trắc nghiệm": [THI_test],
                 "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
-                "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME],
+                "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME, BC_VTTB],
             },
         expanded=False,
         )
@@ -341,7 +341,7 @@ if "username" in st.session_state:
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                     "Trắc nghiệm": [THI_test],
                     "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
-                    "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME],
+                    "Báo cáo": [BC_QTKT, BC_CSCS, BC_PRIME,BC_VTTB],
                 },
             expanded=False,
             )
@@ -353,7 +353,7 @@ if "username" in st.session_state:
                 "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                 "Trắc nghiệm": [THI_test],
                 "Nhập kết quả": [QTKT,CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
-                "Báo cáo": [BC_HSBA, BC_GDSK],
+                "Báo cáo": [BC_HSBA, BC_GDSK,BC_VTTB],
             },
         expanded=False,
         )
@@ -363,7 +363,7 @@ if "username" in st.session_state:
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                     "Trắc nghiệm": [THI_test],
                     "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
-                    "Báo cáo": [BC_HSBA, BC_GDSK],
+                    "Báo cáo": [BC_HSBA, BC_GDSK,BC_VTTB],
                 },
             expanded=False,
             )
@@ -451,6 +451,7 @@ if "username" in st.session_state:
                         "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                         "Trắc nghiệm": [THI_test],
                         "Nhập kết quả": [QTKT, CSCS, PRIME, HSBA, GDSK, VTTB, PCCS],
+                        "Báo cáo":[BC_VTTB],
                     },
             expanded=False,
             )
@@ -462,6 +463,7 @@ if "username" in st.session_state:
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                     "Trắc nghiệm": [THI_test],
                     "Nhập kết quả": [QTKT],
+                    "Báo cáo": [BC_VTTB],
                 },
         expanded=False,
         )
@@ -471,6 +473,7 @@ if "username" in st.session_state:
                         "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                         "Trắc nghiệm": [THI_test],
                         "Nhập kết quả": [QTKT],
+                        "Báo cáo":[BC_VTTB],
                     },
             expanded=False,
             )
@@ -481,6 +484,7 @@ if "username" in st.session_state:
                     "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                     "Trắc nghiệm": [THI_test],
                     "Nhập kết quả": [QTKT],
+                    "Báo cáo":[BC_VTTB],
                 },
         expanded=False,
         )
@@ -490,6 +494,7 @@ if "username" in st.session_state:
                         "Thông tin tài khoản": [ logout_page,PD,PS, YC],
                         "Trắc nghiệm": [THI_test],
                         "Nhập kết quả": [QTKT],
+                        "Báo cáo":[BC_VTTB],
                     },
             expanded=False,
             )
